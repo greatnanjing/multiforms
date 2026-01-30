@@ -820,3 +820,5 @@ import type { Metadata } from 'next'
 ---
 
 *文档由 Claude AI 协助创建*
+
+*最后更新：2026-01-31 - 测试自动部署*

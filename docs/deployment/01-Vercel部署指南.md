@@ -625,26 +625,27 @@ Error occurred prerendering page "/login".
 Error: @supabase/ssr: Your project's URL and API key are required to create a Supabase client!
 ```
 
-**原因**：Next.js 在构建时尝试静态生成（pre-render）登录/注册页面，此时 Supabase 环境变量尚未设置。`@supabase/ssr` 的 `createServerClient()` 会验证 URL 和密钥是否为空字符串。
+**原因**：Next.js 在构建时尝试静态生成（pre-render）页面，此时 Supabase 环境变量尚未设置。`@supabase/ssr` 的 `createServerClient()` 会验证 URL 和密钥是否为空字符串。
 
-**解决方案**：在需要访问 Supabase 的页面添加 `export const dynamic = 'force-dynamic'` 强制动态渲染：
+**重要**：`export const dynamic = 'force-dynamic'` 必须添加在**服务端组件**中，在客户端组件（`'use client'`）中无效！
+
+**解决方案**：在服务端布局文件中添加 `export const dynamic = 'force-dynamic'`：
 
 ```typescript
-// login/page.tsx 或 register/page.tsx
-'use client'
+// app/layout.tsx (根布局)
+// app/(public)/layout.tsx (公开页面布局)
 
 // 强制动态渲染，防止构建时 Supabase 错误
-// 此页面需要访问 Supabase，需要运行时环境变量
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
-// ... rest of the component
+import type { Metadata } from 'next'
+// ... rest of the layout
 ```
 
-**受影响的页面**：
-- `/login` - 登录页面
-- `/register` - 注册页面
-- 任何其他需要在服务器端访问 Supabase 的页面
+**受影响的文件**：
+- `app/layout.tsx` - 根布局（包含 AuthProvider）
+- `app/(public)/layout.tsx` - 公开页面布局
+- 任何其他使用 Supabase 的服务端组件
 
 ### 获取帮助
 

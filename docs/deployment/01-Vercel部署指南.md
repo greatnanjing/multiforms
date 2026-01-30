@@ -533,6 +533,67 @@ const inputFormat = toInputFormat(currentValue ?? '') // ✅ 提供 fallback
 const validationError = validate(currentValue ?? '')
 ```
 
+#### 10. 预渲染错误：构建时环境变量未设置
+
+**错误信息**：
+```
+Error occurred prerendering page "/login".
+Error: 缺少必需的 Supabase 环境变量。请确保已设置 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_ANON_KEY。
+```
+
+**原因**：浏览器端 Supabase 客户端在构建时被调用，此时环境变量尚未设置。构建时不应该验证环境变量。
+
+**解决方案**：移除环境变量验证，使用空字符串作为 fallback，运行时会有实际值：
+
+```typescript
+// 错误写法
+function getBrowserSupabaseEnv() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    throw new Error('缺少必需的 Supabase 环境变量...') // ❌ 构建时会报错
+  }
+  return { url, key }
+}
+
+// 正确写法
+export function createClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+
+  if (clientInstance) {
+    return clientInstance
+  }
+
+  clientInstance = createBrowserClient(url, key)
+  return clientInstance
+}
+```
+
+#### 11. TypeScript 错误：Supabase 回调参数类型缺失
+
+**错误信息**：
+```
+Type error: Parameter 'event' implicitly has an 'any' type.
+./src/components/providers/auth-provider.tsx:105:79
+```
+
+**原因**：Supabase `onAuthStateChange` 回调函数的 `event` 参数需要明确的类型注解。
+
+**解决方案**：为回调参数添加类型注解：
+
+```typescript
+// 错误写法
+supabase.auth.onAuthStateChange(async (event, session) => { // ❌ event 隐式 any 类型
+
+// 正确写法
+supabase.auth.onAuthStateChange(
+  async (
+    event: 'INITIAL_SESSION' | 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED',
+    session: { data: { user: { id: string; email: string | null; email_confirmed_at: string | null; created_at: string; updated_at?: string } | null } | null } | null
+  ) => {
+
 ### 获取帮助
 
 - [Vercel 文档](https://vercel.com/docs)

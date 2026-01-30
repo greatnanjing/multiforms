@@ -22,7 +22,7 @@ import * as QuestionComponents from '@/components/forms/questions'
 // Types
 // ============================================
 
-interface BuilderQuestion {
+export interface BuilderQuestion {
   id: string
   type: QuestionType
   question_text: string

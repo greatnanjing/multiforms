@@ -1,21 +1,23 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { getSupabaseEnv } from '@/lib/env'
 
 /**
  * Supabase 中间件
  * 用于刷新会话 token 和处理认证状态
- *
- * 在 middleware.ts 中使用:
- * import { updateSession } from '@/lib/supabase/middleware'
- * export { updateSession as middleware } from '@/lib/supabase/middleware'
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
-  const { url, anonKey } = getSupabaseEnv()
+  // 获取环境变量，如果不存在则跳过 Supabase 处理
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // 如果环境变量未设置，直接返回（用于首次部署或本地开发）
+  if (!url || !anonKey) {
+    return supabaseResponse
+  }
 
   const supabase = createServerClient(
     url,

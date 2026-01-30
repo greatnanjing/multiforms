@@ -13,6 +13,9 @@
 
 'use client'
 
+// Force dynamic rendering to prevent build-time Supabase errors
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, User, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react'

@@ -14,6 +14,10 @@
 
 'use client'
 
+// Force dynamic rendering to prevent build-time Supabase errors
+// This page needs to access Supabase which requires runtime env vars
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'

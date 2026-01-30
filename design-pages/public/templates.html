@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模板库 - MultiForms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../theme-system.css">
+  <style>
+    /* Templates Page Styles */
+    .templates-page {
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    /* Top Navigation */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg) var(--space-xl);
+      background: rgba(15, 15, 35, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: color 0.2s var(--ease-out);
+    }
+
+    .back-link:hover {
+      color: var(--primary-glow);
+    }
+
+    /* Search */
+    .search-box {
+      position: relative;
+      width: 320px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: var(--space-md);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px var(--space-md) 12px 44px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      outline: none;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary-start);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .page-header {
+      padding: var(--space-2xl) var(--space-xl);
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .page-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .page-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 600px;
+    }
+
+    /* Categories */
+    .categories-section {
+      padding: 0 var(--space-xl) var(--space-lg);
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .categories-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: var(--space-md);
+    }
+
+    .categories {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    .category-pill {
+      padding: 10px 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .category-pill:hover {
+      color: var(--text-primary);
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .category-pill.active {
+      color: white;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-color: transparent;
+    }
+
+    /* Templates Grid */
+    .templates-section {
+      padding: var(--space-lg) var(--space-xl) var(--space-2xl);
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-lg);
+    }
+
+    /* Template Card */
+    .template-card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: all 0.3s var(--ease-out);
+      cursor: pointer;
+    }
+
+    .template-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .template-preview {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Preview backgrounds for different categories */
+    .preview-vote {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1));
+    }
+
+    .preview-survey {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(34, 211, 238, 0.1));
+    }
+
+    .preview-rating {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.1));
+    }
+
+    .preview-feedback {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(244, 114, 182, 0.1));
+    }
+
+    .preview-collection {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.1));
+    }
+
+    .preview-event {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(251, 146, 60, 0.1));
+    }
+
+    .preview-quiz {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(192, 132, 252, 0.1));
+    }
+
+    .template-preview::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .template-preview-icon {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      color: var(--primary-glow);
+    }
+
+    .template-preview-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .template-preview-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      opacity: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      transition: opacity 0.3s var(--ease-out);
+    }
+
+    .template-card:hover .template-preview-overlay {
+      opacity: 0.9;
+    }
+
+    .preview-button {
+      padding: 10px 20px;
+      background: white;
+      color: var(--primary-start);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .template-info {
+      padding: var(--space-lg);
+    }
+
+    .template-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--primary-glow);
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: 100px;
+      margin-bottom: var(--space-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .template-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .template-description {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: var(--space-md);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .template-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .template-uses {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .template-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #FBBF24;
+    }
+
+    /* Use Button */
+    .use-button {
+      width: 100%;
+      padding: 12px;
+      margin-top: var(--space-md);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .use-button:hover {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-color: transparent;
+      color: white;
+    }
+
+    /* New Badge */
+    .new-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-cyan));
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      z-index: 2;
+    }
+
+    /* Hot Badge */
+    .hot-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, #EF4444, #F87171);
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      z-index: 2;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-top: var(--space-xl);
+      padding-top: var(--space-xl);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .pagination-page {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .pagination-page:hover {
+      border-color: var(--primary-start);
+      color: var(--primary-glow);
+    }
+
+    .pagination-page.active {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-color: transparent;
+      color: white;
+    }
+
+    .pagination-nav {
+      padding: 0 16px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .pagination-nav:hover {
+      border-color: var(--primary-start);
+      color: var(--primary-glow);
+    }
+
+    .pagination-nav:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Empty State */
+    .empty-state {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-3xl);
+      text-align: center;
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: var(--space-md);
+      opacity: 0.5;
+    }
+
+    .empty-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .empty-description {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 400px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1280px) {
+      .templates-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 960px) {
+      .templates-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .search-box {
+        width: 240px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-nav {
+        flex-direction: column;
+        gap: var(--space-md);
+        padding: var(--space-md);
+      }
+
+      .nav-left {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+
+      .page-header {
+        padding: var(--space-lg) var(--space-md);
+      }
+
+      .page-title {
+        font-size: 24px;
+      }
+
+      .categories-section,
+      .templates-section {
+        padding-left: var(--space-md);
+        padding-right: var(--space-md);
+      }
+
+      .templates-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+      }
+
+      .categories {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: var(--space-sm);
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .category-pill {
+        flex-shrink: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="templates-page">
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+      <div class="nav-left">
+        <div class="logo">MultiForms</div>
+        <div class="back-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          返回仪表盘
+        </div>
+      </div>
+      <div class="search-box">
+        <span class="search-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+        </span>
+        <input type="text" class="search-input" placeholder="搜索模板...">
+      </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">模板库</h1>
+      <p class="page-subtitle">从精心设计的模板开始，快速创建专业的表单。所有模板均可自由定制。</p>
+    </div>
+
+    <!-- Categories -->
+    <div class="categories-section">
+      <div class="categories-label">分类</div>
+      <div class="categories">
+        <button class="category-pill active" data-category="all">全部</button>
+        <button class="category-pill" data-category="vote">投票</button>
+        <button class="category-pill" data-category="survey">问卷</button>
+        <button class="category-pill" data-category="rating">评分</button>
+        <button class="category-pill" data-category="feedback">反馈</button>
+        <button class="category-pill" data-category="collection">信息收集</button>
+        <button class="category-pill" data-category="event">活动报名</button>
+        <button class="category-pill" data-category="quiz">考试测验</button>
+      </div>
+    </div>
+
+    <!-- Templates Grid -->
+    <div class="templates-section">
+      <div class="templates-grid" id="templatesGrid">
+        <!-- Vote Templates -->
+        <div class="template-card" data-category="vote">
+          <div class="template-preview preview-vote">
+            <div class="new-badge">热门</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">投票</span>
+            <h3 class="template-title">活动投票</h3>
+            <p class="template-description">用于团队活动、聚会日期、活动方案等的投票选择</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                12.5k 使用
+              </span>
+              <span class="template-rating">★ 4.9</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="vote">
+          <div class="template-preview preview-vote">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 11V6a3 3 0 0 1 6 0v5"/>
+                <path d="M12 11v6"/>
+                <path d="M9 17h6"/>
+                <path d="M7 11h10v10H7z"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">投票</span>
+            <h3 class="template-title">排名投票</h3>
+            <p class="template-description">支持候选人/选项排序的投票，选出自定义排名</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                6.2k 使用
+              </span>
+              <span class="template-rating">★ 4.7</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="vote">
+          <div class="template-preview preview-vote">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M9 12h6"/>
+                <path d="M12 9v6"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">投票</span>
+            <h3 class="template-title">多选投票</h3>
+            <p class="template-description">支持多选的投票模板，可设置最大选择数量</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                8.9k 使用
+              </span>
+              <span class="template-rating">★ 4.6</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <!-- Survey Templates -->
+        <div class="template-card" data-category="survey">
+          <div class="template-preview preview-survey">
+            <div class="hot-badge">热门</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <line x1="10" y1="9" x2="8" y2="9"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">问卷</span>
+            <h3 class="template-title">满意度调研</h3>
+            <p class="template-description">收集客户、员工或用户对产品或服务的反馈意见</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                18.2k 使用
+              </span>
+              <span class="template-rating">★ 4.8</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="survey">
+          <div class="template-preview preview-survey">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 16v-4"/>
+                <path d="M12 8h.01"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">问卷</span>
+            <h3 class="template-title">市场调研问卷</h3>
+            <p class="template-description">用于市场调研、用户需求分析、竞品调研等</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                9.8k 使用
+              </span>
+              <span class="template-rating">★ 4.7</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="survey">
+          <div class="template-preview preview-survey">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">问卷</span>
+            <h3 class="template-title">学术研究问卷</h3>
+            <p class="template-description">用于学术论文、课题研究、数据采集等场景</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                5.1k 使用
+              </span>
+              <span class="template-rating">★ 4.6</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <!-- Rating Templates -->
+        <div class="template-card" data-category="rating">
+          <div class="template-preview preview-rating">
+            <div class="hot-badge">热门</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">评分</span>
+            <h3 class="template-title">年度最佳员工评选</h3>
+            <p class="template-description">用于评选优秀员工、最佳新人等内部投票活动</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                8.7k 使用
+              </span>
+              <span class="template-rating">★ 4.9</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="rating">
+          <div class="template-preview preview-rating">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">评分</span>
+            <h3 class="template-title">产品评分</h3>
+            <p class="template-description">收集用户对产品的评分和评论，支持多维度评价</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                11.3k 使用
+              </span>
+              <span class="template-rating">★ 4.8</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="rating">
+          <div class="template-preview preview-rating">
+            <div class="new-badge">新</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">评分</span>
+            <h3 class="template-title">演讲评分表</h3>
+            <p class="template-description">用于演讲比赛、展示评比等多维度打分场景</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                3.2k 使用
+              </span>
+              <span class="template-rating">★ 4.5</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <!-- Feedback Templates -->
+        <div class="template-card" data-category="feedback">
+          <div class="template-preview preview-feedback">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">反馈</span>
+            <h3 class="template-title">用户反馈表</h3>
+            <p class="template-description">收集用户对产品的功能建议、问题报告和改进意见</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                15.3k 使用
+              </span>
+              <span class="template-rating">★ 4.7</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="feedback">
+          <div class="template-preview preview-feedback">
+            <div class="new-badge">新</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">反馈</span>
+            <h3 class="template-title">Bug反馈表</h3>
+            <p class="template-description">用于收集用户报告的Bug问题，包含复现步骤等信息</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                4.7k 使用
+              </span>
+              <span class="template-rating">★ 4.4</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="feedback">
+          <div class="template-preview preview-feedback">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M12 8v4"/>
+                <path d="M12 16h.01"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">反馈</span>
+            <h3 class="template-title">意见征集表</h3>
+            <p class="template-description">征集员工/用户对决策、活动的意见和建议</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                7.1k 使用
+              </span>
+              <span class="template-rating">★ 4.6</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <!-- Collection Templates -->
+        <div class="template-card" data-category="collection">
+          <div class="template-preview preview-collection">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">信息收集</span>
+            <h3 class="template-title">联系信息收集</h3>
+            <p class="template-description">收集客户或潜在客户的联系方式和基本需求信息</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                9.4k 使用
+              </span>
+              <span class="template-rating">★ 4.6</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="collection">
+          <div class="template-preview preview-collection">
+            <div class="hot-badge">热门</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">信息收集</span>
+            <h3 class="template-title">请假申请表</h3>
+            <p class="template-description">员工请假申请，包含请假类型、时间、原因等信息</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                22.6k 使用
+              </span>
+              <span class="template-rating">★ 4.9</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="collection">
+          <div class="template-preview preview-collection">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">信息收集</span>
+            <h3 class="template-title">报销申请表</h3>
+            <p class="template-description">员工费用报销申请，包含费用明细、凭证上传等</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                14.2k 使用
+              </span>
+              <span class="template-rating">★ 4.7</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="collection">
+          <div class="template-preview preview-collection">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">信息收集</span>
+            <h3 class="template-title">入住登记表</h3>
+            <p class="template-description">酒店、民宿、宿舍等入住信息登记</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                6.8k 使用
+              </span>
+              <span class="template-rating">★ 4.5</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="collection">
+          <div class="template-preview preview-collection">
+            <div class="new-badge">新</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">信息收集</span>
+            <h3 class="template-title">产品预订表</h3>
+            <p class="template-description">收集产品预订、服务预约等信息和特殊需求</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                5.2k 使用
+              </span>
+              <span class="template-rating">★ 4.5</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <!-- Event Templates -->
+        <div class="template-card" data-category="event">
+          <div class="template-preview preview-event">
+            <div class="hot-badge">热门</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">活动报名</span>
+            <h3 class="template-title">活动报名表</h3>
+            <p class="template-description">用于会议、讲座、聚会等各类活动的报名信息收集</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                21.1k 使用
+              </span>
+              <span class="template-rating">★ 4.8</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="event">
+          <div class="template-preview preview-event">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">活动报名</span>
+            <h3 class="template-title">志愿者招募</h3>
+            <p class="template-description">活动志愿者招募报名，收集技能、时间等信息</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                4.5k 使用
+              </span>
+              <span class="template-rating">★ 4.6</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="event">
+          <div class="template-preview preview-event">
+            <div class="new-badge">新</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">活动报名</span>
+            <h3 class="template-title">团建活动报名</h3>
+            <p class="template-description">公司团建活动报名，包含饮食偏好、T恤尺码等</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                3.8k 使用
+              </span>
+              <span class="template-rating">★ 4.7</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <!-- Quiz Templates -->
+        <div class="template-card" data-category="quiz">
+          <div class="template-preview preview-quiz">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">考试测验</span>
+            <h3 class="template-title">知识测验</h3>
+            <p class="template-description">用于培训考核、知识竞赛、技能评估等场景</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                6.8k 使用
+              </span>
+              <span class="template-rating">★ 4.7</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="quiz">
+          <div class="template-preview preview-quiz">
+            <div class="new-badge">新</div>
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <path d="M9 15l2 2 4-4"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">考试测验</span>
+            <h3 class="template-title">在线考试</h3>
+            <p class="template-description">完整的在线考试表单，支持多种题型和时间限制</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                8.3k 使用
+              </span>
+              <span class="template-rating">★ 4.8</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+
+        <div class="template-card" data-category="quiz">
+          <div class="template-preview preview-quiz">
+            <div class="template-preview-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M2 12h20"/>
+                <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/>
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M6 17v-3"/>
+                <path d="M18 17v-3"/>
+              </svg>
+            </div>
+            <div class="template-preview-overlay">
+              <button class="preview-button">预览</button>
+            </div>
+          </div>
+          <div class="template-info">
+            <span class="template-tag">考试测验</span>
+            <h3 class="template-title">性格测试</h3>
+            <p class="template-description">MBTI、DISC等性格类型测试问卷</p>
+            <div class="template-meta">
+              <span class="template-uses">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                12.1k 使用
+              </span>
+              <span class="template-rating">★ 4.9</span>
+            </div>
+            <button class="use-button">使用模板</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="pagination-nav" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <button class="pagination-page active">1</button>
+        <button class="pagination-page">2</button>
+        <button class="pagination-page">3</button>
+        <button class="pagination-nav">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Category filtering
+    const categoryPills = document.querySelectorAll('.category-pill');
+    const templateCards = document.querySelectorAll('.template-card');
+
+    categoryPills.forEach(pill => {
+      pill.addEventListener('click', function() {
+        const category = this.dataset.category;
+
+        // Update active state
+        categoryPills.forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+
+        // Filter cards
+        templateCards.forEach(card => {
+          if (category === 'all' || card.dataset.category === category) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Use button interactions
+    document.querySelectorAll('.use-button').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const templateTitle = this.closest('.template-info').querySelector('.template-title').textContent;
+        // In real app, this would redirect to form builder with template
+        alert(`使用模板: ${templateTitle}`);
+      });
+    });
+
+    // Preview button interactions
+    document.querySelectorAll('.preview-button').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const templateTitle = this.closest('.template-card').querySelector('.template-title').textContent;
+        // In real app, this would open a preview modal
+        alert(`预览模板: ${templateTitle}`);
+      });
+    });
+
+    // Search functionality
+    const searchInput = document.querySelector('.search-input');
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+
+      templateCards.forEach(card => {
+        const title = card.querySelector('.template-title').textContent.toLowerCase();
+        const description = card.querySelector('.template-description').textContent.toLowerCase();
+        const category = card.querySelector('.template-tag').textContent.toLowerCase();
+
+        if (title.includes(searchTerm) || description.includes(searchTerm) || category.includes(searchTerm)) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // Reset category filter when searching
+      if (searchTerm) {
+        categoryPills.forEach(p => p.classList.remove('active'));
+      }
+    });
+
+    // Pagination interactions
+    document.querySelectorAll('.pagination-page').forEach(page => {
+      page.addEventListener('click', function() {
+        document.querySelectorAll('.pagination-page').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Back link
+    document.querySelector('.back-link').addEventListener('click', function() {
+      window.location.href = '../../creator/dashboard.html';
+    });
+  </script>
+</body>
+</html>

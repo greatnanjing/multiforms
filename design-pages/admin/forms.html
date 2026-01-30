@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>表单管理 - MultiForms 管理后台</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../common.css">
+
+  <!-- Page Styles -->
+  <style>
+    /* Admin Layout */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    .admin-sidebar {
+      width: 260px;
+      background: rgba(15, 15, 35, 0.95);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+
+    .admin-sidebar-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .admin-sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .admin-sidebar-logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .admin-sidebar-logo-icon svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+
+    .admin-sidebar-logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .admin-sidebar-logo-badge {
+      margin-left: auto;
+      padding: 4px 8px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #A78BFA;
+    }
+
+    .admin-nav {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+    }
+
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s var(--ease-out);
+      margin-bottom: 4px;
+    }
+
+    .admin-nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .admin-nav-item.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15));
+      color: #A78BFA;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .admin-nav-item svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .admin-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      background: rgba(15, 15, 35, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .admin-header-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .admin-content {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    /* Page Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Search & Filters */
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 280px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      background: rgba(26, 26, 46, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #8B5CF6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    }
+
+    .search-box-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+    }
+
+    .filter-select {
+      padding: 12px 16px;
+      background: rgba(26, 26, 46, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Table */
+    .table-container {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .table-count {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      padding: 16px 24px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .data-table td {
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .data-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .form-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .form-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #A78BFA;
+    }
+
+    .form-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .form-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .form-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .form-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .user-mini {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-mini-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #3B82F6, #06B6D4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .user-mini-name {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .type-badge {
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .type-badge.survey {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3B82F6;
+    }
+
+    .type-badge.vote {
+      background: rgba(139, 92, 246, 0.15);
+      color: #A78BFA;
+    }
+
+    .type-badge.rating {
+      background: rgba(236, 72, 153, 0.15);
+      color: #EC4899;
+    }
+
+    .type-badge.feedback {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10B981;
+    }
+
+    .type-badge.collection {
+      background: rgba(245, 158, 11, 0.15);
+      color: #F59E0B;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-dot.published {
+      background: #10B981;
+    }
+
+    .status-dot.draft {
+      background: #9CA3AF;
+    }
+
+    .status-dot.review {
+      background: #F59E0B;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-secondary);
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #8B5CF6;
+    }
+
+    .action-btn.danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: #EF4444;
+      color: #EF4444;
+    }
+
+    .action-btn.success {
+      color: #10B981;
+    }
+
+    .action-btn.success:hover {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: #10B981;
+      color: #10B981;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .pagination-info {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .pagination-pages {
+      display: flex;
+      gap: 8px;
+    }
+
+    .page-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-secondary);
+    }
+
+    .page-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .page-btn.active {
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      border-color: transparent;
+      color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .admin-sidebar {
+        display: none;
+      }
+
+      .admin-content {
+        padding: 20px;
+      }
+
+      .data-table {
+        display: block;
+        overflow-x: auto;
+      }
+
+      .filters-bar {
+        flex-direction: column;
+      }
+
+      .search-box {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="admin-sidebar-logo">
+          <div class="admin-sidebar-logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="admin-sidebar-logo-text">MultiForms</div>
+          <div class="admin-sidebar-logo-badge">ADMIN</div>
+        </div>
+      </div>
+
+      <nav class="admin-nav">
+        <a href="dashboard.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          仪表盘
+        </a>
+        <a href="users.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          用户管理
+        </a>
+        <a href="forms.html" class="admin-nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="9"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="13" y2="17"/>
+          </svg>
+          表单管理
+        </a>
+        <a href="review.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14,2 14,8 20,8"/>
+          </svg>
+          内容审核
+        </a>
+        <a href="templates.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          模板管理
+        </a>
+        <a href="settings.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243M9.879 9.879L5.636 5.636m12.728 12.728l-4.243-4.243m0 0L9.88 14.12"/>
+          </svg>
+          系统设置
+        </a>
+        <a href="logs.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10,9 9,9 8,9"/>
+          </svg>
+          系统日志
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <h1 class="admin-header-title">表单管理</h1>
+      </header>
+
+      <div class="admin-content">
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-title">管理平台所有表单</div>
+          <div class="page-actions">
+            <button class="btn btn-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              导出数据
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+          <div class="search-box">
+            <svg class="search-box-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" placeholder="搜索表单名称或创建者...">
+          </div>
+          <select class="filter-select">
+            <option>所有类型</option>
+            <option>投票</option>
+            <option>问卷</option>
+            <option>评分</option>
+            <option>反馈</option>
+            <option>信息收集</option>
+          </select>
+          <select class="filter-select">
+            <option>所有状态</option>
+            <option>已发布</option>
+            <option>草稿</option>
+            <option>审核中</option>
+          </select>
+          <select class="filter-select">
+            <option>创建时间 ↓</option>
+            <option>创建时间 ↑</option>
+            <option>回复数 ↓</option>
+            <option>回复数 ↑</option>
+          </select>
+        </div>
+
+        <!-- Forms Table -->
+        <div class="table-container">
+          <div class="table-header">
+            <span class="table-title">表单列表</span>
+            <span class="table-count">共 45,280 个</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>表单名称</th>
+                <th>创建者</th>
+                <th>类型</th>
+                <th>回复数</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="form-cell">
+                    <div class="form-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="9" y1="9" x2="15" y2="9"/>
+                        <line x1="9" y1="13" x2="15" y2="13"/>
+                        <line x1="9" y1="17" x2="13" y2="17"/>
+                      </svg>
+                    </div>
+                    <div class="form-info">
+                      <span class="form-title">产品满意度调研</span>
+                      <span class="form-meta">问卷调查</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="user-mini">
+                    <div class="user-mini-avatar">张</div>
+                    <span class="user-mini-name">张三</span>
+                  </div>
+                </td>
+                <td><span class="type-badge survey">问卷</span></td>
+                <td>852</td>
+                <td><span class="status-indicator"><span class="status-dot published"></span>已发布</span></td>
+                <td style="color: var(--text-muted);">2025-01-20</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-btn">查看</button>
+                    <button class="action-btn">下架</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="form-cell">
+                    <div class="form-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                    <div class="form-info">
+                      <span class="form-title">年度最佳员工评选</span>
+                      <span class="form-meta">投票活动</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="user-mini">
+                    <div class="user-mini-avatar" style="background: linear-gradient(135deg, #10B981, #059669);">李</div>
+                    <span class="user-mini-name">李四</span>
+                  </div>
+                </td>
+                <td><span class="type-badge vote">投票</span></td>
+                <td>128</td>
+                <td><span class="status-indicator"><span class="status-dot published"></span>已发布</span></td>
+                <td style="color: var(--text-muted);">2025-01-18</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-btn">查看</button>
+                    <button class="action-btn">下架</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="form-cell">
+                    <div class="form-icon" style="background: rgba(239, 68, 68, 0.15);">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #EF4444;">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                    </div>
+                    <div class="form-info">
+                      <span class="form-title">违规内容测试</span>
+                      <span class="form-meta" style="color: #EF4444;">被举报</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="user-mini">
+                    <div class="user-mini-avatar" style="background: linear-gradient(135deg, #F59E0B, #D97706);">王</div>
+                    <span class="user-mini-name">王五</span>
+                  </div>
+                </td>
+                <td><span class="type-badge survey">问卷</span></td>
+                <td>12</td>
+                <td><span class="status-indicator"><span class="status-dot review"></span>审核中</span></td>
+                <td style="color: var(--text-muted);">2025-01-15</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-btn">审核</button>
+                    <button class="action-btn danger">删除</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="form-cell">
+                    <div class="form-icon" style="background: rgba(107, 114, 128, 0.15);">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #9CA3AF;">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="9" y1="9" x2="15" y2="9"/>
+                        <line x1="9" y1="13" x2="15" y2="13"/>
+                        <line x1="9" y1="17" x2="13" y2="17"/>
+                      </svg>
+                    </div>
+                    <div class="form-info">
+                      <span class="form-title">客户反馈收集</span>
+                      <span class="form-meta">草稿</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="user-mini">
+                    <div class="user-mini-avatar" style="background: linear-gradient(135deg, #EC4899, #F472B6);">赵</div>
+                    <span class="user-mini-name">赵六</span>
+                  </div>
+                </td>
+                <td><span class="type-badge feedback">反馈</span></td>
+                <td>-</td>
+                <td><span class="status-indicator"><span class="status-dot draft"></span>草稿</span></td>
+                <td style="color: var(--text-muted);">2025-01-28</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-btn">查看</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="form-cell">
+                    <div class="form-icon" style="background: rgba(236, 72, 153, 0.15);">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #EC4899;">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                    <div class="form-info">
+                      <span class="form-title">服务评分表</span>
+                      <span class="form-meta">星级评分</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="user-mini">
+                    <div class="user-mini-avatar" style="background: linear-gradient(135deg, #8B5CF6, #A78BFA);">C</div>
+                    <span class="user-mini-name">Chen</span>
+                  </div>
+                </td>
+                <td><span class="type-badge rating">评分</span></td>
+                <td>56</td>
+                <td><span class="status-indicator"><span class="status-dot published"></span>已发布</span></td>
+                <td style="color: var(--text-muted);">2025-01-25</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-btn">查看</button>
+                    <button class="action-btn">下架</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="form-cell">
+                    <div class="form-icon" style="background: rgba(245, 158, 11, 0.15);">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #F59E0B;">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                    </div>
+                    <div class="form-info">
+                      <span class="form-title">活动报名表</span>
+                      <span class="form-meta">信息收集</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="user-mini">
+                    <div class="user-mini-avatar" style="background: linear-gradient(135deg, #06B6D4, #0891B2);">L</div>
+                    <span class="user-mini-name">Liu</span>
+                  </div>
+                </td>
+                <td><span class="type-badge collection">信息收集</span></td>
+                <td>234</td>
+                <td><span class="status-indicator"><span class="status-dot published"></span>已发布</span></td>
+                <td style="color: var(--text-muted);">2025-01-22</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-btn">查看</button>
+                    <button class="action-btn">下架</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <span class="pagination-info">显示 1-6 条，共 45,280 条</span>
+            <div class="pagination-pages">
+              <button class="page-btn">← 上一页</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <span style="color: var(--text-muted); padding: 8px 4px;">...</span>
+              <button class="page-btn">7547</button>
+              <button class="page-btn">下一页 →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Handle action button clicks
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const action = this.textContent;
+        const row = this.closest('tr');
+        const formTitle = row.querySelector('.form-title')?.textContent || '此表单';
+
+        if (action === '查看') {
+          // Navigate to form view page
+          alert(`查看表单：${formTitle}`);
+        } else if (action === '下架') {
+          if (confirm(`确定要下架「${formTitle}」吗？`)) {
+            const statusIndicator = row.querySelector('.status-indicator');
+            const statusDot = statusIndicator?.querySelector('.status-dot');
+            if (statusDot) {
+              statusDot.classList.remove('published');
+              statusDot.classList.add('draft');
+            }
+            if (statusIndicator) {
+              statusIndicator.innerHTML = '<span class="status-dot draft"></span>已下架';
+            }
+            // 更新按钮
+            const actionButtons = this.closest('.action-buttons');
+            actionButtons.innerHTML = `
+              <button class="action-btn" onclick="handleFormAction(this, '查看')">查看</button>
+              <button class="action-btn success" onclick="handleFormAction(this, '上架')">上架</button>
+            `;
+          }
+        } else if (action === '上架') {
+          if (confirm(`确定要重新上架「${formTitle}」吗？`)) {
+            const statusIndicator = row.querySelector('.status-indicator');
+            if (statusIndicator) {
+              statusIndicator.innerHTML = '<span class="status-dot published"></span>已发布';
+            }
+            // 更新按钮
+            const actionButtons = this.closest('.action-buttons');
+            actionButtons.innerHTML = `
+              <button class="action-btn" onclick="handleFormAction(this, '查看')">查看</button>
+              <button class="action-btn" onclick="handleFormAction(this, '下架')">下架</button>
+            `;
+          }
+        } else if (action === '审核') {
+          alert(`进入审核页面：${formTitle}`);
+        } else if (action === '删除') {
+          if (confirm(`确定要删除「${formTitle}」吗？此操作不可恢复！`)) {
+            row.remove();
+            alert('表单已删除');
+          }
+        }
+      });
+    });
+
+    // Search functionality
+    document.querySelector('.search-box input')?.addEventListener('keyup', function(e) {
+      if (e.key === 'Enter') {
+        alert('搜索功能：' + this.value);
+      }
+    });
+
+    // Filter change
+    document.querySelectorAll('.filter-select').forEach(select => {
+      select.addEventListener('change', function() {
+        console.log('筛选条件变更:', this.value);
+      });
+    });
+
+    // Pagination clicks
+    document.querySelectorAll('.page-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const page = this.textContent;
+        if (page.includes('上一页') || page.includes('下一页')) {
+          alert(page + ' 功能演示');
+        } else if (!page.includes('...')) {
+          // Update active page
+          document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

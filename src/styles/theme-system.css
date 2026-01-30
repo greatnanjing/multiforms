@@ -1,0 +1,433 @@
+/* ============================================
+   MultiForms Theme System
+   支持8套主题的动态换肤系统
+
+   使用方式:
+   <body data-theme="nebula">  <!-- 星云紫 (默认) -->
+   <body data-theme="ocean">   <!-- 海洋蓝 -->
+   <body data-theme="sunset">  <!-- 日落橙 -->
+   <body data-theme="forest">  <!-- 森林绿 -->
+   <body data-theme="sakura">  <!-- 樱花粉 -->
+   <body data-theme="cyber">   <!-- 赛博霓虹 -->
+   <body data-theme="minimal"> <!-- 极简灰 -->
+   <body data-theme="royal">   <!-- 皇家金 -->
+
+   深浅模式切换:
+   <body data-theme="nebula" data-mode="dark">  <!-- 深色模式 (默认) -->
+   <body data-theme="nebula" data-mode="light"> <!-- 浅色模式 -->
+   ============================================ */
+
+/* ============================================
+   THEME 1: 星云紫 Nebula Purple (默认主题)
+   神秘优雅，适合通用场景
+   ============================================ */
+:root,
+[data-theme="nebula"] {
+  /* Primary Gradient */
+  --primary-start: #6366F1;  /* Indigo 500 */
+  --primary-end: #8B5CF6;    /* Violet 500 */
+  --primary-glow: #A78BFA;   /* Violet 400 */
+
+  /* Accent Colors */
+  --accent-color: #EC4899;   /* Pink 500 */
+  --accent-secondary: #06B6D4; /* Cyan 500 */
+
+  /* Background Colors */
+  --bg-primary: #0F0F23;
+  --bg-secondary: #1A1A2E;
+  --bg-tertiary: #2D2D44;
+
+  /* Text Colors */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  /* Border & Glass */
+  --border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(26, 26, 46, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Input & Form */
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: rgba(255, 255, 255, 0.1);
+
+  /* Effects */
+  --shadow-color: rgba(99, 102, 241, 0.3);
+  --focus-ring: rgba(99, 102, 241, 0.2);
+  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(99, 102, 241, 0.15);
+  --tag-border: rgba(99, 102, 241, 0.3);
+  --tag-text: #A78BFA;
+
+  /* Alert */
+  --alert-bg: rgba(99, 102, 241, 0.1);
+  --alert-border: rgba(99, 102, 241, 0.3);
+  --alert-text: #A78BFA;
+}
+
+/* ============================================
+   THEME 2: 海洋蓝 Ocean Blue
+   清新专业，适合商务场景
+   ============================================ */
+[data-theme="ocean"] {
+  /* Primary Gradient */
+  --primary-start: #0EA5E9;  /* Sky 500 */
+  --primary-end: #06B6D4;    /* Cyan 500 */
+  --primary-glow: #22D3EE;   /* Cyan 400 */
+
+  /* Accent Colors */
+  --accent-color: #3B82F6;   /* Blue 500 */
+  --accent-secondary: #14B8A6; /* Teal 500 */
+
+  /* Background Colors */
+  --bg-primary: #0A1628;
+  --bg-secondary: #0F2744;
+  --bg-tertiary: #1E3A5F;
+
+  /* Text Colors */
+  --text-primary: #F0F9FF;
+  --text-secondary: #7DD3FC;
+  --text-muted: #5EEAD4;
+
+  /* Border & Glass */
+  --border: rgba(14, 165, 233, 0.15);
+  --glass-bg: rgba(15, 39, 68, 0.6);
+  --glass-border: rgba(14, 165, 233, 0.15);
+
+  /* Input & Form */
+  --input-bg: rgba(14, 165, 233, 0.05);
+  --input-border: rgba(14, 165, 233, 0.15);
+
+  /* Effects */
+  --shadow-color: rgba(14, 165, 233, 0.3);
+  --focus-ring: rgba(14, 165, 233, 0.2);
+  --glow-primary: 0 0 20px rgba(14, 165, 233, 0.4), 0 0 40px rgba(6, 182, 212, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(14, 165, 233, 0.15);
+  --tag-border: rgba(14, 165, 233, 0.3);
+  --tag-text: #22D3EE;
+
+  /* Alert */
+  --alert-bg: rgba(14, 165, 233, 0.1);
+  --alert-border: rgba(14, 165, 233, 0.3);
+  --alert-text: #22D3EE;
+}
+
+/* ============================================
+   THEME 3: 日落橙 Sunset Orange
+   活力热情，适合年轻用户
+   ============================================ */
+[data-theme="sunset"] {
+  /* Primary Gradient */
+  --primary-start: #F97316;  /* Orange 500 */
+  --primary-end: #EC4899;    /* Pink 500 */
+  --primary-glow: #FB923C;   /* Orange 400 */
+
+  /* Accent Colors */
+  --accent-color: #EF4444;   /* Red 500 */
+  --accent-secondary: #F59E0B; /* Amber 500 */
+
+  /* Background Colors */
+  --bg-primary: #1A0A0A;
+  --bg-secondary: #2D1515;
+  --bg-tertiary: #40201A;
+
+  /* Text Colors */
+  --text-primary: #FFF7ED;
+  --text-secondary: #FDBA74;
+  --text-muted: #F97316;
+
+  /* Border & Glass */
+  --border: rgba(249, 115, 22, 0.15);
+  --glass-bg: rgba(45, 21, 21, 0.6);
+  --glass-border: rgba(249, 115, 22, 0.15);
+
+  /* Input & Form */
+  --input-bg: rgba(249, 115, 22, 0.05);
+  --input-border: rgba(249, 115, 22, 0.15);
+
+  /* Effects */
+  --shadow-color: rgba(249, 115, 22, 0.3);
+  --focus-ring: rgba(249, 115, 22, 0.2);
+  --glow-primary: 0 0 20px rgba(249, 115, 22, 0.4), 0 0 40px rgba(236, 72, 153, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(249, 115, 22, 0.15);
+  --tag-border: rgba(249, 115, 22, 0.3);
+  --tag-text: #FB923C;
+
+  /* Alert */
+  --alert-bg: rgba(249, 115, 22, 0.1);
+  --alert-border: rgba(249, 115, 22, 0.3);
+  --alert-text: #FB923C;
+}
+
+/* ============================================
+   THEME 4: 森林绿 Forest Green
+   清新自然，适合健康环保主题
+   ============================================ */
+[data-theme="forest"] {
+  /* Primary Gradient */
+  --primary-start: #10B981;  /* Emerald 500 */
+  --primary-end: #06B6D4;    /* Cyan 500 */
+  --primary-glow: #34D399;   /* Emerald 400 */
+
+  /* Accent Colors */
+  --accent-color: #059669;   /* Emerald 600 */
+  --accent-secondary: #84CC16; /* Lime 500 */
+
+  /* Background Colors */
+  --bg-primary: #0A1A12;
+  --bg-secondary: #0F291C;
+  --bg-tertiary: #1A3D2B;
+
+  /* Text Colors */
+  --text-primary: #F0FDF4;
+  --text-secondary: #6EE7B7;
+  --text-muted: #34D399;
+
+  /* Border & Glass */
+  --border: rgba(16, 185, 129, 0.15);
+  --glass-bg: rgba(15, 41, 28, 0.6);
+  --glass-border: rgba(16, 185, 129, 0.15);
+
+  /* Input & Form */
+  --input-bg: rgba(16, 185, 129, 0.05);
+  --input-border: rgba(16, 185, 129, 0.15);
+
+  /* Effects */
+  --shadow-color: rgba(16, 185, 129, 0.3);
+  --focus-ring: rgba(16, 185, 129, 0.2);
+  --glow-primary: 0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(6, 182, 212, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(16, 185, 129, 0.15);
+  --tag-border: rgba(16, 185, 129, 0.3);
+  --tag-text: #34D399;
+
+  /* Alert */
+  --alert-bg: rgba(16, 185, 129, 0.1);
+  --alert-border: rgba(16, 185, 129, 0.3);
+  --alert-text: #34D399;
+}
+
+/* ============================================
+   THEME 5: 樱花粉 Sakura Pink
+   浪漫柔美，适合女性用户
+   ============================================ */
+[data-theme="sakura"] {
+  /* Primary Gradient */
+  --primary-start: #EC4899;  /* Pink 500 */
+  --primary-end: #F472B6;    /* Pink 400 */
+  --primary-glow: #F9A8D4;   /* Pink 300 */
+
+  /* Accent Colors */
+  --accent-color: #F43F5E;   /* Rose 500 */
+  --accent-secondary: #C084FC; /* Purple 400 */
+
+  /* Background Colors */
+  --bg-primary: #1A0A14;
+  --bg-secondary: #2D1526;
+  --bg-tertiary: #402035;
+
+  /* Text Colors */
+  --text-primary: #FFF1F8;
+  --text-secondary: #F9A8D4;
+  --text-muted: #EC4899;
+
+  /* Border & Glass */
+  --border: rgba(236, 72, 153, 0.15);
+  --glass-bg: rgba(45, 21, 38, 0.6);
+  --glass-border: rgba(236, 72, 153, 0.15);
+
+  /* Input & Form */
+  --input-bg: rgba(236, 72, 153, 0.05);
+  --input-border: rgba(236, 72, 153, 0.15);
+
+  /* Effects */
+  --shadow-color: rgba(236, 72, 153, 0.3);
+  --focus-ring: rgba(236, 72, 153, 0.2);
+  --glow-primary: 0 0 20px rgba(236, 72, 153, 0.4), 0 0 40px rgba(244, 114, 182, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(236, 72, 153, 0.15);
+  --tag-border: rgba(236, 72, 153, 0.3);
+  --tag-text: #F9A8D4;
+
+  /* Alert */
+  --alert-bg: rgba(236, 72, 153, 0.1);
+  --alert-border: rgba(236, 72, 153, 0.3);
+  --alert-text: #F9A8D4;
+}
+
+/* ============================================
+   THEME 6: 赛博霓虹 Cyber Neon
+   科技未来感，适合游戏科技主题
+   ============================================ */
+[data-theme="cyber"] {
+  /* Primary Gradient */
+  --primary-start: #22D3EE;  /* Cyan 400 */
+  --primary-end: #A855F7;    /* Purple 500 */
+  --primary-glow: #E879F9;   /* Fuchsia 400 */
+
+  /* Accent Colors */
+  --accent-color: #F0ABFC;   /* Fuchsia 300 */
+  --accent-secondary: #67E8F9; /* Cyan 300 */
+
+  /* Background Colors */
+  --bg-primary: #0A0514;
+  --bg-secondary: #180B2E;
+  --bg-tertiary: #2D1B4E;
+
+  /* Text Colors */
+  --text-primary: #FAF5FF;
+  --text-secondary: #D8B4FE;
+  --text-muted: #A78BFA;
+
+  /* Border & Glass */
+  --border: rgba(168, 85, 247, 0.2);
+  --glass-bg: rgba(24, 11, 46, 0.7);
+  --glass-border: rgba(168, 85, 247, 0.2);
+
+  /* Input & Form */
+  --input-bg: rgba(168, 85, 247, 0.08);
+  --input-border: rgba(168, 85, 247, 0.2);
+
+  /* Effects */
+  --shadow-color: rgba(168, 85, 247, 0.4);
+  --focus-ring: rgba(168, 85, 247, 0.3);
+  --glow-primary: 0 0 20px rgba(168, 85, 247, 0.5), 0 0 40px rgba(34, 211, 238, 0.3);
+
+  /* Tags */
+  --tag-bg: rgba(168, 85, 247, 0.2);
+  --tag-border: rgba(168, 85, 247, 0.4);
+  --tag-text: #E879F9;
+
+  /* Alert */
+  --alert-bg: rgba(168, 85, 247, 0.15);
+  --alert-border: rgba(168, 85, 247, 0.4);
+  --alert-text: #E879F9;
+}
+
+/* ============================================
+   THEME 7: 极简灰 Minimal Gray
+   简约专业，适合企业正式场景
+   ============================================ */
+[data-theme="minimal"] {
+  /* Primary Gradient */
+  --primary-start: #64748B;  /* Slate 500 */
+  --primary-end: #94A3B8;    /* Slate 400 */
+  --primary-glow: #CBD5E1;   /* Slate 300 */
+
+  /* Accent Colors */
+  --accent-color: #475569;   /* Slate 600 */
+  --accent-secondary: #334155; /* Slate 700 */
+
+  /* Background Colors */
+  --bg-primary: #0F0F12;
+  --bg-secondary: #1A1A1F;
+  --bg-tertiary: #2D2D35;
+
+  /* Text Colors */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  /* Border & Glass */
+  --border: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(26, 26, 31, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.06);
+
+  /* Input & Form */
+  --input-bg: rgba(255, 255, 255, 0.03);
+  --input-border: rgba(255, 255, 255, 0.08);
+
+  /* Effects */
+  --shadow-color: rgba(100, 116, 139, 0.2);
+  --focus-ring: rgba(100, 116, 139, 0.15);
+  --glow-primary: 0 0 20px rgba(100, 116, 139, 0.2), 0 0 40px rgba(148, 163, 184, 0.1);
+
+  /* Tags */
+  --tag-bg: rgba(100, 116, 139, 0.15);
+  --tag-border: rgba(100, 116, 139, 0.25);
+  --tag-text: #CBD5E1;
+
+  /* Alert */
+  --alert-bg: rgba(100, 116, 139, 0.1);
+  --alert-border: rgba(100, 116, 139, 0.2);
+  --alert-text: #CBD5E1;
+}
+
+/* ============================================
+   THEME 8: 皇家金 Royal Gold
+   奢华高端，适合高级会员/尊贵场景
+   ============================================ */
+[data-theme="royal"] {
+  /* Primary Gradient */
+  --primary-start: #F59E0B;  /* Amber 500 */
+  --primary-end: #EAB308;    /* Yellow 500 */
+  --primary-glow: #FBBF24;   /* Amber 400 */
+
+  /* Accent Colors */
+  --accent-color: #D97706;   /* Amber 600 */
+  --accent-secondary: #CA8A04; /* Yellow 600 */
+
+  /* Background Colors */
+  --bg-primary: #1A1205;
+  --bg-secondary: #2D1F0A;
+  --bg-tertiary: #402D10;
+
+  /* Text Colors */
+  --text-primary: #FFFBEB;
+  --text-secondary: #FDE68A;
+  --text-muted: #F59E0B;
+
+  /* Border & Glass */
+  --border: rgba(245, 158, 11, 0.15);
+  --glass-bg: rgba(45, 31, 10, 0.6);
+  --glass-border: rgba(245, 158, 11, 0.15);
+
+  /* Input & Form */
+  --input-bg: rgba(245, 158, 11, 0.05);
+  --input-border: rgba(245, 158, 11, 0.15);
+
+  /* Effects */
+  --shadow-color: rgba(245, 158, 11, 0.3);
+  --focus-ring: rgba(245, 158, 11, 0.2);
+  --glow-primary: 0 0 20px rgba(245, 158, 11, 0.4), 0 0 40px rgba(234, 179, 8, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(245, 158, 11, 0.15);
+  --tag-border: rgba(245, 158, 11, 0.3);
+  --tag-text: #FBBF24;
+
+  /* Alert */
+  --alert-bg: rgba(245, 158, 11, 0.1);
+  --alert-border: rgba(245, 158, 11, 0.3);
+  --alert-text: #FBBF24;
+}
+
+/* ============================================
+   Light Mode Overrides (可选)
+   部分主题支持浅色模式
+   ============================================ */
+[data-theme="nebula"][data-mode="light"],
+[data-theme="ocean"][data-mode="light"],
+[data-theme="forest"][data-mode="light"],
+[data-theme="minimal"][data-mode="light"],
+[data-theme="royal"][data-mode="light"] {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F3FF;
+  --bg-tertiary: #E0E7FF;
+  --text-primary: #1E1B4B;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --border: rgba(99, 102, 241, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(99, 102, 241, 0.1);
+  --input-bg: rgba(255, 255, 255, 0.8);
+  --input-border: rgba(99, 102, 241, 0.2);
+}

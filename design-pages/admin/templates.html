@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模板管理 - MultiForms 管理后台</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../theme-system.css">
+
+  <!-- Page Styles -->
+  <style>
+    /* Admin Layout */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    .admin-sidebar {
+      width: 260px;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+
+    .admin-sidebar-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .admin-sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .admin-sidebar-logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .admin-sidebar-logo-icon svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+
+    .admin-sidebar-logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .admin-sidebar-logo-badge {
+      margin-left: auto;
+      padding: 4px 8px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--primary-glow);
+    }
+
+    .admin-nav {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+    }
+
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s var(--ease-out);
+      margin-bottom: 4px;
+    }
+
+    .admin-nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .admin-nav-item.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15));
+      color: var(--primary-glow);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .admin-nav-item svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .admin-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .admin-header-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .admin-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .admin-content {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    /* Page Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Search & Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+      width: 280px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary-start);
+      box-shadow: 0 0 0 3px var(--focus-ring);
+    }
+
+    .search-box-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .filter-select {
+      padding: 10px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary-start);
+    }
+
+    .filter-select option {
+      background: var(--bg-secondary);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      color: white;
+      box-shadow: 0 4px 15px var(--shadow-color);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px var(--shadow-color);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--primary-start);
+      color: var(--primary-glow);
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 13px;
+      border-radius: 10px;
+    }
+
+    /* Category Tabs */
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .category-tab {
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+
+    .category-tab:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .category-tab.active {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-color: transparent;
+      color: white;
+    }
+
+    /* Templates Grid */
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .template-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .template-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary-start);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .template-preview {
+      height: 160px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.05));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .template-preview::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      opacity: 0.1;
+    }
+
+    .template-preview-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--bg-tertiary);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-glow);
+      position: relative;
+      z-index: 1;
+    }
+
+    .template-preview-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .template-featured {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 4px 10px;
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #F59E0B;
+      z-index: 2;
+    }
+
+    .template-theme-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      z-index: 2;
+    }
+
+    .template-info {
+      padding: 20px;
+    }
+
+    .template-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .template-description {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.5;
+    }
+
+    .template-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .template-usage {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .template-usage span {
+      color: var(--primary-glow);
+      font-weight: 600;
+    }
+
+    .template-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-dot.active {
+      background: #10B981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    .status-dot.inactive {
+      background: #6B7280;
+    }
+
+    .template-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .action-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .action-btn:hover {
+      background: var(--bg-secondary);
+      border-color: var(--primary-start);
+      color: var(--primary-glow);
+    }
+
+    .action-btn.danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: #EF4444;
+      color: #EF4444;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--bg-tertiary);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .modal-close:hover {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    /* Form Groups */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary-start);
+      box-shadow: 0 0 0 3px var(--focus-ring);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-select option {
+      background: var(--bg-secondary);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Theme Selector */
+    .theme-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .theme-option {
+      cursor: pointer;
+      border-radius: 16px;
+      padding: 12px;
+      border: 2px solid var(--border);
+      background: var(--bg-tertiary);
+      transition: all 0.2s var(--ease-out);
+      text-align: center;
+    }
+
+    .theme-option:hover {
+      border-color: var(--primary-start);
+    }
+
+    .theme-option.selected {
+      border-color: var(--primary-start);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .theme-option-color {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+
+    .theme-option-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    /* Toggle Switch */
+    .toggle-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle {
+      width: 48px;
+      height: 26px;
+      background: var(--bg-tertiary);
+      border-radius: 13px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .toggle.active {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+    }
+
+    .toggle.active::after {
+      left: 25px;
+    }
+
+    .toggle-label {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: var(--bg-tertiary);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+    }
+
+    .empty-state-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .empty-state-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .theme-selector {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .admin-sidebar {
+        display: none;
+      }
+      .admin-content {
+        padding: 20px;
+      }
+      .templates-grid {
+        grid-template-columns: 1fr;
+      }
+      .stats-bar {
+        grid-template-columns: 1fr;
+      }
+      .search-box {
+        width: 100%;
+      }
+      .filter-bar {
+        width: 100%;
+      }
+      .modal {
+        max-height: 95vh;
+        border-radius: 20px;
+      }
+      .modal-header,
+      .modal-body,
+      .modal-footer {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="admin-sidebar-logo">
+          <div class="admin-sidebar-logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="admin-sidebar-logo-text">MultiForms</div>
+          <div class="admin-sidebar-logo-badge">ADMIN</div>
+        </div>
+      </div>
+
+      <nav class="admin-nav">
+        <a href="dashboard.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          仪表盘
+        </a>
+        <a href="users.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          用户管理
+        </a>
+        <a href="forms.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="9"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="13" y2="17"/>
+          </svg>
+          表单管理
+        </a>
+        <a href="review.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14,2 14,8 20,8"/>
+          </svg>
+          内容审核
+        </a>
+        <a href="templates.html" class="admin-nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          模板管理
+        </a>
+        <a href="settings.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243M9.879 9.879L5.636 5.636m12.728 12.728l-4.243-4.243m0 0L9.88 14.12"/>
+          </svg>
+          系统设置
+        </a>
+        <a href="logs.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10,9 9,9 8,9"/>
+          </svg>
+          系统日志
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <h1 class="admin-header-title">模板管理</h1>
+        <div class="admin-header-actions">
+          <button class="btn btn-secondary" id="themeToggleBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            切换主题
+          </button>
+          <button class="btn btn-primary" id="addTemplateBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            添加模板
+          </button>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+          <div class="stat-card">
+            <div class="stat-value">24</div>
+            <div class="stat-label">总模板数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">8</div>
+            <div class="stat-label">分类数量</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">12,580</div>
+            <div class="stat-label">总使用次数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">5</div>
+            <div class="stat-label">精选模板</div>
+          </div>
+        </div>
+
+        <!-- Page Header with Search & Filter -->
+        <div class="page-header">
+          <div class="filter-bar">
+            <div class="search-box">
+              <svg class="search-box-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input type="text" placeholder="搜索模板..." id="searchInput">
+            </div>
+            <select class="filter-select" id="statusFilter">
+              <option value="all">全部状态</option>
+              <option value="active">已启用</option>
+              <option value="inactive">已禁用</option>
+              <option value="featured">精选</option>
+            </select>
+            <select class="filter-select" id="typeFilter">
+              <option value="all">全部类型</option>
+              <option value="vote">投票</option>
+              <option value="survey">问卷</option>
+              <option value="rating">评分</option>
+              <option value="feedback">反馈</option>
+              <option value="collection">信息收集</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="category-tabs">
+          <button class="category-tab active" data-category="all">全部</button>
+          <button class="category-tab" data-category="vote">投票</button>
+          <button class="category-tab" data-category="survey">问卷</button>
+          <button class="category-tab" data-category="rating">评分</button>
+          <button class="category-tab" data-category="feedback">反馈</button>
+          <button class="category-tab" data-category="collection">信息收集</button>
+        </div>
+
+        <!-- Templates Grid -->
+        <div class="templates-grid" id="templatesGrid">
+          <!-- Templates will be rendered here -->
+        </div>
+
+        <!-- Empty State (hidden by default) -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <div class="empty-state-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+          </div>
+          <div class="empty-state-title">暂无模板</div>
+          <div class="empty-state-desc">没有找到符合条件的模板，请尝试调整筛选条件</div>
+          <button class="btn btn-primary" id="addFirstTemplateBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            创建第一个模板
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Template Modal -->
+  <div class="modal-overlay" id="templateModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">添加模板</h2>
+        <button class="modal-close" id="closeModalBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="templateForm">
+          <input type="hidden" id="templateId">
+
+          <div class="form-group">
+            <label class="form-label">模板名称 *</label>
+            <input type="text" class="form-input" id="templateName" placeholder="例如：活动投票表单" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">模板描述</label>
+            <textarea class="form-textarea" id="templateDesc" placeholder="描述此模板的用途和特点..."></textarea>
+            <p class="form-hint">描述将显示在模板列表中，帮助用户了解模板用途</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">模板类型 *</label>
+            <select class="form-select" id="templateType" required>
+              <option value="">请选择类型</option>
+              <option value="vote">投票</option>
+              <option value="survey">问卷调研</option>
+              <option value="rating">评分</option>
+              <option value="feedback">反馈</option>
+              <option value="collection">信息收集</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">选择主题 *</label>
+            <div class="theme-selector" id="themeSelector">
+              <div class="theme-option selected" data-theme="nebula">
+                <div class="theme-option-color" style="background: linear-gradient(135deg, #6366F1, #8B5CF6);"></div>
+                <div class="theme-option-name">星云紫</div>
+              </div>
+              <div class="theme-option" data-theme="ocean">
+                <div class="theme-option-color" style="background: linear-gradient(135deg, #0EA5E9, #06B6D4);"></div>
+                <div class="theme-option-name">海洋蓝</div>
+              </div>
+              <div class="theme-option" data-theme="sunset">
+                <div class="theme-option-color" style="background: linear-gradient(135deg, #F97316, #EC4899);"></div>
+                <div class="theme-option-name">日落橙</div>
+              </div>
+              <div class="theme-option" data-theme="forest">
+                <div class="theme-option-color" style="background: linear-gradient(135deg, #10B981, #06B6D4);"></div>
+                <div class="theme-option-name">森林绿</div>
+              </div>
+              <div class="theme-option" data-theme="sakura">
+                <div class="theme-option-color" style="background: linear-gradient(135deg, #EC4899, #F472B6);"></div>
+                <div class="theme-option-name">樱花粉</div>
+              </div>
+              <div class="theme-option" data-theme="cyber">
+                <div class="theme-option-color" style="background: linear-gradient(135deg, #22D3EE, #A855F7);"></div>
+                <div class="theme-option-name">赛博霓虹</div>
+              </div>
+              <div class="theme-option" data-theme="minimal">
+                <div class="theme-option-color" style="background: linear-gradient(135deg, #64748B, #94A3B8);"></div>
+                <div class="theme-option-name">极简灰</div>
+              </div>
+              <div class="theme-option" data-theme="royal">
+                <div class="theme-option-color" style="background: linear-gradient(135deg, #F59E0B, #EAB308);"></div>
+                <div class="theme-option-name">皇家金</div>
+              </div>
+            </div>
+            <p class="form-hint">选择此模板默认使用的主题样式</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">表单内容</label>
+            <textarea class="form-textarea" id="templateContent" rows="4" placeholder='例如：[{"type":"text","question":"您的姓名","required":true}]'></textarea>
+            <p class="form-hint">JSON格式的表单结构定义</p>
+          </div>
+
+          <div class="form-group">
+            <div class="toggle-wrapper">
+              <div class="toggle" id="featuredToggle"></div>
+              <span class="toggle-label">设为精选模板</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="toggle-wrapper">
+              <div class="toggle active" id="enabledToggle"></div>
+              <span class="toggle-label">立即启用</span>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelBtn">取消</button>
+        <button class="btn btn-primary" id="saveBtn">保存模板</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 class="modal-title">确认删除</h2>
+        <button class="modal-close" id="closeDeleteModalBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); line-height: 1.6;">
+          确定要删除模板 <strong id="deleteTemplateName" style="color: var(--text-primary);"></strong> 吗？
+        </p>
+        <p class="form-hint" style="margin-top: 12px;">
+          此操作不可恢复，模板的所有配置将被永久删除。
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelDeleteBtn">取消</button>
+        <button class="btn btn-primary" style="background: linear-gradient(135deg, #EF4444, #DC2626);" id="confirmDeleteBtn">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme definitions
+    const themes = {
+      nebula: { name: '星云紫', gradient: 'linear-gradient(135deg, #6366F1, #8B5CF6)' },
+      ocean: { name: '海洋蓝', gradient: 'linear-gradient(135deg, #0EA5E9, #06B6D4)' },
+      sunset: { name: '日落橙', gradient: 'linear-gradient(135deg, #F97316, #EC4899)' },
+      forest: { name: '森林绿', gradient: 'linear-gradient(135deg, #10B981, #06B6D4)' },
+      sakura: { name: '樱花粉', gradient: 'linear-gradient(135deg, #EC4899, #F472B6)' },
+      cyber: { name: '赛博霓虹', gradient: 'linear-gradient(135deg, #22D3EE, #A855F7)' },
+      minimal: { name: '极简灰', gradient: 'linear-gradient(135deg, #64748B, #94A3B8)' },
+      royal: { name: '皇家金', gradient: 'linear-gradient(135deg, #F59E0B, #EAB308)' }
+    };
+
+    // Sample templates data
+    let templates = [
+      { id: 1, name: '活动投票', desc: '适用于各类活动的投票评选，支持单选、多选和排名投票。', type: 'vote', theme: 'nebula', featured: true, enabled: true, usage: 1280 },
+      { id: 2, name: '满意度调研', desc: '客户满意度问卷调查模板，包含多维度评分和开放式问题。', type: 'survey', theme: 'ocean', featured: false, enabled: true, usage: 3560 },
+      { id: 3, name: '员工评分', desc: '员工绩效考核评分表，支持星级评分和分数区间设置。', type: 'rating', theme: 'sakura', featured: true, enabled: true, usage: 890 },
+      { id: 4, name: '活动报名', desc: '活动报名信息收集表，包含基本信息和报名选项。', type: 'collection', theme: 'forest', featured: false, enabled: true, usage: 2140 },
+      { id: 5, name: '客户反馈', desc: '产品和服务反馈收集表，支持评分和文字反馈。', type: 'feedback', theme: 'sunset', featured: false, enabled: true, usage: 1650 },
+      { id: 6, name: '联系我们', desc: '网站联系我们表单，收集访客咨询和合作信息。', type: 'collection', theme: 'minimal', featured: false, enabled: false, usage: 980 },
+      { id: 7, name: '线上调研', desc: '专业的市场调研问卷模板，支持逻辑跳转和题型组合。', type: 'survey', theme: 'cyber', featured: false, enabled: true, usage: 520 },
+      { id: 8, name: '人员登记', desc: '人员信息登记表，适用于活动签到、人员档案等场景。', type: 'collection', theme: 'royal', featured: false, enabled: true, usage: 1120 }
+    ];
+
+    let currentFilter = { category: 'all', status: 'all', type: 'all', search: '' };
+    let editingTemplateId = null;
+    let deletingTemplateId = null;
+
+    // DOM Elements
+    const templatesGrid = document.getElementById('templatesGrid');
+    const emptyState = document.getElementById('emptyState');
+    const templateModal = document.getElementById('templateModal');
+    const deleteModal = document.getElementById('deleteModal');
+    const templateForm = document.getElementById('templateForm');
+
+    // Type icons
+    const typeIcons = {
+      vote: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+      survey: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/>',
+      rating: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+      feedback: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+      collection: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'
+    };
+
+    // Type names
+    const typeNames = {
+      vote: '投票',
+      survey: '问卷',
+      rating: '评分',
+      feedback: '反馈',
+      collection: '信息收集'
+    };
+
+    // Render templates
+    function renderTemplates() {
+      let filtered = templates.filter(t => {
+        if (currentFilter.category !== 'all' && t.type !== currentFilter.category) return false;
+        if (currentFilter.status === 'active' && !t.enabled) return false;
+        if (currentFilter.status === 'inactive' && t.enabled) return false;
+        if (currentFilter.status === 'featured' && !t.featured) return false;
+        if (currentFilter.type !== 'all' && t.type !== currentFilter.type) return false;
+        if (currentFilter.search && !t.name.toLowerCase().includes(currentFilter.search.toLowerCase())) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        templatesGrid.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      templatesGrid.style.display = 'grid';
+      emptyState.style.display = 'none';
+
+      templatesGrid.innerHTML = filtered.map(t => `
+        <div class="template-card" data-id="${t.id}">
+          <div class="template-preview" style="background: ${themes[t.theme]?.gradient || themes.nebula.gradient};">
+            ${t.featured ? '<span class="template-featured">精选</span>' : ''}
+            <span class="template-theme-badge">${themes[t.theme]?.name || '星云紫'}</span>
+            <div class="template-preview-icon" style="background: rgba(255,255,255,0.15); color: white;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                ${typeIcons[t.type] || typeIcons.survey}
+              </svg>
+            </div>
+          </div>
+          <div class="template-info">
+            <h3 class="template-title">${t.name}</h3>
+            <p class="template-description">${t.desc}</p>
+            <div class="template-meta">
+              <span class="template-usage">使用 <span>${t.usage.toLocaleString()}</span> 次</span>
+              <span class="template-status">
+                <span class="status-dot ${t.enabled ? 'active' : 'inactive'}"></span>
+                ${t.enabled ? '已启用' : '已禁用'}
+              </span>
+            </div>
+            <div class="template-actions">
+              <button class="action-btn edit-btn" data-id="${t.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                编辑
+              </button>
+              <button class="action-btn toggle-btn" data-id="${t.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  ${t.enabled ? '<rect x="6" y="10" width="12" height="8"/><rect x="8" y="6" width="8" height="4"/>' : '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>'}
+                </svg>
+                ${t.enabled ? '禁用' : '启用'}
+              </button>
+              <button class="action-btn danger delete-btn" data-id="${t.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3,6 5,6 21,6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Add event listeners
+      templatesGrid.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => openEditModal(parseInt(btn.dataset.id)));
+      });
+      templatesGrid.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => toggleTemplate(parseInt(btn.dataset.id)));
+      });
+      templatesGrid.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => openDeleteModal(parseInt(btn.dataset.id)));
+      });
+    }
+
+    // Modal functions
+    function openAddModal() {
+      editingTemplateId = null;
+      document.getElementById('modalTitle').textContent = '添加模板';
+      templateForm.reset();
+      document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('selected'));
+      document.querySelector('.theme-option[data-theme="nebula"]').classList.add('selected');
+      document.getElementById('featuredToggle').classList.remove('active');
+      document.getElementById('enabledToggle').classList.add('active');
+      templateModal.classList.add('active');
+    }
+
+    function openEditModal(id) {
+      const template = templates.find(t => t.id === id);
+      if (!template) return;
+
+      editingTemplateId = id;
+      document.getElementById('modalTitle').textContent = '编辑模板';
+      document.getElementById('templateName').value = template.name;
+      document.getElementById('templateDesc').value = template.desc;
+      document.getElementById('templateType').value = template.type;
+
+      document.querySelectorAll('.theme-option').forEach(o => {
+        o.classList.toggle('selected', o.dataset.theme === template.theme);
+      });
+
+      if (template.featured) {
+        document.getElementById('featuredToggle').classList.add('active');
+      } else {
+        document.getElementById('featuredToggle').classList.remove('active');
+      }
+
+      if (template.enabled) {
+        document.getElementById('enabledToggle').classList.add('active');
+      } else {
+        document.getElementById('enabledToggle').classList.remove('active');
+      }
+
+      templateModal.classList.add('active');
+    }
+
+    function closeModal() {
+      templateModal.classList.remove('active');
+      editingTemplateId = null;
+    }
+
+    function saveTemplate() {
+      const name = document.getElementById('templateName').value.trim();
+      const desc = document.getElementById('templateDesc').value.trim();
+      const type = document.getElementById('templateType').value;
+      const theme = document.querySelector('.theme-option.selected')?.dataset.theme || 'nebula';
+      const featured = document.getElementById('featuredToggle').classList.contains('active');
+      const enabled = document.getElementById('enabledToggle').classList.contains('active');
+
+      if (!name || !type) {
+        alert('请填写必填项');
+        return;
+      }
+
+      if (editingTemplateId) {
+        // Update existing
+        const template = templates.find(t => t.id === editingTemplateId);
+        if (template) {
+          template.name = name;
+          template.desc = desc;
+          template.type = type;
+          template.theme = theme;
+          template.featured = featured;
+          template.enabled = enabled;
+        }
+      } else {
+        // Add new
+        const newId = Math.max(...templates.map(t => t.id)) + 1;
+        templates.push({
+          id: newId,
+          name,
+          desc,
+          type,
+          theme,
+          featured,
+          enabled,
+          usage: 0
+        });
+      }
+
+      closeModal();
+      renderTemplates();
+    }
+
+    function openDeleteModal(id) {
+      deletingTemplateId = id;
+      const template = templates.find(t => t.id === id);
+      document.getElementById('deleteTemplateName').textContent = template?.name || '';
+      deleteModal.classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      deleteModal.classList.remove('active');
+      deletingTemplateId = null;
+    }
+
+    function deleteTemplate() {
+      if (deletingTemplateId) {
+        templates = templates.filter(t => t.id !== deletingTemplateId);
+        closeDeleteModal();
+        renderTemplates();
+      }
+    }
+
+    function toggleTemplate(id) {
+      const template = templates.find(t => t.id === id);
+      if (template) {
+        template.enabled = !template.enabled;
+        renderTemplates();
+      }
+    }
+
+    // Theme toggle
+    let currentThemeIndex = 0;
+    const themeKeys = Object.keys(themes);
+
+    function toggleTheme() {
+      currentThemeIndex = (currentThemeIndex + 1) % themeKeys.length;
+      const newTheme = themeKeys[currentThemeIndex];
+      document.body.dataset.theme = newTheme;
+      renderTemplates();
+    }
+
+    // Event listeners
+    document.getElementById('addTemplateBtn').addEventListener('click', openAddModal);
+    document.getElementById('addFirstTemplateBtn').addEventListener('click', openAddModal);
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('saveBtn').addEventListener('click', saveTemplate);
+    document.getElementById('closeDeleteModalBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('confirmDeleteBtn').addEventListener('click', deleteTemplate);
+    document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+
+    // Toggle switches
+    document.getElementById('featuredToggle').addEventListener('click', function() {
+      this.classList.toggle('active');
+    });
+    document.getElementById('enabledToggle').addEventListener('click', function() {
+      this.classList.toggle('active');
+    });
+
+    // Theme selector in modal
+    document.querySelectorAll('.theme-option').forEach(option => {
+      option.addEventListener('click', function() {
+        document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('selected'));
+        this.classList.add('selected');
+      });
+    });
+
+    // Category tabs
+    document.querySelectorAll('.category-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter.category = this.dataset.category;
+        renderTemplates();
+      });
+    });
+
+    // Filters
+    document.getElementById('statusFilter').addEventListener('change', function() {
+      currentFilter.status = this.value;
+      renderTemplates();
+    });
+
+    document.getElementById('typeFilter').addEventListener('change', function() {
+      currentFilter.type = this.value;
+      renderTemplates();
+    });
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+      currentFilter.search = this.value;
+      renderTemplates();
+    });
+
+    // Close modal on overlay click
+    templateModal.addEventListener('click', function(e) {
+      if (e.target === templateModal) closeModal();
+    });
+    deleteModal.addEventListener('click', function(e) {
+      if (e.target === deleteModal) closeDeleteModal();
+    });
+
+    // Initial render
+    renderTemplates();
+  </script>
+</body>
+</html>

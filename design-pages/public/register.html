@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>注册 - MultiForms</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../theme-system.css">
+
+  <!-- Page Styles -->
+  <style>
+    /* Auth Layout */
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-page::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 25%);
+      animation: float 20s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(30px, -30px) rotate(5deg); }
+      66% { transform: translate(-20px, 20px) rotate(-5deg); }
+    }
+
+    /* Auth Card */
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 48px 40px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .auth-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .auth-logo-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .auth-logo-icon svg {
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+
+    .auth-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .auth-subtitle a {
+      color: var(--primary-glow);
+    }
+
+    .auth-subtitle a:hover {
+      text-decoration: underline;
+    }
+
+    /* Form */
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 32px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .input-with-icon {
+      padding-left: 48px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .password-toggle:hover {
+      color: var(--text-primary);
+    }
+
+    /* Password Strength */
+    .password-strength {
+      margin-top: 8px;
+    }
+
+    .password-strength-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .strength-label-text {
+      color: var(--text-secondary);
+    }
+
+    .strength-value {
+      font-weight: 500;
+    }
+
+    .strength-value.weak { color: #EF4444; }
+    .strength-value.medium { color: #F59E0B; }
+    .strength-value.strong { color: #10B981; }
+
+    .strength-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .strength-bar-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 2px;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .strength-bar-fill.weak {
+      width: 33%;
+      background: #EF4444;
+    }
+
+    .strength-bar-fill.medium {
+      width: 66%;
+      background: #F59E0B;
+    }
+
+    .strength-bar-fill.strong {
+      width: 100%;
+      background: #10B981;
+    }
+
+    /* Checkbox */
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .checkbox-input {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--primary-start);
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .checkbox-label a {
+      color: var(--primary-glow);
+    }
+
+    .checkbox-label a:hover {
+      text-decoration: underline;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      margin-top: 8px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Divider */
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .auth-divider span {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Social Login */
+    .social-login {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .social-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .social-btn:hover {
+      transform: scale(1.1);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--primary-start);
+    }
+
+    .social-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Auth Footer */
+    .auth-footer {
+      text-align: center;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .auth-footer p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .auth-footer a {
+      color: var(--primary-glow);
+      font-weight: 500;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Loading State */
+    .btn-submit.loading {
+      position: relative;
+      color: transparent;
+      pointer-events: none;
+    }
+
+    .btn-submit.loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* Error State */
+    .input-error {
+      border-color: #EF4444 !important;
+    }
+
+    .input-error:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+    }
+
+    .error-message {
+      font-size: 13px;
+      color: #EF4444;
+      margin-top: 4px;
+    }
+
+    /* Success Animation */
+    @keyframes checkmark {
+      0% {
+        stroke-dashoffset: 100;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .success-checkmark {
+      display: none;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+    }
+
+    .success-checkmark.show {
+      display: block;
+    }
+
+    .success-checkmark circle {
+      fill: none;
+      stroke: #10B981;
+      stroke-width: 3;
+      stroke-dasharray: 166;
+      stroke-dashoffset: 166;
+      animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+
+    .success-checkmark path {
+      fill: none;
+      stroke: #10B981;
+      stroke-width: 3;
+      stroke-dasharray: 48;
+      stroke-dashoffset: 48;
+      animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.4s forwards;
+    }
+
+    @keyframes stroke {
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 32px 24px;
+      }
+
+      .auth-title {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="auth-logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="9"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="13" y2="17"/>
+          </svg>
+        </div>
+        <h1 class="auth-title">创建账号</h1>
+        <p class="auth-subtitle">开始使用 MultiForms</p>
+      </div>
+
+      <!-- Form -->
+      <form class="auth-form" id="registerForm" action="../landing.html" method="get">
+        <div class="form-group">
+          <label for="name" class="form-label">姓名</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <input
+              type="text"
+              id="name"
+              class="input input-with-icon"
+              placeholder="请输入您的姓名"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email" class="form-label">邮箱</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </span>
+            <input
+              type="email"
+              id="email"
+              class="input input-with-icon"
+              placeholder="请输入邮箱"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">密码</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </span>
+            <input
+              type="password"
+              id="password"
+              class="input input-with-icon"
+              placeholder="请输入密码（至少8位）"
+              minlength="8"
+              required
+            >
+            <button type="button" class="password-toggle" id="togglePassword" title="显示/隐藏密码">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="password-strength">
+            <div class="password-strength-label">
+              <span class="strength-label-text">密码强度</span>
+              <span class="strength-value" id="strengthValue">请输入密码</span>
+            </div>
+            <div class="strength-bar">
+              <div class="strength-bar-fill" id="strengthBar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label">确认密码</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </span>
+            <input
+              type="password"
+              id="confirmPassword"
+              class="input input-with-icon"
+              placeholder="请再次输入密码"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <input
+            type="checkbox"
+            id="terms"
+            class="checkbox-input"
+            required
+          >
+          <label for="terms" class="checkbox-label">
+            我已阅读并同意 <a href="#">服务条款</a> 和 <a href="#">隐私政策</a>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-submit">创建账号</button>
+      </form>
+
+      <!-- Divider -->
+      <div class="auth-divider">
+        <span>或</span>
+      </div>
+
+      <!-- Social Login -->
+      <div class="social-login">
+        <button class="social-btn" title="微信登录">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm-7 4.5c-2.485 0-4.5-1.57-4.5-3.5S4.015 8.5 6.5 8.5 11 10.07 11 12s-2.015 3.5-4.5 3.5zM8.5 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm6.5 10.5c-1.93 0-3.5-1.12-3.5-2.5s1.57-2.5 3.5-2.5 3.5 1.12 3.5 2.5-1.57 2.5-3.5 2.5zM15 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+          </svg>
+        </button>
+        <button class="social-btn" title="Google 登录">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="auth-footer">
+        <p>已有账号？ <a href="login.html">立即登录</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Password strength indicator
+    const passwordInput = document.getElementById('password');
+    const strengthValue = document.getElementById('strengthValue');
+    const strengthBar = document.getElementById('strengthBar');
+    const confirmInput = document.getElementById('confirmPassword');
+    const registerForm = document.getElementById('registerForm');
+
+    passwordInput.addEventListener('input', function() {
+      const password = this.value;
+      let strength = 0;
+
+      if (password.length >= 8) strength++;
+      if (password.length >= 12) strength++;
+      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+      if (/\d/.test(password)) strength++;
+      if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+      if (password.length === 0) {
+        strengthValue.textContent = '请输入密码';
+        strengthValue.className = 'strength-value';
+        strengthBar.className = 'strength-bar-fill';
+        return;
+      }
+
+      if (strength <= 2) {
+        strengthValue.textContent = '弱';
+        strengthValue.className = 'strength-value weak';
+        strengthBar.className = 'strength-bar-fill weak';
+      } else if (strength <= 3) {
+        strengthValue.textContent = '中';
+        strengthValue.className = 'strength-value medium';
+        strengthBar.className = 'strength-bar-fill medium';
+      } else {
+        strengthValue.textContent = '强';
+        strengthValue.className = 'strength-value strong';
+        strengthBar.className = 'strength-bar-fill strong';
+      }
+    });
+
+    // Confirm password validation
+    confirmInput.addEventListener('input', function() {
+      if (this.value !== passwordInput.value) {
+        this.setCustomValidity('密码不匹配');
+      } else {
+        this.setCustomValidity('');
+      }
+    });
+
+    // Password toggle
+    const togglePassword = document.getElementById('togglePassword');
+    togglePassword.addEventListener('click', function() {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+
+      // Update icon
+      if (type === 'text') {
+        this.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        `;
+      } else {
+        this.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        `;
+      }
+    });
+
+    // Form submission
+    registerForm.addEventListener('submit', function(e) {
+      const submitBtn = this.querySelector('.btn-submit');
+      submitBtn.classList.add('loading');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>页面未找到 - MultiForms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../common.css">
+  <style>
+    /* Error Page Styles */
+    .error-page {
+      min-height: 100vh;
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+    }
+
+    /* Background decoration */
+    .error-page::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Error Card */
+    .error-card {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      z-index: 1;
+    }
+
+    /* Error Code */
+    .error-code {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 120px;
+      font-weight: 700;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: var(--space-md);
+      position: relative;
+    }
+
+    .error-code::after {
+      content: '404';
+      position: absolute;
+      inset: 0;
+      font-size: 120px;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: blur(40px);
+      opacity: 0.3;
+      z-index: -1;
+    }
+
+    /* Error Icon */
+    .error-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto var(--space-lg);
+      position: relative;
+    }
+
+    .error-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Error Title */
+    .error-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-md);
+    }
+
+    /* Error Description */
+    .error-description {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: var(--space-xl);
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Action Buttons */
+    .error-actions {
+      display: flex;
+      gap: var(--space-md);
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 500;
+      color: white;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border: none;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-secondary {
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--primary-start);
+      color: var(--primary-glow);
+    }
+
+    /* Footer */
+    .error-footer {
+      margin-top: var(--space-2xl);
+      padding-top: var(--space-lg);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .error-footer a {
+      color: var(--primary-glow);
+      text-decoration: none;
+    }
+
+    .error-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Floating Elements */
+    .floating-shapes {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      opacity: 0.1;
+      animation: float 20s infinite ease-in-out;
+    }
+
+    .shape-1 {
+      width: 300px;
+      height: 300px;
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+
+    .shape-2 {
+      width: 200px;
+      height: 200px;
+      bottom: -50px;
+      right: -50px;
+      animation-delay: -5s;
+    }
+
+    .shape-3 {
+      width: 150px;
+      height: 150px;
+      top: 50%;
+      right: 10%;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      25% {
+        transform: translate(20px, -20px) rotate(5deg);
+      }
+      50% {
+        transform: translate(-10px, 20px) rotate(-5deg);
+      }
+      75% {
+        transform: translate(-20px, -10px) rotate(3deg);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .error-code {
+        font-size: 80px;
+      }
+
+      .error-code::after {
+        font-size: 80px;
+      }
+
+      .error-title {
+        font-size: 22px;
+      }
+
+      .error-actions {
+        flex-direction: column;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="error-page">
+    <!-- Floating Shapes -->
+    <div class="floating-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Error Card -->
+    <div class="error-card">
+      <!-- Error Code -->
+      <div class="error-code">404</div>
+
+      <!-- Error Icon -->
+      <div class="error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#errorGradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="errorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6366F1"/>
+              <stop offset="100%" stop-color="#8B5CF6"/>
+            </linearGradient>
+          </defs>
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+
+      <!-- Error Title -->
+      <h1 class="error-title">页面好像走丢了...</h1>
+
+      <!-- Error Description -->
+      <p class="error-description">
+        抱歉，您访问的页面不存在或已被删除。<br>
+        请检查链接是否正确，或返回首页继续探索。
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="error-actions">
+        <button class="btn-primary" onclick="window.location.href='../landing.html'">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          返回首页
+        </button>
+        <button class="btn-secondary" onclick="history.back()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          返回上一页
+        </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="error-footer">
+        需要帮助？<a href="#">联系客服</a> 或访问 <a href="#">帮助中心</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

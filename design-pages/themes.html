@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiForms - 主题换肤演示</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme-system.css">
+  <style>
+    /* Demo Page Styles */
+    .theme-showcase {
+      min-height: 100vh;
+      padding: 100px 24px 40px;
+    }
+
+    .theme-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .theme-header h1 {
+      font-size: 42px;
+      margin-bottom: 16px;
+    }
+
+    .theme-header p {
+      font-size: 18px;
+      color: var(--text-secondary);
+    }
+
+    /* Theme Selector */
+    .theme-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+
+    .theme-btn {
+      padding: 12px 20px;
+      border-radius: 50px;
+      border: 2px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-start);
+    }
+
+    .theme-btn.active {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-color: transparent;
+      color: white;
+    }
+
+    .theme-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .theme-btn.active .theme-dot {
+      border-color: white;
+    }
+
+    /* Demo Components Grid */
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .demo-section {
+      margin-bottom: 48px;
+    }
+
+    .demo-section-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    /* Demo Card */
+    .demo-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .demo-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary-start);
+      box-shadow: 0 20px 40px var(--shadow-color);
+    }
+
+    /* Demo Form */
+    .demo-form-group {
+      margin-bottom: 16px;
+    }
+
+    .demo-form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .demo-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .demo-input:focus {
+      outline: none;
+      border-color: var(--primary-start);
+      box-shadow: 0 0 0 3px var(--focus-ring);
+    }
+
+    /* Demo Buttons */
+    .demo-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .demo-btn {
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s var(--ease-out);
+      border: none;
+    }
+
+    .demo-btn-primary {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      color: white;
+      box-shadow: 0 4px 15px var(--shadow-color);
+    }
+
+    .demo-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px var(--shadow-color);
+    }
+
+    .demo-btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .demo-btn-secondary:hover {
+      border-color: var(--primary-start);
+      color: var(--primary-glow);
+    }
+
+    /* Demo Tags */
+    .demo-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .demo-tag {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--tag-bg);
+      color: var(--primary-glow);
+      border: 1px solid var(--tag-border);
+    }
+
+    /* Progress Bar */
+    .demo-progress {
+      margin-top: 16px;
+    }
+
+    .demo-progress-bar {
+      height: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .demo-progress-fill {
+      height: 100%;
+      width: 75%;
+      background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+      border-radius: 4px;
+      animation: progressAnimation 2s var(--ease-in-out) infinite;
+    }
+
+    @keyframes progressAnimation {
+      0%, 100% { width: 75%; }
+      50% { width: 85%; }
+    }
+
+    /* Toggle Switch */
+    .demo-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .demo-toggle-switch {
+      width: 48px;
+      height: 26px;
+      background: var(--bg-tertiary);
+      border-radius: 13px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .demo-toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .demo-toggle-switch.active {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+    }
+
+    .demo-toggle-switch.active::after {
+      left: 25px;
+    }
+
+    /* Stats Card */
+    .demo-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .demo-stat {
+      text-align: center;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+    }
+
+    .demo-stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .demo-stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Color Palette Display */
+    .color-palette {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .color-swatch {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    /* Info Alert */
+    .demo-alert {
+      padding: 16px;
+      background: var(--alert-bg);
+      border: 1px solid var(--alert-border);
+      border-radius: var(--radius-md);
+      display: flex;
+      gap: 12px;
+      align-items: start;
+      margin-top: 16px;
+    }
+
+    .demo-alert-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      background: var(--primary-start);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+    }
+
+    .demo-alert-content h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .demo-alert-content p {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Navbar Demo */
+    .demo-navbar {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .demo-nav-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .demo-nav-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .demo-nav-link {
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+
+    .demo-nav-link:hover {
+      color: var(--primary-glow);
+    }
+
+    /* Checkbox Demo */
+    .demo-checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .demo-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .demo-checkbox-input {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      background: var(--input-bg);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .demo-checkbox-input:checked {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-color: var(--primary-start);
+    }
+
+    .demo-checkbox-input:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 12px;
+    }
+
+    .demo-checkbox-label {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    /* Radio Demo */
+    .demo-radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .demo-radio {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .demo-radio-input {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      background: var(--input-bg);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .demo-radio-input.checked {
+      border-color: var(--primary-start);
+    }
+
+    .demo-radio-input.checked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-radius: 50%;
+    }
+
+    .demo-radio-label {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    /* Slider Demo */
+    .demo-slider {
+      margin-top: 16px;
+    }
+
+    .demo-slider-track {
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      position: relative;
+    }
+
+    .demo-slider-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 60%;
+      background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+      border-radius: 3px;
+    }
+
+    .demo-slider-thumb {
+      position: absolute;
+      left: 60%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+
+    /* Theme Info Panel */
+    .theme-info {
+      text-align: center;
+      padding: 24px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 32px;
+    }
+
+    .theme-info h3 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .theme-info p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+      .theme-header h1 {
+        font-size: 28px;
+      }
+      .demo-grid {
+        grid-template-columns: 1fr;
+      }
+      .theme-selector {
+        gap: 8px;
+      }
+      .theme-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body data-theme="nebula">
+  <!-- Floating Navbar -->
+  <nav class="demo-navbar">
+    <div class="demo-nav-logo">MultiForms</div>
+    <div class="demo-nav-links">
+      <a href="#" class="demo-nav-link">首页</a>
+      <a href="#" class="demo-nav-link">模板</a>
+      <a href="#" class="demo-nav-link">定价</a>
+      <a href="#" class="demo-nav-link">关于</a>
+    </div>
+    <button class="demo-btn demo-btn-primary">开始使用</button>
+  </nav>
+
+  <div class="theme-showcase">
+    <!-- Header -->
+    <div class="theme-header">
+      <h1 class="gradient-text">主题换肤系统</h1>
+      <p>选择下方主题，预览不同风格的表单界面</p>
+    </div>
+
+    <!-- Theme Selector -->
+    <div class="theme-selector">
+      <button class="theme-btn active" data-theme="nebula">
+        <span class="theme-dot" style="background: linear-gradient(135deg, #6366F1, #8B5CF6);"></span>
+        星云紫
+      </button>
+      <button class="theme-btn" data-theme="ocean">
+        <span class="theme-dot" style="background: linear-gradient(135deg, #0EA5E9, #06B6D4);"></span>
+        海洋蓝
+      </button>
+      <button class="theme-btn" data-theme="sunset">
+        <span class="theme-dot" style="background: linear-gradient(135deg, #F97316, #EC4899);"></span>
+        日落橙
+      </button>
+      <button class="theme-btn" data-theme="forest">
+        <span class="theme-dot" style="background: linear-gradient(135deg, #10B981, #06B6D4);"></span>
+        森林绿
+      </button>
+      <button class="theme-btn" data-theme="sakura">
+        <span class="theme-dot" style="background: linear-gradient(135deg, #EC4899, #F472B6);"></span>
+        樱花粉
+      </button>
+      <button class="theme-btn" data-theme="cyber">
+        <span class="theme-dot" style="background: linear-gradient(135deg, #22D3EE, #A855F7);"></span>
+        赛博霓虹
+      </button>
+      <button class="theme-btn" data-theme="minimal">
+        <span class="theme-dot" style="background: linear-gradient(135deg, #64748B, #94A3B8);"></span>
+        极简灰
+      </button>
+      <button class="theme-btn" data-theme="royal">
+        <span class="theme-dot" style="background: linear-gradient(135deg, #F59E0B, #EAB308);"></span>
+        皇家金
+      </button>
+    </div>
+
+    <!-- Theme Info -->
+    <div class="theme-info">
+      <h3 id="themeName">星云紫 Nebula Purple</h3>
+      <p id="themeDesc">神秘优雅的紫色调，营造专业现代的视觉体验</p>
+    </div>
+
+    <!-- Demo: Form Elements -->
+    <div class="demo-section">
+      <div class="demo-section-title">表单元素</div>
+      <div class="demo-grid">
+        <!-- Input Fields -->
+        <div class="demo-card">
+          <h4 style="margin-bottom: 16px;">输入框</h4>
+          <div class="demo-form-group">
+            <label>用户名</label>
+            <input type="text" class="demo-input" placeholder="请输入用户名">
+          </div>
+          <div class="demo-form-group">
+            <label>邮箱地址</label>
+            <input type="email" class="demo-input" placeholder="example@email.com">
+          </div>
+          <div class="demo-form-group">
+            <label>个人简介</label>
+            <textarea class="demo-input" rows="3" placeholder="介绍一下你自己..."></textarea>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="demo-card">
+          <h4 style="margin-bottom: 16px;">按钮</h4>
+          <div class="demo-buttons">
+            <button class="demo-btn demo-btn-primary">主要按钮</button>
+            <button class="demo-btn demo-btn-secondary">次要按钮</button>
+          </div>
+          <div class="demo-buttons">
+            <button class="demo-btn demo-btn-primary" style="opacity: 0.7;">禁用状态</button>
+            <button class="demo-btn demo-btn-secondary" style="opacity: 0.5;">只读</button>
+          </div>
+          <div class="demo-tags">
+            <span class="demo-tag">标签一</span>
+            <span class="demo-tag">标签二</span>
+            <span class="demo-tag">标签三</span>
+          </div>
+        </div>
+
+        <!-- Checkbox & Radio -->
+        <div class="demo-card">
+          <h4 style="margin-bottom: 16px;">选择控件</h4>
+          <div class="demo-checkbox-group">
+            <label class="demo-checkbox">
+              <input type="checkbox" class="demo-checkbox-input" checked>
+              <span class="demo-checkbox-label">记住我的选择</span>
+            </label>
+            <label class="demo-checkbox">
+              <input type="checkbox" class="demo-checkbox-input">
+              <span class="demo-checkbox-label">订阅邮件通知</span>
+            </label>
+            <label class="demo-checkbox">
+              <input type="checkbox" class="demo-checkbox-input">
+              <span class="demo-checkbox-label">同意用户协议</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Radio Buttons -->
+        <div class="demo-card">
+          <h4 style="margin-bottom: 16px;">单选按钮</h4>
+          <div class="demo-radio-group">
+            <label class="demo-radio">
+              <div class="demo-radio-input checked"></div>
+              <span class="demo-radio-label">选项 A - 推荐选项</span>
+            </label>
+            <label class="demo-radio">
+              <div class="demo-radio-input"></div>
+              <span class="demo-radio-label">选项 B</span>
+            </label>
+            <label class="demo-radio">
+              <div class="demo-radio-input"></div>
+              <span class="demo-radio-label">选项 C</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Toggle & Slider -->
+        <div class="demo-card">
+          <h4 style="margin-bottom: 16px;">开关与滑块</h4>
+          <div class="demo-toggle">
+            <div class="demo-toggle-switch active"></div>
+            <span style="font-size: 14px;">开启通知推送</span>
+          </div>
+          <div class="demo-toggle">
+            <div class="demo-toggle-switch"></div>
+            <span style="font-size: 14px;">自动保存草稿</span>
+          </div>
+          <div class="demo-slider">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 14px;">满意度评分</span>
+              <span style="font-size: 14px; color: var(--primary-glow);">6/10</span>
+            </div>
+            <div class="demo-slider-track">
+              <div class="demo-slider-fill"></div>
+              <div class="demo-slider-thumb"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="demo-card">
+          <h4 style="margin-bottom: 16px;">数据统计</h4>
+          <div class="demo-stats">
+            <div class="demo-stat">
+              <div class="demo-stat-value">1,234</div>
+              <div class="demo-stat-label">总访问量</div>
+            </div>
+            <div class="demo-stat">
+              <div class="demo-stat-value">89%</div>
+              <div class="demo-stat-label">完成率</div>
+            </div>
+            <div class="demo-stat">
+              <div class="demo-stat-value">567</div>
+              <div class="demo-stat-label">今日提交</div>
+            </div>
+            <div class="demo-stat">
+              <div class="demo-stat-value">4.8</div>
+              <div class="demo-stat-label">平均评分</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo: Alert & Progress -->
+    <div class="demo-section">
+      <div class="demo-section-title">提示与进度</div>
+      <div class="demo-grid">
+        <div class="demo-card">
+          <h4 style="margin-bottom: 16px;">提示信息</h4>
+          <div class="demo-alert">
+            <div class="demo-alert-icon">i</div>
+            <div class="demo-alert-content">
+              <h4>提示标题</h4>
+              <p>这是一条提示信息，用于向用户展示重要的注意事项或操作引导。</p>
+            </div>
+          </div>
+          <div class="demo-progress">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 14px;">表单完成进度</span>
+              <span style="font-size: 14px;">75%</span>
+            </div>
+            <div class="demo-progress-bar">
+              <div class="demo-progress-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-card">
+          <h4 style="margin-bottom: 16px;">色彩色板</h4>
+          <div class="color-palette">
+            <div class="color-swatch" style="background: var(--primary-start);">Primary</div>
+            <div class="color-swatch" style="background: var(--primary-end);">Accent</div>
+            <div class="color-swatch" style="background: var(--accent-color);">Accent 2</div>
+            <div class="color-swatch" style="background: var(--bg-secondary); border: 1px solid var(--border);">Surface</div>
+            <div class="color-swatch" style="background: var(--text-primary); border: 1px solid var(--border);">Text</div>
+          </div>
+          <p style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
+            当前主题使用精心调配的渐变色板，确保视觉和谐统一
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme Data
+    const themes = {
+      nebula: { name: '星云紫 Nebula Purple', desc: '神秘优雅的紫色调，营造专业现代的视觉体验' },
+      ocean: { name: '海洋蓝 Ocean Blue', desc: '清新自然的海洋蓝色，带来宁静舒适的视觉感受' },
+      sunset: { name: '日落橙 Sunset Orange', desc: '温暖活力的橙红色，传递热情积极的产品气质' },
+      forest: { name: '森林绿 Forest Green', desc: '自然清新的绿色调，营造健康环保的使用氛围' },
+      sakura: { name: '樱花粉 Sakura Pink', desc: '浪漫柔和的粉色调，创造温馨友好的用户体验' },
+      cyber: { name: '赛博霓虹 Cyber Neon', desc: '未来科技感的霓虹色，展现前卫创新的产品形象' },
+      minimal: { name: '极简灰 Minimal Gray', desc: '简约专业的灰色调，突出内容本身的设计理念' },
+      royal: { name: '皇家金 Royal Gold', desc: '奢华质感的金色调，彰显高端尊贵的品牌定位' }
+    };
+
+    // Theme Switching
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const theme = btn.dataset.theme;
+
+        // Update active state
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update body theme
+        document.body.dataset.theme = theme;
+
+        // Update info
+        document.getElementById('themeName').textContent = themes[theme].name;
+        document.getElementById('themeDesc').textContent = themes[theme].desc;
+
+        // Update active states for interactive demos
+        document.querySelectorAll('.demo-toggle-switch').forEach((toggle, i) => {
+          toggle.classList.toggle('active', i === 0);
+        });
+      });
+    });
+
+    // Interactive demos
+    document.querySelectorAll('.demo-toggle-switch').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        toggle.classList.toggle('active');
+      });
+    });
+
+    document.querySelectorAll('.demo-checkbox-input').forEach(checkbox => {
+      checkbox.addEventListener('click', (e) => {
+        e.target.checked = !e.target.checked;
+        if (e.target.checked) {
+          e.target.style.background = `linear-gradient(135deg, var(--primary-start), var(--primary-end))`;
+          e.target.style.borderColor = `var(--primary-start)`;
+        } else {
+          e.target.style.background = `var(--input-bg)`;
+          e.target.style.borderColor = `var(--border)`;
+        }
+      });
+    });
+
+    document.querySelectorAll('.demo-radio-input').forEach(radio => {
+      radio.addEventListener('click', () => {
+        document.querySelectorAll('.demo-radio-input').forEach(r => r.classList.remove('checked'));
+        radio.classList.add('checked');
+      });
+    });
+
+    // Slider drag
+    document.querySelectorAll('.demo-slider-thumb').forEach(thumb => {
+      let isDragging = false;
+      thumb.addEventListener('mousedown', () => isDragging = true);
+      document.addEventListener('mouseup', () => isDragging = false);
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const track = thumb.parentElement;
+        const rect = track.getBoundingClientRect();
+        const percent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+        track.querySelector('.demo-slider-fill').style.width = percent + '%';
+        thumb.style.left = percent + '%';
+      });
+    });
+  </script>
+</body>
+</html>

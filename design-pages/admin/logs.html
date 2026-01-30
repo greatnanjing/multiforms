@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>系统日志 - MultiForms 管理后台</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../common.css">
+
+  <!-- Page Styles -->
+  <style>
+    /* Admin Layout */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    .admin-sidebar {
+      width: 260px;
+      background: rgba(15, 15, 35, 0.95);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+
+    .admin-sidebar-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .admin-sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .admin-sidebar-logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .admin-sidebar-logo-icon svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+
+    .admin-sidebar-logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .admin-sidebar-logo-badge {
+      margin-left: auto;
+      padding: 4px 8px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #A78BFA;
+    }
+
+    .admin-nav {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+    }
+
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s var(--ease-out);
+      margin-bottom: 4px;
+    }
+
+    .admin-nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .admin-nav-item.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15));
+      color: #A78BFA;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .admin-nav-item svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .admin-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      background: rgba(15, 15, 35, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .admin-header-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .admin-content {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    /* Page Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Filters */
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 12px 16px;
+      background: rgba(26, 26, 46, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Date Range */
+    .date-range {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(26, 26, 46, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+    }
+
+    .date-input {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .date-input:focus {
+      outline: none;
+    }
+
+    .date-separator {
+      color: var(--text-muted);
+    }
+
+    /* Log Table */
+    .log-table-container {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      padding: 16px 24px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .data-table td {
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .data-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Log Entry */
+    .log-entry {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-action {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .log-details {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Action Type Badge */
+    .action-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .action-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .action-badge.login {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10B981;
+    }
+
+    .action-badge.login::before {
+      background: #10B981;
+    }
+
+    .action-badge.create {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3B82F6;
+    }
+
+    .action-badge.create::before {
+      background: #3B82F6;
+    }
+
+    .action-badge.update {
+      background: rgba(245, 158, 11, 0.15);
+      color: #F59E0B;
+    }
+
+    .action-badge.update::before {
+      background: #F59E0B;
+    }
+
+    .action-badge.delete {
+      background: rgba(239, 68, 68, 0.15);
+      color: #EF4444;
+    }
+
+    .action-badge.delete::before {
+      background: #EF4444;
+    }
+
+    .action-badge.export {
+      background: rgba(139, 92, 246, 0.15);
+      color: #A78BFA;
+    }
+
+    .action-badge.export::before {
+      background: #A78BFA;
+    }
+
+    /* User Cell */
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3B82F6, #06B6D4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .user-name {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .log-time {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .ip-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .pagination-info {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .pagination-pages {
+      display: flex;
+      gap: 8px;
+    }
+
+    .page-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-secondary);
+    }
+
+    .page-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .page-btn.active {
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      border-color: transparent;
+      color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .admin-sidebar {
+        display: none;
+      }
+
+      .admin-content {
+        padding: 20px;
+      }
+
+      .data-table {
+        display: block;
+        overflow-x: auto;
+      }
+
+      .filters-bar {
+        flex-direction: column;
+      }
+
+      .date-range {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="admin-sidebar-logo">
+          <div class="admin-sidebar-logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="admin-sidebar-logo-text">MultiForms</div>
+          <div class="admin-sidebar-logo-badge">ADMIN</div>
+        </div>
+      </div>
+
+      <nav class="admin-nav">
+        <a href="dashboard.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          仪表盘
+        </a>
+        <a href="users.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          用户管理
+        </a>
+        <a href="forms.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="9"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="13" y2="17"/>
+          </svg>
+          表单管理
+        </a>
+        <a href="review.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14,2 14,8 20,8"/>
+          </svg>
+          内容审核
+        </a>
+        <a href="templates.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          模板管理
+        </a>
+        <a href="settings.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243M9.879 9.879L5.636 5.636m12.728 12.728l-4.243-4.243m0 0L9.88 14.12"/>
+          </svg>
+          系统设置
+        </a>
+        <a href="logs.html" class="admin-nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10,9 9,9 8,9"/>
+          </svg>
+          系统日志
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <h1 class="admin-header-title">系统日志</h1>
+      </header>
+
+      <div class="admin-content">
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-title">管理员操作日志</div>
+          <div class="page-actions">
+            <button class="btn btn-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              导出日志
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+          <select class="filter-select">
+            <option>所有操作</option>
+            <option>登录/登出</option>
+            <option>用户管理</option>
+            <option>表单管理</option>
+            <option>内容审核</option>
+            <option>系统设置</option>
+            <option>数据导出</option>
+          </select>
+          <select class="filter-select">
+            <option>所有管理员</option>
+            <option>Admin User</option>
+            <option>超级管理员</option>
+          </select>
+          <div class="date-range">
+            <input type="date" class="date-input" value="2025-01-22">
+            <span class="date-separator">至</span>
+            <input type="date" class="date-input" value="2025-01-29">
+          </div>
+        </div>
+
+        <!-- Log Table -->
+        <div class="log-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>操作</th>
+                <th>管理员</th>
+                <th>详情</th>
+                <th>IP 地址</th>
+                <th>时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="action-badge login">登录</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">A</div>
+                    <span class="user-name">Admin User</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">登录管理后台</div>
+                    <div class="log-details">成功登录</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">192.168.1.1</span></td>
+                <td><span class="log-time">2025-01-29 10:23:45</span></td>
+              </tr>
+              <tr>
+                <td><span class="action-badge.update">更新用户</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">A</div>
+                    <span class="user-name">Admin User</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">禁用用户</div>
+                    <div class="log-details">禁用用户 "王五" (wang@example.com)</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">192.168.1.1</span></td>
+                <td><span class="log-time">2025-01-29 09:45:12</span></td>
+              </tr>
+              <tr>
+                <td><span class="action-badge.delete">删除表单</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">A</div>
+                    <span class="user-name">Admin User</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">删除违规表单</div>
+                    <div class="log-details">删除表单 "违规内容测试" (ID: f4a3b2c1)</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">192.168.1.1</span></td>
+                <td><span class="log-time">2025-01-29 09:30:08</span></td>
+              </tr>
+              <tr>
+                <td><span class="action-badge.create">审核内容</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #8B5CF6, #A78BFA);">超</div>
+                    <span class="user-name">超级管理员</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">通过内容审核</div>
+                    <div class="log-details">通过举报 ID: r1a2b3c4，恢复内容</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">10.0.0.5</span></td>
+                <td><span class="log-time">2025-01-29 08:15:33</span></td>
+              </tr>
+              <tr>
+                <td><span class="action-badge.export">导出数据</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #8B5CF6, #A78BFA);">超</div>
+                    <span class="user-name">超级管理员</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">导出用户数据</div>
+                    <div class="log-details">导出用户列表，共 12,580 条记录</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">10.0.0.5</span></td>
+                <td><span class="log-time">2025-01-28 18:22:11</span></td>
+              </tr>
+              <tr>
+                <td><span class="action-badge.update">系统设置</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">A</div>
+                    <span class="user-name">Admin User</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">修改功能开关</div>
+                    <div class="log-details">关闭 "协作功能" 开关</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">192.168.1.1</span></td>
+                <td><span class="log-time">2025-01-28 14:10:05</span></td>
+              </tr>
+              <tr>
+                <td><span class="action-badge.create">创建模板</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #8B5CF6, #A78BFA);">超</div>
+                    <span class="user-name">超级管理员</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">添加新模板</div>
+                    <div class="log-details">创建模板 "员工评分表"</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">10.0.0.5</span></td>
+                <td><span class="log-time">2025-01-28 11:30:00</span></td>
+              </tr>
+              <tr>
+                <td><span class="action-badge.login">登出</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">A</div>
+                    <span class="user-name">Admin User</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">退出管理后台</div>
+                    <div class="log-details">正常退出</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">192.168.1.1</span></td>
+                <td><span class="log-time">2025-01-28 20:00:00</span></td>
+              </tr>
+              <tr>
+                <td><span class="action-badge.update">更新模板</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #8B5CF6, #A78BFA);">超</div>
+                    <span class="user-name">超级管理员</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">编辑模板</div>
+                    <div class="log-details">更新模板 "活动投票" 的描述</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">10.0.0.5</span></td>
+                <td><span class="log-time">2025-01-27 16:45:22</span></td>
+              </tr>
+              <tr>
+                <td><span class="action-badge.login">登录</span></td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">A</div>
+                    <span class="user-name">Admin User</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="log-entry">
+                    <div class="log-action">登录管理后台</div>
+                    <div class="log-details">成功登录</div>
+                  </div>
+                </td>
+                <td><span class="ip-badge">192.168.1.1</span></td>
+                <td><span class="log-time">2025-01-27 09:00:00</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <span class="pagination-info">显示 1-10 条，共 2,845 条</span>
+            <div class="pagination-pages">
+              <button class="page-btn">← 上一页</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <span style="color: var(--text-muted); padding: 8px 4px;">...</span>
+              <button class="page-btn">285</button>
+              <button class="page-btn">下一页 →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Export logs function
+    function exportLogs() {
+      // Show a notification
+      const btn = document.querySelector('.page-actions .btn-secondary');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" class="spinning">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7,10 12,15 17,10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        导出中...
+      `;
+      btn.style.opacity = '0.7';
+
+      // Add spinning animation
+      btn.style.animation = 'spin 1s linear infinite';
+
+      setTimeout(() => {
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <polyline points="20,6 9,17 9,17 9,17"/>
+            <line x1="12" y1="19" x2="12" y2="19"/>
+          </svg>
+          导出成功
+        `;
+        btn.style.opacity = '1';
+        btn.style.animation = '';
+        btn.style.background = 'rgba(16, 185, 129, 0.2)';
+        btn.style.borderColor = '#10B981';
+        btn.style.color = '#10B981';
+
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 2000);
+      }, 1500);
+    }
+
+    // Pagination functionality
+    document.querySelectorAll('.page-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const pageText = this.textContent;
+
+        if (pageText.includes('上一页') || pageText.includes('下一页')) {
+          // Navigate previous/next
+          console.log('Navigate:', pageText);
+        } else {
+          // Navigate to specific page
+          const pageNumber = this.textContent.trim();
+          document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          console.log('Navigate to page:', pageNumber);
+        }
+      });
+    });
+
+    // Filter change handlers
+    document.querySelectorAll('.filter-select').forEach(select => {
+      select.addEventListener('change', function() {
+        console.log('Filter changed:', this.value);
+        // In real implementation, this would filter the logs
+      });
+    });
+  </script>
+</body>
+</html>

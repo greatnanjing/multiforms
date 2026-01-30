@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>系统设置 - MultiForms 管理后台</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../common.css">
+
+  <!-- Page Styles -->
+  <style>
+    /* Admin Layout */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    .admin-sidebar {
+      width: 260px;
+      background: rgba(15, 15, 35, 0.95);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+
+    .admin-sidebar-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .admin-sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .admin-sidebar-logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .admin-sidebar-logo-icon svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+
+    .admin-sidebar-logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .admin-sidebar-logo-badge {
+      margin-left: auto;
+      padding: 4px 8px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #A78BFA;
+    }
+
+    .admin-nav {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+    }
+
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s var(--ease-out);
+      margin-bottom: 4px;
+    }
+
+    .admin-nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .admin-nav-item.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15));
+      color: #A78BFA;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .admin-nav-item svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .admin-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      background: rgba(15, 15, 35, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .admin-header-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .admin-content {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    /* Settings Section */
+    .settings-section {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title svg {
+      width: 20px;
+      height: 20px;
+      color: #A78BFA;
+    }
+
+    /* Form Grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .form-input {
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #8B5CF6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    }
+
+    .form-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .form-row:last-child {
+      border-bottom: none;
+    }
+
+    .form-row-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .form-row-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .form-row-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 26px;
+    }
+
+    .toggle-switch input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: 0.3s;
+      border-radius: 26px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(22px);
+    }
+
+    /* File Upload */
+    .file-upload {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .file-preview {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #A78BFA;
+    }
+
+    .file-preview svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .file-upload-btn {
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-primary);
+    }
+
+    .file-upload-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Action Buttons */
+    .settings-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+    }
+
+    .feature-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    /* Info Card */
+    .info-card {
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .info-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #A78BFA;
+      margin-bottom: 8px;
+    }
+
+    .info-card-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .admin-sidebar {
+        display: none;
+      }
+
+      .admin-content {
+        padding: 20px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="admin-sidebar-logo">
+          <div class="admin-sidebar-logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="admin-sidebar-logo-text">MultiForms</div>
+          <div class="admin-sidebar-logo-badge">ADMIN</div>
+        </div>
+      </div>
+
+      <nav class="admin-nav">
+        <a href="dashboard.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          仪表盘
+        </a>
+        <a href="users.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          用户管理
+        </a>
+        <a href="forms.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="9"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="13" y2="17"/>
+          </svg>
+          表单管理
+        </a>
+        <a href="review.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14,2 14,8 20,8"/>
+          </svg>
+          内容审核
+        </a>
+        <a href="templates.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          模板管理
+        </a>
+        <a href="settings.html" class="admin-nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243M9.879 9.879L5.636 5.636m12.728 12.728l-4.243-4.243m0 0L9.88 14.12"/>
+          </svg>
+          系统设置
+        </a>
+        <a href="logs.html" class="admin-nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10,9 9,9 8,9"/>
+          </svg>
+          系统日志
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <h1 class="admin-header-title">系统设置</h1>
+      </header>
+
+      <div class="admin-content">
+        <!-- Basic Settings -->
+        <div class="settings-section">
+          <h2 class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243M9.879 9.879L5.636 5.636m12.728 12.728l-4.243-4.243m0 0L9.88 14.12"/>
+            </svg>
+            基础设置
+          </h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">站点名称</label>
+              <input type="text" class="form-input" value="MultiForms">
+            </div>
+            <div class="form-group">
+              <label class="form-label">站点描述</label>
+              <input type="text" class="form-input" value="5分钟创建专业表单">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 24px;">
+            <label class="form-label">站点 Logo</label>
+            <div class="file-upload">
+              <div class="file-preview">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21,15 16,10 5,21"/>
+                </svg>
+              </div>
+              <button class="file-upload-btn">上传图片</button>
+              <span style="font-size: 13px; color: var(--text-muted);">支持 JPG、PNG 格式，建议尺寸 200x60px</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Toggles -->
+        <div class="settings-section">
+          <h2 class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2"/>
+            </svg>
+            功能开关
+          </h2>
+          <div class="feature-grid">
+            <div class="feature-item">
+              <span class="feature-name">用户注册</span>
+              <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="feature-item">
+              <span class="feature-name">访客创建表单</span>
+              <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="feature-item">
+              <span class="feature-name">第三方登录</span>
+              <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="feature-item">
+              <span class="feature-name">模板库</span>
+              <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="feature-item">
+              <span class="feature-name">协作功能</span>
+              <label class="toggle-switch">
+                <input type="checkbox">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="feature-item">
+              <span class="feature-name">API 接口</span>
+              <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="info-card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="display: inline; vertical-align: middle; margin-right: 4px;">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              提示
+            </div>
+            <div class="info-card-text">关闭功能开关后，该功能将对所有用户隐藏。请谨慎操作，特别是用户注册功能。</div>
+          </div>
+        </div>
+
+        <!-- Storage Settings -->
+        <div class="settings-section">
+          <h2 class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17,8 12,3 7,8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            存储配置
+          </h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">最大文件上传大小</label>
+              <input type="number" class="form-input" value="10485760">
+              <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">字节（当前设置: 10 MB）</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">单表单提交上限</label>
+              <input type="number" class="form-input" value="10000">
+              <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">条数</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">访客表单提交上限</label>
+              <input type="number" class="form-input" value="100">
+              <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">条数/表单</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">访客每月创建表单数</label>
+              <input type="number" class="form-input" value="3">
+              <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">个/月</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email Settings -->
+        <div class="settings-section">
+          <h2 class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            邮件配置
+          </h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">SMTP 服务器</label>
+              <input type="text" class="form-input" placeholder="smtp.example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SMTP 端口</label>
+              <input type="number" class="form-input" placeholder="587">
+            </div>
+            <div class="form-group">
+              <label class="form-label">发件人邮箱</label>
+              <input type="email" class="form-input" placeholder="noreply@multiforms.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">发件人名称</label>
+              <input type="text" class="form-input" placeholder="MultiForms">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SMTP 用户名</label>
+              <input type="text" class="form-input" placeholder="用户名">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SMTP 密码</label>
+              <input type="password" class="form-input" placeholder="••••••••">
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <button class="btn btn-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
+              </svg>
+              发送测试邮件
+            </button>
+          </div>
+        </div>
+
+        <!-- Save Actions -->
+        <div class="settings-actions">
+          <button class="btn btn-secondary">取消</button>
+          <button class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <polyline points="20,6 9,17 4,12"/>
+            </svg>
+            保存设置
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Store original values for cancel functionality
+    const originalValues = new Map();
+
+    // Save all input values on page load
+    document.querySelectorAll('.form-input').forEach(input => {
+      originalValues.set(input, input.value);
+    });
+    document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+      originalValues.set(toggle, toggle.checked);
+    });
+
+    // Save settings
+    document.querySelector('.btn-primary').addEventListener('click', function() {
+      const btn = this;
+      const originalHTML = btn.innerHTML;
+
+      // Show loading state
+      btn.innerHTML = `
+        <svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="animation: spin 1s linear infinite;">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        保存中...
+      `;
+      btn.disabled = true;
+
+      // Simulate save
+      setTimeout(() => {
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <polyline points="20,6 9,17 4,12"/>
+          </svg>
+          已保存
+        `;
+
+        // Update original values
+        document.querySelectorAll('.form-input').forEach(input => {
+          originalValues.set(input, input.value);
+        });
+        document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+          originalValues.set(toggle, toggle.checked);
+        });
+
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+        }, 2000);
+      }, 1500);
+    });
+
+    // Cancel and revert changes
+    document.querySelector('.btn-secondary').addEventListener('click', function() {
+      // Revert all input values
+      document.querySelectorAll('.form-input').forEach(input => {
+        if (originalValues.has(input)) {
+          input.value = originalValues.get(input);
+        }
+      });
+      document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+        if (originalValues.has(toggle)) {
+          toggle.checked = originalValues.get(toggle);
+        }
+      });
+
+      // Show feedback
+      const btn = this;
+      const originalText = btn.textContent;
+      btn.textContent = '已取消';
+      setTimeout(() => {
+        btn.textContent = originalText;
+      }, 1500);
+    });
+
+    // Send test email
+    const emailTestBtn = document.querySelectorAll('.btn-secondary')[1]; // The test email button
+    if (emailTestBtn) {
+      emailTestBtn.addEventListener('click', function() {
+        const btn = this;
+        const originalHTML = btn.innerHTML;
+
+        // Show loading state
+        btn.innerHTML = `
+          <svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="animation: spin 1s linear infinite;">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          发送中...
+        `;
+        btn.disabled = true;
+
+        // Simulate send
+        setTimeout(() => {
+          btn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <polyline points="20,6 9,17 4,12"/>
+            </svg>
+            已发送
+          `;
+
+          setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+          }, 2000);
+        }, 1500);
+      });
+    }
+
+    // Add spinner animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .spin {
+        display: inline-block;
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

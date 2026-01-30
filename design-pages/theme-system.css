@@ -1,0 +1,487 @@
+/* ============================================
+   MultiForms Theme System
+   支持8套主题的动态换肤系统
+   ============================================ */
+
+/* Base CSS Variables (Fallback - Nebula Theme) */
+:root {
+  /* Spacing - Universal */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================
+   THEME 1: 星云紫 Nebula Purple (默认主题)
+   ============================================ */
+:root,
+[data-theme="nebula"] {
+  /* Primary Gradient - 神秘紫 */
+  --primary-start: #6366F1;  /* Indigo 500 */
+  --primary-end: #8B5CF6;    /* Violet 500 */
+  --primary-glow: #A78BFA;   /* Violet 400 */
+
+  /* Accent Colors */
+  --accent-color: #EC4899;   /* Pink 500 */
+  --accent-secondary: #06B6D4; /* Cyan 500 */
+
+  /* Background Colors */
+  --bg-primary: #0F0F23;
+  --bg-secondary: #1A1A2E;
+  --bg-tertiary: #2D2D44;
+
+  /* Text Colors */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  /* Border & Glass */
+  --border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(26, 26, 46, 0.6);
+
+  /* Input & Form */
+  --input-bg: rgba(255, 255, 255, 0.05);
+
+  /* Effects */
+  --shadow-color: rgba(99, 102, 241, 0.3);
+  --focus-ring: rgba(99, 102, 241, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(99, 102, 241, 0.15);
+  --tag-border: rgba(99, 102, 241, 0.3);
+
+  /* Alert */
+  --alert-bg: rgba(99, 102, 241, 0.1);
+  --alert-border: rgba(99, 102, 241, 0.3);
+}
+
+/* ============================================
+   THEME 2: 海洋蓝 Ocean Blue
+   ============================================ */
+[data-theme="ocean"] {
+  /* Primary Gradient - 海洋蓝 */
+  --primary-start: #0EA5E9;  /* Sky 500 */
+  --primary-end: #06B6D4;    /* Cyan 500 */
+  --primary-glow: #22D3EE;   /* Cyan 400 */
+
+  /* Accent Colors */
+  --accent-color: #3B82F6;   /* Blue 500 */
+  --accent-secondary: #14B8A6; /* Teal 500 */
+
+  /* Background Colors - 深海蓝 */
+  --bg-primary: #0A1628;
+  --bg-secondary: #0F2744;
+  --bg-tertiary: #1E3A5F;
+
+  /* Text Colors */
+  --text-primary: #F0F9FF;
+  --text-secondary: #7DD3FC;
+  --text-muted: #5EEAD4;
+
+  /* Border & Glass */
+  --border: rgba(14, 165, 233, 0.15);
+  --glass-bg: rgba(15, 39, 68, 0.6);
+
+  /* Input & Form */
+  --input-bg: rgba(14, 165, 233, 0.05);
+
+  /* Effects */
+  --shadow-color: rgba(14, 165, 233, 0.3);
+  --focus-ring: rgba(14, 165, 233, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(14, 165, 233, 0.15);
+  --tag-border: rgba(14, 165, 233, 0.3);
+
+  /* Alert */
+  --alert-bg: rgba(14, 165, 233, 0.1);
+  --alert-border: rgba(14, 165, 233, 0.3);
+}
+
+/* ============================================
+   THEME 3: 日落橙 Sunset Orange
+   ============================================ */
+[data-theme="sunset"] {
+  /* Primary Gradient - 日落橙 */
+  --primary-start: #F97316;  /* Orange 500 */
+  --primary-end: #EC4899;    /* Pink 500 */
+  --primary-glow: #FB923C;   /* Orange 400 */
+
+  /* Accent Colors */
+  --accent-color: #EF4444;   /* Red 500 */
+  --accent-secondary: #F59E0B; /* Amber 500 */
+
+  /* Background Colors - 暖色深橙 */
+  --bg-primary: #1A0A0A;
+  --bg-secondary: #2D1515;
+  --bg-tertiary: #40201A;
+
+  /* Text Colors */
+  --text-primary: #FFF7ED;
+  --text-secondary: #FDBA74;
+  --text-muted: #F97316;
+
+  /* Border & Glass */
+  --border: rgba(249, 115, 22, 0.15);
+  --glass-bg: rgba(45, 21, 21, 0.6);
+
+  /* Input & Form */
+  --input-bg: rgba(249, 115, 22, 0.05);
+
+  /* Effects */
+  --shadow-color: rgba(249, 115, 22, 0.3);
+  --focus-ring: rgba(249, 115, 22, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(249, 115, 22, 0.15);
+  --tag-border: rgba(249, 115, 22, 0.3);
+
+  /* Alert */
+  --alert-bg: rgba(249, 115, 22, 0.1);
+  --alert-border: rgba(249, 115, 22, 0.3);
+}
+
+/* ============================================
+   THEME 4: 森林绿 Forest Green
+   ============================================ */
+[data-theme="forest"] {
+  /* Primary Gradient - 森林绿 */
+  --primary-start: #10B981;  /* Emerald 500 */
+  --primary-end: #06B6D4;    /* Cyan 500 */
+  --primary-glow: #34D399;   /* Emerald 400 */
+
+  /* Accent Colors */
+  --accent-color: #059669;   /* Emerald 600 */
+  --accent-secondary: #84CC16; /* Lime 500 */
+
+  /* Background Colors - 深林绿 */
+  --bg-primary: #0A1A12;
+  --bg-secondary: #0F291C;
+  --bg-tertiary: #1A3D2B;
+
+  /* Text Colors */
+  --text-primary: #F0FDF4;
+  --text-secondary: #6EE7B7;
+  --text-muted: #34D399;
+
+  /* Border & Glass */
+  --border: rgba(16, 185, 129, 0.15);
+  --glass-bg: rgba(15, 41, 28, 0.6);
+
+  /* Input & Form */
+  --input-bg: rgba(16, 185, 129, 0.05);
+
+  /* Effects */
+  --shadow-color: rgba(16, 185, 129, 0.3);
+  --focus-ring: rgba(16, 185, 129, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(16, 185, 129, 0.15);
+  --tag-border: rgba(16, 185, 129, 0.3);
+
+  /* Alert */
+  --alert-bg: rgba(16, 185, 129, 0.1);
+  --alert-border: rgba(16, 185, 129, 0.3);
+}
+
+/* ============================================
+   THEME 5: 樱花粉 Sakura Pink
+   ============================================ */
+[data-theme="sakura"] {
+  /* Primary Gradient - 樱花粉 */
+  --primary-start: #EC4899;  /* Pink 500 */
+  --primary-end: #F472B6;    /* Pink 400 */
+  --primary-glow: #F9A8D4;   /* Pink 300 */
+
+  /* Accent Colors */
+  --accent-color: #F43F5E;   /* Rose 500 */
+  --accent-secondary: #C084FC; /* Purple 400 */
+
+  /* Background Colors - 樱花粉紫 */
+  --bg-primary: #1A0A14;
+  --bg-secondary: #2D1526;
+  --bg-tertiary: #402035;
+
+  /* Text Colors */
+  --text-primary: #FFF1F8;
+  --text-secondary: #F9A8D4;
+  --text-muted: #EC4899;
+
+  /* Border & Glass */
+  --border: rgba(236, 72, 153, 0.15);
+  --glass-bg: rgba(45, 21, 38, 0.6);
+
+  /* Input & Form */
+  --input-bg: rgba(236, 72, 153, 0.05);
+
+  /* Effects */
+  --shadow-color: rgba(236, 72, 153, 0.3);
+  --focus-ring: rgba(236, 72, 153, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(236, 72, 153, 0.15);
+  --tag-border: rgba(236, 72, 153, 0.3);
+
+  /* Alert */
+  --alert-bg: rgba(236, 72, 153, 0.1);
+  --alert-border: rgba(236, 72, 153, 0.3);
+}
+
+/* ============================================
+   THEME 6: 赛博霓虹 Cyber Neon
+   ============================================ */
+[data-theme="cyber"] {
+  /* Primary Gradient - 赛博霓虹 */
+  --primary-start: #22D3EE;  /* Cyan 400 */
+  --primary-end: #A855F7;    /* Purple 500 */
+  --primary-glow: #E879F9;   /* Fuchsia 400 */
+
+  /* Accent Colors */
+  --accent-color: #F0ABFC;   /* Fuchsia 300 */
+  --accent-secondary: #67E8F9; /* Cyan 300 */
+
+  /* Background Colors - 赛博深紫 */
+  --bg-primary: #0A0514;
+  --bg-secondary: #180B2E;
+  --bg-tertiary: #2D1B4E;
+
+  /* Text Colors */
+  --text-primary: #FAF5FF;
+  --text-secondary: #D8B4FE;
+  --text-muted: #A78BFA;
+
+  /* Border & Glass */
+  --border: rgba(168, 85, 247, 0.2);
+  --glass-bg: rgba(24, 11, 46, 0.7);
+
+  /* Input & Form */
+  --input-bg: rgba(168, 85, 247, 0.08);
+
+  /* Effects */
+  --shadow-color: rgba(168, 85, 247, 0.4);
+  --focus-ring: rgba(168, 85, 247, 0.3);
+
+  /* Tags */
+  --tag-bg: rgba(168, 85, 247, 0.2);
+  --tag-border: rgba(168, 85, 247, 0.4);
+
+  /* Alert */
+  --alert-bg: rgba(168, 85, 247, 0.15);
+  --alert-border: rgba(168, 85, 247, 0.4);
+}
+
+/* ============================================
+   THEME 7: 极简灰 Minimal Gray
+   ============================================ */
+[data-theme="minimal"] {
+  /* Primary Gradient - 极简灰 */
+  --primary-start: #64748B;  /* Slate 500 */
+  --primary-end: #94A3B8;    /* Slate 400 */
+  --primary-glow: #CBD5E1;   /* Slate 300 */
+
+  /* Accent Colors */
+  --accent-color: #475569;   /* Slate 600 */
+  --accent-secondary: #334155; /* Slate 700 */
+
+  /* Background Colors - 深空灰 */
+  --bg-primary: #0F0F12;
+  --bg-secondary: #1A1A1F;
+  --bg-tertiary: #2D2D35;
+
+  /* Text Colors */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  /* Border & Glass */
+  --border: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(26, 26, 31, 0.6);
+
+  /* Input & Form */
+  --input-bg: rgba(255, 255, 255, 0.03);
+
+  /* Effects */
+  --shadow-color: rgba(100, 116, 139, 0.2);
+  --focus-ring: rgba(100, 116, 139, 0.15);
+
+  /* Tags */
+  --tag-bg: rgba(100, 116, 139, 0.15);
+  --tag-border: rgba(100, 116, 139, 0.25);
+
+  /* Alert */
+  --alert-bg: rgba(100, 116, 139, 0.1);
+  --alert-border: rgba(100, 116, 139, 0.2);
+}
+
+/* ============================================
+   THEME 8: 皇家金 Royal Gold
+   ============================================ */
+[data-theme="royal"] {
+  /* Primary Gradient - 皇家金 */
+  --primary-start: #F59E0B;  /* Amber 500 */
+  --primary-end: #EAB308;    /* Yellow 500 */
+  --primary-glow: #FBBF24;   /* Amber 400 */
+
+  /* Accent Colors */
+  --accent-color: #D97706;   /* Amber 600 */
+  --accent-secondary: #CA8A04; /* Yellow 600 */
+
+  /* Background Colors - 皇家深金 */
+  --bg-primary: #1A1205;
+  --bg-secondary: #2D1F0A;
+  --bg-tertiary: #402D10;
+
+  /* Text Colors */
+  --text-primary: #FFFBEB;
+  --text-secondary: #FDE68A;
+  --text-muted: #F59E0B;
+
+  /* Border & Glass */
+  --border: rgba(245, 158, 11, 0.15);
+  --glass-bg: rgba(45, 31, 10, 0.6);
+
+  /* Input & Form */
+  --input-bg: rgba(245, 158, 11, 0.05);
+
+  /* Effects */
+  --shadow-color: rgba(245, 158, 11, 0.3);
+  --focus-ring: rgba(245, 158, 11, 0.2);
+
+  /* Tags */
+  --tag-bg: rgba(245, 158, 11, 0.15);
+  --tag-border: rgba(245, 158, 11, 0.3);
+
+  /* Alert */
+  --alert-bg: rgba(245, 158, 11, 0.1);
+  --alert-border: rgba(245, 158, 11, 0.3);
+}
+
+/* ============================================
+   Light Mode Overrides (可选)
+   ============================================ */
+[data-theme="nebula"][data-mode="light"],
+[data-theme="ocean"][data-mode="light"],
+[data-theme="forest"][data-mode="light"],
+[data-theme="minimal"][data-mode="light"] {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F3FF;
+  --bg-tertiary: #E0E7FF;
+  --text-primary: #1E1B4B;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --border: rgba(99, 102, 241, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --input-bg: rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   Shared Base Styles
+   ============================================ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.3s var(--ease-out), color 0.3s var(--ease-out);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+h1 { font-size: 48px; }
+h2 { font-size: 32px; }
+h3 { font-size: 24px; }
+h4 { font-size: 20px; }
+h5 { font-size: 18px; }
+h6 { font-size: 16px; }
+
+p {
+  color: var(--text-secondary);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end), var(--accent-color));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Links */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s var(--ease-out);
+}
+
+a:hover {
+  color: var(--primary-glow);
+}
+
+/* Focus Visible */
+*:focus-visible {
+  outline: 2px solid var(--primary-start);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--primary-start);
+  color: white;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-start);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  h1 { font-size: 28px; }
+  h2 { font-size: 24px; }
+  h3 { font-size: 20px; }
+}

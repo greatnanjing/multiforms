@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>表单编辑器 - MultiForms</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../theme-system.css">
+
+  <!-- Page Styles -->
+  <style>
+    /* Builder Layout */
+    .builder-layout {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    /* Top Header */
+    .builder-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: rgba(15, 15, 35, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--primary-glow);
+    }
+
+    .back-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .form-title-input {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      transition: background 0.2s var(--ease-out);
+    }
+
+    .form-title-input:focus {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .form-title-input:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .header-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .header-btn.ghost {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .header-btn.ghost:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--primary-start);
+    }
+
+    .header-btn.primary {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      color: white;
+      border: none;
+    }
+
+    .header-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Main Builder Area */
+    .builder-main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Question Type Sidebar */
+    .question-sidebar {
+      width: 280px;
+      background: rgba(26, 26, 46, 0.8);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .question-types {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .question-type-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      margin-bottom: 8px;
+      cursor: grab;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .question-type-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateX(4px);
+    }
+
+    .question-type-card:active {
+      cursor: grabbing;
+    }
+
+    .question-type-card.dragging {
+      opacity: 0.5;
+      transform: scale(0.95);
+    }
+
+    .question-type-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .question-type-icon svg {
+      width: 18px;
+      height: 18px;
+      color: var(--primary-glow);
+    }
+
+    .question-type-info {
+      flex: 1;
+    }
+
+    .question-type-name {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .question-type-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .advanced-features {
+      padding: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .feature-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .feature-item svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+    }
+
+    /* Form Preview Area */
+    .form-preview-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .preview-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .form-preview {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    /* Form Header Card */
+    .form-header-card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-header-card:hover {
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .form-header-actions {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: none;
+      gap: 8px;
+    }
+
+    .form-header-card:hover .form-header-actions {
+      display: flex;
+    }
+
+    .form-header-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .form-header-desc {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Question Card */
+    .question-card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 16px;
+      position: relative;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .question-card:hover {
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .question-card.drag-over {
+      border-color: var(--primary-start);
+      border-style: dashed;
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .question-number {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--primary-glow);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .question-content {
+      padding-left: 40px;
+    }
+
+    .question-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .question-title.required::after {
+      content: '*';
+      color: var(--accent-pink);
+      margin-left: 4px;
+    }
+
+    /* Question Preview Styles */
+    .option-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .option-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .option-radio {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--text-muted);
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .option-radio.checked {
+      border-color: var(--primary-start);
+    }
+
+    .option-radio.checked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary-start);
+    }
+
+    .option-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--text-muted);
+      border-radius: 4px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .option-checkbox.checked {
+      border-color: var(--primary-start);
+      background: var(--primary-start);
+    }
+
+    .option-checkbox.checked::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 5px;
+      width: 4px;
+      height: 8px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .option-text {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    /* Rating Preview */
+    .rating-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rating-star {
+      width: 32px;
+      height: 32px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .rating-star:hover,
+    .rating-star.active {
+      color: #FBBF24;
+    }
+
+    /* Slider Preview */
+    .slider-preview {
+      padding: 12px 0;
+    }
+
+    .slider-track {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      position: relative;
+    }
+
+    .slider-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 60%;
+      background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+      border-radius: 3px;
+    }
+
+    .slider-thumb {
+      position: absolute;
+      left: 60%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Text Input Preview */
+    .text-input-preview {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .textarea-preview {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Question Actions */
+    .question-actions {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: none;
+      gap: 8px;
+    }
+
+    .question-card:hover .question-actions {
+      display: flex;
+    }
+
+    .question-action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .question-action-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--primary-start);
+    }
+
+    .question-action-btn:hover svg {
+      color: var(--primary-glow);
+    }
+
+    .question-action-btn.danger:hover {
+      border-color: #EF4444;
+    }
+
+    .question-action-btn.danger:hover svg {
+      color: #EF4444;
+    }
+
+    .question-action-btn svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-secondary);
+    }
+
+    .drag-handle {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 24px;
+      height: 24px;
+      cursor: grab;
+      display: none;
+    }
+
+    .question-card:hover .drag-handle {
+      display: flex;
+    }
+
+    .drag-handle svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+    }
+
+    /* Add Question Drop Zone */
+    .add-question-zone {
+      border: 2px dashed rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      margin-top: 16px;
+    }
+
+    .add-question-zone:hover,
+    .add-question-zone.drag-over {
+      border-color: var(--primary-start);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .add-question-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      background: rgba(99, 102, 241, 0.15);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .add-question-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--primary-glow);
+    }
+
+    .add-question-text {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .add-question-hint {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Question Type Icons Colors */
+    .question-type-icon.single-choice { background: rgba(99, 102, 241, 0.15); }
+    .question-type-icon.multiple-choice { background: rgba(139, 92, 246, 0.15); }
+    .question-type-icon.dropdown { background: rgba(6, 182, 212, 0.15); }
+    .question-type-icon.rating { background: rgba(251, 191, 36, 0.15); }
+    .question-type-icon.slider { background: rgba(236, 72, 153, 0.15); }
+    .question-type-icon.text { background: rgba(16, 185, 129, 0.15); }
+    .question-type-icon.number { background: rgba(249, 115, 22, 0.15); }
+    .question-type-icon.date { background: rgba(239, 68, 68, 0.15); }
+    .question-type-icon.file { background: rgba(107, 114, 128, 0.15); }
+
+    /* Mobile Drawer Toggle */
+    .mobile-drawer-toggle {
+      display: none;
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border: none;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+      cursor: pointer;
+      z-index: 60;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-drawer-toggle svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    /* Mobile Sidebar Drawer */
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(26, 26, 46, 0.98);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px 24px 0 0;
+      max-height: 70vh;
+      overflow-y: auto;
+      z-index: 55;
+      transform: translateY(100%);
+      transition: transform 0.3s var(--ease-out);
+    }
+
+    .mobile-drawer.open {
+      transform: translateY(0);
+    }
+
+    .mobile-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .mobile-drawer-handle {
+      width: 40px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    .mobile-drawer-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .mobile-drawer-close svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .question-sidebar {
+        width: 240px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .builder-header {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .header-actions .btn {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+
+      .header-actions .btn span {
+        display: none;
+      }
+
+      .question-sidebar {
+        display: none;
+      }
+
+      .mobile-drawer-toggle {
+        display: flex;
+      }
+
+      .mobile-drawer {
+        display: block;
+      }
+
+      .preview-container {
+        padding: 16px;
+      }
+
+      .form-header-card,
+      .question-card {
+        padding: 20px;
+        border-radius: 16px;
+      }
+
+      .form-header-title {
+        font-size: 20px;
+      }
+
+      .question-content {
+        padding-left: 0;
+        padding-top: 36px;
+      }
+
+      .question-number {
+        top: 12px;
+        left: 12px;
+      }
+
+      .question-actions {
+        top: 12px;
+        right: 12px;
+      }
+
+      .header-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+
+      .header-btn.primary span {
+        display: inline;
+      }
+
+      .back-btn span {
+        display: none;
+      }
+    }
+
+    /* Theme Selector Modal */
+    .theme-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .theme-modal-overlay.active {
+      display: flex;
+    }
+
+    .theme-modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 85vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .theme-modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .theme-modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--bg-tertiary);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .theme-modal-close:hover {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .theme-modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .theme-option-card {
+      cursor: pointer;
+      border-radius: 16px;
+      padding: 16px;
+      border: 2px solid var(--border);
+      background: var(--bg-tertiary);
+      transition: all 0.2s var(--ease-out);
+      text-align: center;
+    }
+
+    .theme-option-card:hover {
+      border-color: var(--primary-start);
+      transform: translateY(-2px);
+    }
+
+    .theme-option-card.selected {
+      border-color: var(--primary-start);
+      background: rgba(99, 102, 241, 0.1);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .theme-option-preview {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .theme-option-preview::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    }
+
+    .theme-option-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .theme-option-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .theme-option-check {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      background: var(--primary-start);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-option-card.selected .theme-option-check {
+      display: flex;
+    }
+
+    .theme-option-check svg {
+      width: 14px;
+      height: 14px;
+      color: white;
+    }
+
+    .theme-modal-footer {
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .theme-preview-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 100;
+    }
+
+    .theme-preview-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .theme-preview-badge {
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-preview-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    @media (max-width: 640px) {
+      .theme-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .theme-modal {
+        max-height: 90vh;
+        border-radius: 20px;
+      }
+      .theme-modal-header,
+      .theme-modal-body,
+      .theme-modal-footer {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="builder-layout">
+    <!-- Top Header -->
+    <header class="builder-header">
+      <div class="header-left">
+        <a href="dashboard.html" class="back-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+          </svg>
+          <span>返回</span>
+        </a>
+        <input type="text" class="form-title-input" value="产品满意度调研" placeholder="输入表单标题">
+      </div>
+      <div class="header-actions">
+        <button class="header-btn ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span>设置</span>
+        </button>
+        <button class="header-btn ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span>预览</span>
+        </button>
+        <button class="header-btn ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          <span>保存</span>
+        </button>
+        <button class="header-btn primary">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>发布</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Builder Area -->
+    <div class="builder-main">
+      <!-- Question Type Sidebar -->
+      <aside class="question-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">题型工具箱</div>
+        </div>
+
+        <div class="question-types">
+          <div class="question-type-card" draggable="true" data-type="single-choice">
+            <div class="question-type-icon single-choice">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </div>
+            <div class="question-type-info">
+              <div class="question-type-name">单选题</div>
+              <div class="question-type-desc">从多个选项中选择一个</div>
+            </div>
+          </div>
+
+          <div class="question-type-card" draggable="true" data-type="multiple-choice">
+            <div class="question-type-icon multiple-choice">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <polyline points="9 11 12 14 15 11"/>
+              </svg>
+            </div>
+            <div class="question-type-info">
+              <div class="question-type-name">多选题</div>
+              <div class="question-type-desc">可以选择多个选项</div>
+            </div>
+          </div>
+
+          <div class="question-type-card" draggable="true" data-type="dropdown">
+            <div class="question-type-icon dropdown">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <div class="question-type-info">
+              <div class="question-type-name">下拉选择</div>
+              <div class="question-type-desc">从下拉列表中选择</div>
+            </div>
+          </div>
+
+          <div class="question-type-card" draggable="true" data-type="rating">
+            <div class="question-type-icon rating">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="question-type-info">
+              <div class="question-type-name">评分题</div>
+              <div class="question-type-desc">星级或数字评分</div>
+            </div>
+          </div>
+
+          <div class="question-type-card" draggable="true" data-type="slider">
+            <div class="question-type-icon slider">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="12" x2="20" y2="12"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </div>
+            <div class="question-type-info">
+              <div class="question-type-name">滑动条</div>
+              <div class="question-type-desc">用滑块选择数值</div>
+            </div>
+          </div>
+
+          <div class="question-type-card" draggable="true" data-type="text">
+            <div class="question-type-icon text">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="7" x2="20" y2="7"/>
+                <line x1="9" y1="20" x2="15" y2="20"/>
+                <line x1="12" y1="4" x2="12" y2="20"/>
+              </svg>
+            </div>
+            <div class="question-type-info">
+              <div class="question-type-name">文本题</div>
+              <div class="question-type-desc">单行或多行文本输入</div>
+            </div>
+          </div>
+
+          <div class="question-type-card" draggable="true" data-type="number">
+            <div class="question-type-icon number">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+              </svg>
+            </div>
+            <div class="question-type-info">
+              <div class="question-type-name">数字题</div>
+              <div class="question-type-desc">仅允许输入数字</div>
+            </div>
+          </div>
+
+          <div class="question-type-card" draggable="true" data-type="date">
+            <div class="question-type-icon date">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div class="question-type-info">
+              <div class="question-type-name">日期题</div>
+              <div class="question-type-desc">选择日期或时间</div>
+            </div>
+          </div>
+
+          <div class="question-type-card" draggable="true" data-type="file">
+            <div class="question-type-icon file">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <div class="question-type-info">
+              <div class="question-type-name">文件上传</div>
+              <div class="question-type-desc">允许上传文件</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="advanced-features">
+          <div class="feature-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+            <span>逻辑跳转</span>
+          </div>
+          <div class="feature-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            <span>主题样式</span>
+          </div>
+          <div class="feature-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span>隐私设置</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Form Preview Area -->
+      <div class="form-preview-area">
+        <div class="preview-container">
+          <div class="form-preview">
+            <!-- Form Header -->
+            <div class="form-header-card">
+              <div class="form-header-actions">
+                <button class="question-action-btn" title="编辑">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              </div>
+              <h1 class="form-header-title">产品满意度调研</h1>
+              <p class="form-header-desc">请告诉我们您对我们产品的真实感受，您的反馈将帮助我们不断改进。</p>
+            </div>
+
+            <!-- Question 1: Single Choice -->
+            <div class="question-card" data-question-id="1">
+              <div class="question-number">1</div>
+              <div class="drag-handle">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="12" r="1"/>
+                  <circle cx="9" cy="5" r="1"/>
+                  <circle cx="9" cy="19" r="1"/>
+                  <circle cx="15" cy="12" r="1"/>
+                  <circle cx="15" cy="5" r="1"/>
+                  <circle cx="15" cy="19" r="1"/>
+                </svg>
+              </div>
+              <div class="question-actions">
+                <button class="question-action-btn" title="必填">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </svg>
+                </button>
+                <button class="question-action-btn" title="复制">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+                <button class="question-action-btn danger" title="删除">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="question-content">
+                <h3 class="question-title required">您使用我们产品多久了？</h3>
+                <div class="option-list">
+                  <div class="option-item">
+                    <div class="option-radio"></div>
+                    <span class="option-text">不到 1 个月</span>
+                  </div>
+                  <div class="option-item">
+                    <div class="option-radio checked"></div>
+                    <span class="option-text">1-6 个月</span>
+                  </div>
+                  <div class="option-item">
+                    <div class="option-radio"></div>
+                    <span class="option-text">6-12 个月</span>
+                  </div>
+                  <div class="option-item">
+                    <div class="option-radio"></div>
+                    <span class="option-text">超过 1 年</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Question 2: Rating -->
+            <div class="question-card" data-question-id="2">
+              <div class="question-number">2</div>
+              <div class="drag-handle">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="12" r="1"/>
+                  <circle cx="9" cy="5" r="1"/>
+                  <circle cx="9" cy="19" r="1"/>
+                  <circle cx="15" cy="12" r="1"/>
+                  <circle cx="15" cy="5" r="1"/>
+                  <circle cx="15" cy="19" r="1"/>
+                </svg>
+              </div>
+              <div class="question-actions">
+                <button class="question-action-btn" title="必填">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </svg>
+                </button>
+                <button class="question-action-btn" title="复制">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+                <button class="question-action-btn danger" title="删除">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="question-content">
+                <h3 class="question-title required">您对产品的整体满意度如何？</h3>
+                <div class="rating-preview">
+                  <svg class="rating-star active" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-5.82 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <svg class="rating-star active" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-5.82 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <svg class="rating-star active" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-5.82 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <svg class="rating-star active" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-5.82 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <svg class="rating-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-5.82 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Question 3: Text Area -->
+            <div class="question-card" data-question-id="3">
+              <div class="question-number">3</div>
+              <div class="drag-handle">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="12" r="1"/>
+                  <circle cx="9" cy="5" r="1"/>
+                  <circle cx="9" cy="19" r="1"/>
+                  <circle cx="15" cy="12" r="1"/>
+                  <circle cx="15" cy="5" r="1"/>
+                  <circle cx="15" cy="19" r="1"/>
+                </svg>
+              </div>
+              <div class="question-actions">
+                <button class="question-action-btn" title="可选">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </svg>
+                </button>
+                <button class="question-action-btn" title="复制">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+                <button class="question-action-btn danger" title="删除">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="question-content">
+                <h3 class="question-title">请分享您的详细反馈和建议</h3>
+                <textarea class="text-input-preview textarea-preview" placeholder="请输入您的反馈..."></textarea>
+              </div>
+            </div>
+
+            <!-- Add Question Zone -->
+            <div class="add-question-zone">
+              <div class="add-question-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </div>
+              <div class="add-question-text">添加新题目</div>
+              <div class="add-question-hint">拖拽左侧题型到此处，或点击添加</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Toggle -->
+    <button class="mobile-drawer-toggle" id="drawerToggle">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="16"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+      </svg>
+    </button>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-handle"></div>
+      <div class="mobile-drawer-header">
+        <span class="sidebar-title">添加题型</span>
+        <div class="mobile-drawer-close" id="drawerClose">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+      </div>
+      <div class="question-types">
+        <div class="question-type-card">
+          <div class="question-type-icon single-choice">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <div class="question-type-info">
+            <div class="question-type-name">单选题</div>
+          </div>
+        </div>
+        <div class="question-type-card">
+          <div class="question-type-icon multiple-choice">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <polyline points="9 11 12 14 15 11"/>
+            </svg>
+          </div>
+          <div class="question-type-info">
+            <div class="question-type-name">多选题</div>
+          </div>
+        </div>
+        <div class="question-type-card">
+          <div class="question-type-icon rating">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div class="question-type-info">
+            <div class="question-type-name">评分题</div>
+          </div>
+        </div>
+        <div class="question-type-card">
+          <div class="question-type-icon text">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="7" x2="20" y2="7"/>
+              <line x1="9" y1="20" x2="15" y2="20"/>
+              <line x1="12" y1="4" x2="12" y2="20"/>
+            </svg>
+          </div>
+          <div class="question-type-info">
+            <div class="question-type-name">文本题</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Theme Selector Modal -->
+    <div class="theme-modal-overlay" id="themeModal">
+      <div class="theme-modal">
+        <div class="theme-modal-header">
+          <h2 class="theme-modal-title">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            选择表单主题
+          </h2>
+          <button class="theme-modal-close" id="themeModalClose">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="theme-modal-body">
+          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">选择一个主题，访客填写表单时将看到所选风格的界面</p>
+          <div class="theme-grid" id="themeGrid">
+            <div class="theme-option-card selected" data-theme="nebula">
+              <div class="theme-option-preview" style="background: linear-gradient(135deg, #6366F1, #8B5CF6);">
+                <div class="theme-option-check">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="theme-option-name">星云紫</div>
+              <div class="theme-option-desc">神秘优雅</div>
+            </div>
+            <div class="theme-option-card" data-theme="ocean">
+              <div class="theme-option-preview" style="background: linear-gradient(135deg, #0EA5E9, #06B6D4);">
+                <div class="theme-option-check">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="theme-option-name">海洋蓝</div>
+              <div class="theme-option-desc">清新自然</div>
+            </div>
+            <div class="theme-option-card" data-theme="sunset">
+              <div class="theme-option-preview" style="background: linear-gradient(135deg, #F97316, #EC4899);">
+                <div class="theme-option-check">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="theme-option-name">日落橙</div>
+              <div class="theme-option-desc">温暖活力</div>
+            </div>
+            <div class="theme-option-card" data-theme="forest">
+              <div class="theme-option-preview" style="background: linear-gradient(135deg, #10B981, #06B6D4);">
+                <div class="theme-option-check">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="theme-option-name">森林绿</div>
+              <div class="theme-option-desc">自然清新</div>
+            </div>
+            <div class="theme-option-card" data-theme="sakura">
+              <div class="theme-option-preview" style="background: linear-gradient(135deg, #EC4899, #F472B6);">
+                <div class="theme-option-check">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="theme-option-name">樱花粉</div>
+              <div class="theme-option-desc">浪漫柔和</div>
+            </div>
+            <div class="theme-option-card" data-theme="cyber">
+              <div class="theme-option-preview" style="background: linear-gradient(135deg, #22D3EE, #A855F7);">
+                <div class="theme-option-check">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="theme-option-name">赛博霓虹</div>
+              <div class="theme-option-desc">未来科技</div>
+            </div>
+            <div class="theme-option-card" data-theme="minimal">
+              <div class="theme-option-preview" style="background: linear-gradient(135deg, #64748B, #94A3B8);">
+                <div class="theme-option-check">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="theme-option-name">极简灰</div>
+              <div class="theme-option-desc">简约专业</div>
+            </div>
+            <div class="theme-option-card" data-theme="royal">
+              <div class="theme-option-preview" style="background: linear-gradient(135deg, #F59E0B, #EAB308);">
+                <div class="theme-option-check">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="theme-option-name">皇家金</div>
+              <div class="theme-option-desc">奢华质感</div>
+            </div>
+          </div>
+        </div>
+        <div class="theme-modal-footer">
+          <button class="header-btn ghost" id="themeModalCancel">取消</button>
+          <button class="header-btn primary" id="themeModalApply">应用主题</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Theme Preview Bar -->
+    <div class="theme-preview-bar" id="themePreviewBar" style="display: none;">
+      <span class="theme-preview-label">当前表单主题：</span>
+      <div class="theme-preview-badge">
+        <div class="theme-preview-dot" id="currentThemeDot"></div>
+        <span id="currentThemeName">星云紫</span>
+      </div>
+      <button class="header-btn ghost" style="padding: 6px 12px;" id="changeThemeBtn">更换</button>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Drag and drop functionality
+    const questionTypeCards = document.querySelectorAll('.question-type-card[draggable="true"]');
+    const addQuestionZone = document.querySelector('.add-question-zone');
+    const formPreview = document.querySelector('.form-preview');
+
+    questionTypeCards.forEach(card => {
+      card.addEventListener('dragstart', function(e) {
+        this.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', this.dataset.type);
+      });
+
+      card.addEventListener('dragend', function() {
+        this.classList.remove('dragging');
+      });
+
+      // Click to add
+      card.addEventListener('click', function() {
+        addQuestion(this.dataset.type);
+      });
+    });
+
+    addQuestionZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      this.classList.add('drag-over');
+    });
+
+    addQuestionZone.addEventListener('dragleave', function() {
+      this.classList.remove('drag-over');
+    });
+
+    addQuestionZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.classList.remove('drag-over');
+      const type = e.dataTransfer.getData('text/plain');
+      addQuestion(type);
+    });
+
+    // Click to add question
+    addQuestionZone.addEventListener('click', function() {
+      // Default to single choice
+      addQuestion('single-choice');
+    });
+
+    function addQuestion(type) {
+      console.log('Adding question type:', type);
+      // In a real implementation, this would add a new question card
+      // to the form preview area
+    }
+
+    // Question card drag and drop for reordering
+    const questionCards = document.querySelectorAll('.question-card');
+
+    questionCards.forEach(card => {
+      card.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('drag-over');
+      });
+
+      card.addEventListener('dragleave', function() {
+        this.classList.remove('drag-over');
+      });
+
+      card.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+        // Handle reordering
+      });
+    });
+
+    // Question actions
+    document.querySelectorAll('.question-action-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const title = this.getAttribute('title');
+        console.log('Question action:', title);
+
+        if (this.classList.contains('danger')) {
+          // Delete question
+          const card = this.closest('.question-card');
+          if (confirm('确定要删除这道题目吗？')) {
+            card.remove();
+          }
+        }
+      });
+    });
+
+    // Option selection
+    document.querySelectorAll('.option-item').forEach(option => {
+      option.addEventListener('click', function() {
+        const parent = this.closest('.option-list');
+        const isRadio = this.querySelector('.option-radio');
+
+        if (isRadio) {
+          // Single choice - clear others
+          parent.querySelectorAll('.option-radio').forEach(r => r.classList.remove('checked'));
+          this.querySelector('.option-radio').classList.add('checked');
+        } else {
+          // Multiple choice - toggle
+          this.querySelector('.option-checkbox').classList.toggle('checked');
+        }
+      });
+    });
+
+    // Rating stars
+    document.querySelectorAll('.rating-preview').forEach(container => {
+      const stars = container.querySelectorAll('.rating-star');
+      stars.forEach((star, index) => {
+        star.addEventListener('click', function() {
+          stars.forEach((s, i) => {
+            if (i <= index) {
+              s.classList.add('active');
+            } else {
+              s.classList.remove('active');
+            }
+          });
+        });
+      });
+    });
+
+    // Mobile drawer
+    const drawerToggle = document.getElementById('drawerToggle');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const drawerClose = document.getElementById('drawerClose');
+
+    drawerToggle?.addEventListener('click', function() {
+      mobileDrawer.classList.add('open');
+    });
+
+    drawerClose?.addEventListener('click', function() {
+      mobileDrawer.classList.remove('open');
+    });
+
+    // Close drawer when clicking outside
+    document.addEventListener('click', function(e) {
+      if (mobileDrawer.classList.contains('open') &&
+          !mobileDrawer.contains(e.target) &&
+          !drawerToggle.contains(e.target)) {
+        mobileDrawer.classList.remove('open');
+      }
+    });
+
+    // Form title edit
+    const formTitleInput = document.querySelector('.form-title-input');
+    const formHeaderTitle = document.querySelector('.form-header-title');
+
+    formTitleInput?.addEventListener('input', function() {
+      formHeaderTitle.textContent = this.value || '未命名表单';
+    });
+
+    // Header actions
+    const headerBtns = document.querySelectorAll('.header-btn');
+    const settingsBtn = headerBtns[0];
+    const previewBtn = headerBtns[1];
+    const saveBtn = headerBtns[2];
+    const publishBtn = headerBtns[3];
+
+    // Settings button
+    settingsBtn?.addEventListener('click', function() {
+      const originalHTML = this.innerHTML;
+      this.innerHTML = `
+        <svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        <span>加载中...</span>
+      `;
+      setTimeout(() => {
+        this.innerHTML = originalHTML;
+        alert('打开表单设置面板');
+      }, 500);
+    });
+
+    // Preview button
+    previewBtn?.addEventListener('click', function() {
+      const originalHTML = this.innerHTML;
+      this.innerHTML = `
+        <svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        <span>加载中...</span>
+      `;
+      setTimeout(() => {
+        this.innerHTML = originalHTML;
+        window.open('../public/form-view.html', '_blank');
+      }, 500);
+    });
+
+    // Save button
+    saveBtn?.addEventListener('click', function() {
+      const originalHTML = this.innerHTML;
+      this.innerHTML = `
+        <svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        <span>保存中...</span>
+      `;
+      setTimeout(() => {
+        this.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20,6 9,17 4,12"/>
+          </svg>
+          <span>已保存</span>
+        `;
+        setTimeout(() => {
+          this.innerHTML = originalHTML;
+        }, 2000);
+      }, 1000);
+    });
+
+    // Publish button
+    publishBtn?.addEventListener('click', function() {
+      const originalHTML = this.innerHTML;
+      this.innerHTML = `
+        <svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        <span>发布中...</span>
+      `;
+      setTimeout(() => {
+        this.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20,6 9,17 4,12"/>
+          </svg>
+          <span>已发布</span>
+        `;
+        setTimeout(() => {
+          this.innerHTML = originalHTML;
+          // Show share dialog
+          alert('表单已发布！\n\n分享链接：\nhttps://multiforms.com/f/abc123');
+        }, 1500);
+      }, 1500);
+    });
+
+    // Advanced features
+    document.querySelectorAll('.feature-item').forEach((item, index) => {
+      item.addEventListener('click', function() {
+        const features = ['逻辑跳转', '主题样式', '隐私设置'];
+        alert(`打开${features[index]}面板`);
+      });
+    });
+
+    // Add spinner animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .spin {
+        display: inline-block;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Theme Selector
+    const themeModal = document.getElementById('themeModal');
+    const themeModalClose = document.getElementById('themeModalClose');
+    const themeModalCancel = document.getElementById('themeModalCancel');
+    const themeModalApply = document.getElementById('themeModalApply');
+    const themeGrid = document.getElementById('themeGrid');
+    const themePreviewBar = document.getElementById('themePreviewBar');
+    const changeThemeBtn = document.getElementById('changeThemeBtn');
+    const currentThemeDot = document.getElementById('currentThemeDot');
+    const currentThemeName = document.getElementById('currentThemeName');
+
+    let selectedTheme = 'nebula';
+    let savedTheme = 'nebula';
+
+    const themeGradients = {
+      nebula: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+      ocean: 'linear-gradient(135deg, #0EA5E9, #06B6D4)',
+      sunset: 'linear-gradient(135deg, #F97316, #EC4899)',
+      forest: 'linear-gradient(135deg, #10B981, #06B6D4)',
+      sakura: 'linear-gradient(135deg, #EC4899, #F472B6)',
+      cyber: 'linear-gradient(135deg, #22D3EE, #A855F7)',
+      minimal: 'linear-gradient(135deg, #64748B, #94A3B8)',
+      royal: 'linear-gradient(135deg, #F59E0B, #EAB308)'
+    };
+
+    const themeNames = {
+      nebula: '星云紫',
+      ocean: '海洋蓝',
+      sunset: '日落橙',
+      forest: '森林绿',
+      sakura: '樱花粉',
+      cyber: '赛博霓虹',
+      minimal: '极简灰',
+      royal: '皇家金'
+    };
+
+    // Open theme modal
+    function openThemeModal() {
+      selectedTheme = savedTheme;
+      updateThemeSelection();
+      themeModal.classList.add('active');
+    }
+
+    // Close theme modal
+    function closeThemeModal() {
+      themeModal.classList.remove('active');
+    }
+
+    // Update theme selection UI
+    function updateThemeSelection() {
+      themeGrid.querySelectorAll('.theme-option-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.theme === selectedTheme);
+      });
+    }
+
+    // Apply theme to preview
+    function applyTheme(theme) {
+      document.body.dataset.theme = theme;
+      savedTheme = theme;
+      updateThemePreviewBar();
+    }
+
+    // Update theme preview bar
+    function updateThemePreviewBar() {
+      themePreviewBar.style.display = 'flex';
+      currentThemeDot.style.background = themeGradients[savedTheme];
+      currentThemeName.textContent = themeNames[savedTheme];
+    }
+
+    // Theme option click
+    themeGrid.querySelectorAll('.theme-option-card').forEach(card => {
+      card.addEventListener('click', function() {
+        selectedTheme = this.dataset.theme;
+        updateThemeSelection();
+      });
+    });
+
+    // Theme modal events
+    themeModalClose?.addEventListener('click', closeThemeModal);
+    themeModalCancel?.addEventListener('click', closeThemeModal);
+    themeModalApply?.addEventListener('click', function() {
+      applyTheme(selectedTheme);
+      closeThemeModal();
+    });
+
+    // Close modal on overlay click
+    themeModal.addEventListener('click', function(e) {
+      if (e.target === themeModal) {
+        closeThemeModal();
+      }
+    });
+
+    // Change theme button in preview bar
+    changeThemeBtn?.addEventListener('click', openThemeModal);
+
+    // Advanced features - open theme modal
+    document.querySelectorAll('.feature-item').forEach((item, index) => {
+      item.addEventListener('click', function() {
+        const features = ['逻辑跳转', '主题样式', '隐私设置'];
+        if (features[index] === '主题样式') {
+          openThemeModal();
+        } else {
+          alert(`打开${features[index]}面板`);
+        }
+      });
+    });
+
+    // Initialize theme preview bar
+    updateThemePreviewBar();
+  </script>
+</body>
+</html>

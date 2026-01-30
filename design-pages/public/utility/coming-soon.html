@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>即将推出 - MultiForms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../common.css">
+  <style>
+    /* Coming Soon Page Styles */
+    .coming-soon-page {
+      min-height: 100vh;
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+    }
+
+    /* Background decoration */
+    .coming-soon-page::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Coming Soon Card */
+    .coming-soon-card {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      z-index: 1;
+    }
+
+    /* Logo */
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: var(--space-2xl);
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: 8px 20px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 100px;
+      color: var(--primary-glow);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: var(--space-lg);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--primary-glow);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+      }
+    }
+
+    /* Title */
+    .title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-md);
+      line-height: 1.2;
+    }
+
+    /* Description */
+    .description {
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: var(--space-xl);
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Countdown */
+    .countdown {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .countdown-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .countdown-value {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: var(--space-sm);
+    }
+
+    .countdown-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Notify Form */
+    .notify-form {
+      display: flex;
+      gap: var(--space-sm);
+      max-width: 400px;
+      margin: 0 auto var(--space-xl);
+    }
+
+    .notify-input {
+      flex: 1;
+      padding: 14px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
+      outline: none;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .notify-input:focus {
+      border-color: var(--primary-start);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .notify-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .notify-button {
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 500;
+      color: white;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border: none;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .notify-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+    }
+
+    /* Social Links */
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-md);
+    }
+
+    .social-link {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+      color: var(--text-secondary);
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .social-link:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--primary-start);
+      color: var(--primary-glow);
+      transform: translateY(-2px);
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: var(--space-2xl);
+      padding-top: var(--space-lg);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .footer a {
+      color: var(--primary-glow);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .title {
+        font-size: 28px;
+      }
+
+      .description {
+        font-size: 16px;
+      }
+
+      .countdown-value {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+      }
+
+      .notify-form {
+        flex-direction: column;
+      }
+
+      .notify-button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="coming-soon-page">
+    <div class="coming-soon-card">
+      <!-- Logo -->
+      <div class="logo">MultiForms</div>
+
+      <!-- Badge -->
+      <div class="badge">
+        <span class="badge-dot"></span>
+        即将推出
+      </div>
+
+      <!-- Title -->
+      <h1 class="title">全新功能即将上线</h1>
+
+      <!-- Description -->
+      <p class="description">
+        我们正在努力构建令人兴奋的新功能。<br>
+        敬请期待，敬请期待！
+      </p>
+
+      <!-- Countdown -->
+      <div class="countdown" id="countdown">
+        <div class="countdown-item">
+          <div class="countdown-value" id="days">00</div>
+          <div class="countdown-label">天</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-value" id="hours">00</div>
+          <div class="countdown-label">时</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-value" id="minutes">00</div>
+          <div class="countdown-label">分</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-value" id="seconds">00</div>
+          <div class="countdown-label">秒</div>
+        </div>
+      </div>
+
+      <!-- Notify Form -->
+      <form class="notify-form" id="notifyForm">
+        <input type="email" class="notify-input" placeholder="输入您的邮箱，我们会在上线时通知您" required>
+        <button type="submit" class="notify-button">通知我</button>
+      </form>
+
+      <!-- Social Links -->
+      <div class="social-links">
+        <a href="#" class="social-link" title="Twitter">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+          </svg>
+        </a>
+        <a href="#" class="social-link" title="GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+          </svg>
+        </a>
+        <a href="#" class="social-link" title="Discord">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+            <line x1="9" y1="9" x2="9.01" y2="9"/>
+            <line x1="15" y1="9" x2="15.01" y2="9"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        &copy; 2026 MultiForms. <a href="#">返回首页</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Set launch date (30 days from now)
+    const launchDate = new Date();
+    launchDate.setDate(launchDate.getDate() + 30);
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = launchDate.getTime() - now;
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      document.getElementById('days').textContent = String(days).padStart(2, '0');
+      document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+      document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+
+      if (distance < 0) {
+        document.getElementById('countdown').innerHTML = '<div style="font-size: 24px; color: var(--primary-glow);">🎉 已上线！</div>';
+      }
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    // Notify form
+    document.getElementById('notifyForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = this.querySelector('input').value;
+      alert(`感谢您的订阅！我们会在上线时通知 ${email}`);
+      this.reset();
+    });
+  </script>
+</body>
+</html>

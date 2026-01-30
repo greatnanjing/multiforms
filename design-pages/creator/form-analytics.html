@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据分析 - MultiForms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common.css">
+  <style>
+    /* Analytics Page Styles */
+    .analytics-page {
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    /* Top Navigation */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg) var(--space-xl);
+      background: rgba(15, 15, 35, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: color 0.2s var(--ease-out);
+    }
+
+    .back-button:hover {
+      color: var(--primary-glow);
+    }
+
+    .form-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: var(--space-md);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-lg);
+      padding: var(--space-xl);
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .stat-card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .stat-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: var(--space-xs);
+    }
+
+    .stat-trend {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: 13px;
+    }
+
+    .stat-trend.positive {
+      color: #10B981;
+    }
+
+    .stat-trend.negative {
+      color: #EF4444;
+    }
+
+    /* Chart Section */
+    .chart-section {
+      padding: 0 var(--space-xl) var(--space-xl);
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .chart-card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+    }
+
+    .chart-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .time-filters {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .time-filter {
+      padding: 8px 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .time-filter:hover,
+    .time-filter.active {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-color: transparent;
+      color: white;
+    }
+
+    /* Line Chart */
+    .line-chart {
+      height: 200px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: var(--space-lg) 0;
+    }
+
+    .chart-grid {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .grid-line {
+      width: 100%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .chart-line {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .chart-path {
+      fill: none;
+      stroke: url(#lineGradient);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
+    }
+
+    .chart-area {
+      fill: url(#areaGradient);
+      opacity: 0.3;
+    }
+
+    .chart-dot {
+      fill: var(--bg-primary);
+      stroke: var(--primary-glow);
+      stroke-width: 3;
+      r: 6;
+      cursor: pointer;
+      transition: r 0.2s var(--ease-out);
+    }
+
+    .chart-dot:hover {
+      r: 8;
+    }
+
+    /* Question Stats */
+    .question-stats {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      margin-top: var(--space-lg);
+    }
+
+    .question-card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+    }
+
+    .question-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-lg);
+    }
+
+    /* Bar Chart */
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .bar-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .bar-label {
+      min-width: 120px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: var(--space-md);
+      transition: width 0.6s var(--ease-out);
+    }
+
+    .bar-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: white;
+    }
+
+    .bar-percentage {
+      min-width: 60px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: right;
+    }
+
+    /* Rating Distribution */
+    .rating-distribution {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .rating-stars {
+      min-width: 100px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      color: #FBBF24;
+      font-size: 16px;
+    }
+
+    .rating-bar-track {
+      flex: 1;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .rating-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FBBF24, #F59E0B);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      padding-left: var(--space-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: white;
+      transition: width 0.6s var(--ease-out);
+    }
+
+    .rating-avg {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+      padding: var(--space-md) var(--space-lg);
+      background: rgba(251, 191, 36, 0.1);
+      border-radius: var(--radius-md);
+    }
+
+    .rating-avg-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .rating-avg-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #FBBF24;
+    }
+
+    /* Data Table */
+    .data-table-section {
+      margin-top: var(--space-lg);
+    }
+
+    .data-table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+    }
+
+    .data-table-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .data-table-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: 14px;
+      color: var(--primary-glow);
+      cursor: pointer;
+      transition: gap 0.2s var(--ease-out);
+    }
+
+    .data-table-link:hover {
+      gap: var(--space-sm);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: var(--space-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .data-table td {
+      padding: var(--space-md);
+      font-size: 14px;
+      color: var(--text-primary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .table-rating {
+      color: #FBBF24;
+    }
+
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-3xl);
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-md);
+      opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+        padding: var(--space-md);
+      }
+
+      .top-nav {
+        flex-direction: column;
+        gap: var(--space-md);
+        padding: var(--space-md);
+      }
+
+      .nav-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .chart-section {
+        padding: 0 var(--space-md) var(--space-md);
+      }
+
+      .bar-label {
+        min-width: 80px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="analytics-page">
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+      <div class="nav-left">
+        <a href="dashboard.html" class="back-button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          返回
+        </a>
+        <h1 class="form-title">产品满意度调研</h1>
+      </div>
+      <div class="nav-actions">
+        <button class="btn btn-ghost" id="exportBtn">导出数据</button>
+        <button class="btn btn-primary" id="shareBtn">分享</button>
+      </div>
+    </nav>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">总回复数</div>
+        <div class="stat-value">852</div>
+        <div class="stat-trend positive">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19V5M5 12l7-7 7 7"/>
+          </svg>
+          较上周 +18%
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">完成率</div>
+        <div class="stat-value">94.2%</div>
+        <div class="stat-trend positive">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19V5M5 12l7-7 7 7"/>
+          </svg>
+          较上周 +2%
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">平均耗时</div>
+        <div class="stat-value">2:34</div>
+        <div class="stat-trend negative">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12l7 7 7-7"/>
+          </svg>
+          较上周 -8%
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">今日新增</div>
+        <div class="stat-value">47</div>
+        <div class="stat-trend positive">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19V5M5 12l7-7 7 7"/>
+          </svg>
+          较昨日 +12%
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="chart-section">
+      <!-- Trend Chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">回复趋势</h2>
+          <div class="time-filters">
+            <button class="time-filter">今日</button>
+            <button class="time-filter active">本周</button>
+            <button class="time-filter">全部</button>
+          </div>
+        </div>
+        <div class="line-chart">
+          <div class="chart-grid">
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
+          </div>
+          <div class="chart-line">
+            <svg class="chart-svg" viewBox="0 0 800 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#6366F1"/>
+                  <stop offset="100%" stop-color="#8B5CF6"/>
+                </linearGradient>
+                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#6366F1" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path class="chart-area" d="M0,150 Q100,120 200,100 T400,80 T600,60 T800,40 L800,200 L0,200 Z"/>
+              <path class="chart-path" d="M0,150 Q100,120 200,100 T400,80 T600,60 T800,40"/>
+              <circle class="chart-dot" cx="0" cy="150"/>
+              <circle class="chart-dot" cx="133" cy="120"/>
+              <circle class="chart-dot" cx="266" cy="100"/>
+              <circle class="chart-dot" cx="400" cy="80"/>
+              <circle class="chart-dot" cx="533" cy="60"/>
+              <circle class="chart-dot" cx="666" cy="50"/>
+              <circle class="chart-dot" cx="800" cy="40"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question Stats -->
+      <div class="question-stats">
+        <!-- Question 1: Single Choice -->
+        <div class="question-card">
+          <h3 class="question-title">1. 您使用多久了？</h3>
+          <div class="bar-chart">
+            <div class="bar-item">
+              <div class="bar-label">不到1个月</div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 35%;">
+                  <span class="bar-value">298</span>
+                </div>
+              </div>
+              <div class="bar-percentage">35%</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">1-6个月</div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 28%;">
+                  <span class="bar-value">239</span>
+                </div>
+              </div>
+              <div class="bar-percentage">28%</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">6-12个月</div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 24%;">
+                  <span class="bar-value">204</span>
+                </div>
+              </div>
+              <div class="bar-percentage">24%</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">超过1年</div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 13%;">
+                  <span class="bar-value">111</span>
+                </div>
+              </div>
+              <div class="bar-percentage">13%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 2: Rating -->
+        <div class="question-card">
+          <h3 class="question-title">2. 整体满意度评分</h3>
+          <div class="rating-avg">
+            <span class="rating-avg-label">平均分</span>
+            <span class="rating-avg-value">4.2<span style="font-size: 16px; color: var(--text-secondary);">/5.0</span></span>
+          </div>
+          <div class="rating-distribution">
+            <div class="rating-row">
+              <div class="rating-stars">★★★★★</div>
+              <div class="rating-bar-track">
+                <div class="rating-bar-fill" style="width: 42%;">42%</div>
+              </div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-stars">★★★★☆</div>
+              <div class="rating-bar-track">
+                <div class="rating-bar-fill" style="width: 38%;">38%</div>
+              </div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-stars">★★★☆☆</div>
+              <div class="rating-bar-track">
+                <div class="rating-bar-fill" style="width: 15%;">15%</div>
+              </div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-stars">★★☆☆☆</div>
+              <div class="rating-bar-track">
+                <div class="rating-bar-fill" style="width: 4%;">4%</div>
+              </div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-stars">★☆☆☆☆</div>
+              <div class="rating-bar-track">
+                <div class="rating-bar-fill" style="width: 1%;">1%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="question-card data-table-section">
+          <div class="data-table-header">
+            <h3 class="data-table-title">查看原始回复</h3>
+            <div class="data-table-link">
+              导出全部
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>回复时间</th>
+                <th>使用时长</th>
+                <th>满意度</th>
+                <th>详细反馈</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-01-29 10:23</td>
+                <td>6-12个月</td>
+                <td><span class="table-rating">★★★★★</span></td>
+                <td>非常好用的产品，强烈推荐！</td>
+              </tr>
+              <tr>
+                <td>2026-01-29 09:15</td>
+                <td>不到1个月</td>
+                <td><span class="table-rating">★★★★☆</span></td>
+                <td>功能全面，界面美观</td>
+              </tr>
+              <tr>
+                <td>2026-01-29 08:42</td>
+                <td>1-6个月</td>
+                <td><span class="table-rating">★★★★★</span></td>
+                <td>帮我节省了很多时间</td>
+              </tr>
+              <tr>
+                <td>2026-01-29 07:30</td>
+                <td>超过1年</td>
+                <td><span class="table-rating">★★★☆☆</span></td>
+                <td>希望能增加更多模板</td>
+              </tr>
+              <tr>
+                <td>2026-01-28 23:15</td>
+                <td>不到1个月</td>
+                <td><span class="table-rating">★★★★☆</span></td>
+                <td>整体体验不错</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple interaction demo
+    document.querySelectorAll('.time-filter').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.time-filter').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Animate bars on load
+    window.addEventListener('load', () => {
+      document.querySelectorAll('.bar-fill, .rating-bar-fill').forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+          bar.style.width = width;
+        }, 100);
+      });
+    });
+
+    // Export button
+    document.getElementById('exportBtn')?.addEventListener('click', function() {
+      const originalText = this.textContent;
+      this.innerHTML = `
+        <svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        导出中...
+      `;
+      this.disabled = true;
+      setTimeout(() => {
+        this.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+            <polyline points="20,6 9,17 4,12"/>
+          </svg>
+          已导出
+        `;
+        setTimeout(() => {
+          this.textContent = originalText;
+          this.disabled = false;
+        }, 2000);
+      }, 1500);
+    });
+
+    // Share button
+    document.getElementById('shareBtn')?.addEventListener('click', function() {
+      const shareUrl = 'https://multiforms.com/f/abc123/analytics';
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          const originalText = this.textContent;
+          this.textContent = '已复制链接';
+          setTimeout(() => {
+            this.textContent = originalText;
+          }, 2000);
+        });
+      } else {
+        alert('分享链接：\n' + shareUrl);
+      }
+    });
+
+    // Export all data link
+    document.querySelector('.data-table-link')?.addEventListener('click', function() {
+      const originalHTML = this.innerHTML;
+      this.innerHTML = `
+        导出中...
+        <svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="animation: spin 1s linear infinite;">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+      `;
+      setTimeout(() => {
+        this.innerHTML = `
+          已导出
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <polyline points="20,6 9,17 4,12"/>
+          </svg>
+        `;
+        setTimeout(() => {
+          this.innerHTML = originalHTML;
+        }, 2000);
+      }, 1500);
+    });
+
+    // Add spinner animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .spin {
+        display: inline-block;
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

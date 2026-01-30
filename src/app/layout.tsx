@@ -8,6 +8,9 @@
    - 全局样式
 ============================================ */
 
+// Force dynamic rendering to prevent build-time Supabase errors
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'

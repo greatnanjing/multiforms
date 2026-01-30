@@ -9,6 +9,9 @@
    Route Groups: (public) - 不会出现在 URL 中
 ============================================ */
 
+// Force dynamic rendering to prevent build-time Supabase errors
+export const dynamic = 'force-dynamic'
+
 import { MainLayout } from '@/components/layout/main-layout'
 
 export default function PublicLayout({

@@ -102,7 +102,7 @@ export default function PasswordGatePage() {
     try {
       // TODO: Replace with actual API verification
       // For demo: simple hash comparison
-      const isCorrect = await verifyPassword(password, form?.access_password)
+      const isCorrect = await verifyPassword(password, form?.access_password ?? null)
 
       if (isCorrect) {
         // Store verification in session storage

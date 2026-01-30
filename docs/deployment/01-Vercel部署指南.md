@@ -617,6 +617,35 @@ ratings.reduce((a: number, b: number) => a + b, 0)
 
 **注意**：此问题通常出现在多个位置，需要全局搜索 `\.filter\(`、`\.map\(`、`\.forEach\(`、`\.reduce\(` 并统一修复。
 
+#### 13. 预渲染错误：Supabase SSR 需要运行时环境变量
+
+**错误信息**：
+```
+Error occurred prerendering page "/login".
+Error: @supabase/ssr: Your project's URL and API key are required to create a Supabase client!
+```
+
+**原因**：Next.js 在构建时尝试静态生成（pre-render）登录/注册页面，此时 Supabase 环境变量尚未设置。`@supabase/ssr` 的 `createServerClient()` 会验证 URL 和密钥是否为空字符串。
+
+**解决方案**：在需要访问 Supabase 的页面添加 `export const dynamic = 'force-dynamic'` 强制动态渲染：
+
+```typescript
+// login/page.tsx 或 register/page.tsx
+'use client'
+
+// 强制动态渲染，防止构建时 Supabase 错误
+// 此页面需要访问 Supabase，需要运行时环境变量
+export const dynamic = 'force-dynamic'
+
+import { useState } from 'react'
+// ... rest of the component
+```
+
+**受影响的页面**：
+- `/login` - 登录页面
+- `/register` - 注册页面
+- 任何其他需要在服务器端访问 Supabase 的页面
+
 ### 获取帮助
 
 - [Vercel 文档](https://vercel.com/docs)

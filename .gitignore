@@ -52,7 +52,7 @@ lerna-debug.log*
 # ============================================
 .env
 .env*.local
-.env.production
+# .env.production - 已提交用于 Vercel 部署 (NEXT_PUBLIC_* 变量是公开的)
 .env.development
 
 # 保留 .env.example 作为模板

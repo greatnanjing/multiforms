@@ -94,13 +94,13 @@ export async function getFormStats(options: GetStatsOptions): Promise<FormOvervi
     .eq('form_id', options.formId)
     .eq('status', 'completed')
 
-  const responsesToday = submissions?.filter(s => s.created_at >= todayStart).length || 0
-  const responsesThisWeek = submissions?.filter(s => s.created_at >= weekStartIso).length || 0
+  const responsesToday = submissions?.filter((s: any) => s.created_at >= todayStart).length || 0
+  const responsesThisWeek = submissions?.filter((s: any) => s.created_at >= weekStartIso).length || 0
 
   // 计算平均完成时间（秒）
-  const durations = submissions?.map(s => s.duration_seconds).filter((d): d is number => d !== null) || []
+  const durations = submissions?.map((s: any) => s.duration_seconds).filter((d: any): d is number => d !== null) || []
   const avgDuration = durations.length > 0
-    ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+    ? Math.round(durations.reduce((a: number, b: number) => a + b, 0) / durations.length)
     : 0
 
   // 计算完成率（假设 view_count 包含未完成的访问）
@@ -116,7 +116,7 @@ export async function getFormStats(options: GetStatsOptions): Promise<FormOvervi
     avg_duration: avgDuration,
     responses_today: responsesToday,
     responses_this_week: responsesThisWeek,
-    responses_this_month: submissions?.filter(s => {
+    responses_this_month: submissions?.filter((s: any) => {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
       return s.created_at >= monthStart
     }).length || 0,
@@ -185,7 +185,7 @@ export async function getResponseTrend(options: GetTrendOptions): Promise<TrendD
   }
 
   // 统计每日回复数
-  submissions?.forEach(submission => {
+  submissions?.forEach((submission: any) => {
     const dateKey = submission.created_at.split('T')[0]
     trendMap.set(dateKey, (trendMap.get(dateKey) || 0) + 1)
   })
@@ -230,14 +230,14 @@ export async function getQuestionStats(options: GetQuestionStatsOptions): Promis
     throw new Error(`获取提交数据失败: ${submissionsError.message}`)
   }
 
-  const answers = submissions?.map(s => s.answers) || []
+  const answers = submissions?.map((s: any) => s.answers) || []
   const totalResponses = answers.length
 
   // 为每个题目计算统计
-  const stats: QuestionStats[] = (questions || []).map(question => {
+  const stats: QuestionStats[] = (questions || []).map((question: any) => {
     const questionAnswers = answers
-      .map(a => a[question.id])
-      .filter(a => a !== undefined && a !== null)
+      .map((a: any) => a[question.id])
+      .filter((a: any) => a !== undefined && a !== null)
 
     const responseCount = questionAnswers.length
     const skipCount = totalResponses - responseCount
@@ -264,9 +264,9 @@ export async function getQuestionStats(options: GetQuestionStatsOptions): Promis
       })
 
       // 统计每个选项的选择次数
-      questionAnswers.forEach(answer => {
+      questionAnswers.forEach((answer: any) => {
         const values = Array.isArray(answer) ? answer : [answer]
-        values.forEach(v => {
+        values.forEach((v: any) => {
           choiceCountMap.set(v, (choiceCountMap.get(v) || 0) + 1)
         })
       })
@@ -288,11 +288,11 @@ export async function getQuestionStats(options: GetQuestionStatsOptions): Promis
 
     // 评分题统计
     if (question.question_type === 'rating') {
-      const ratings = questionAnswers.map(a => Number(a)).filter(n => !isNaN(n))
+      const ratings = questionAnswers.map((a: any) => Number(a)).filter((n: any) => !isNaN(n))
       const validRatings = ratings.length
 
       if (validRatings > 0) {
-        const sum = ratings.reduce((a, b) => a + b, 0)
+        const sum = ratings.reduce((a: number, b: number) => a + b, 0)
         const avg = Math.round((sum / validRatings) * 10) / 10
         const min = Math.min(...ratings)
         const max = Math.max(...ratings)
@@ -302,7 +302,7 @@ export async function getQuestionStats(options: GetQuestionStatsOptions): Promis
         const ratingMin = question.options?.rating_min || 1
 
         for (let i = ratingMin; i <= ratingMax; i++) {
-          distribution[i] = ratings.filter(r => r === i).length
+          distribution[i] = ratings.filter((r: any) => r === i).length
         }
 
         return {
@@ -332,18 +332,18 @@ export async function getQuestionStats(options: GetQuestionStatsOptions): Promis
       question.question_type === 'text' ||
       question.question_type === 'textarea'
     ) {
-      const textAnswers = questionAnswers.map(a => String(a)).filter(a => a.length > 0)
+      const textAnswers = questionAnswers.map((a: any) => String(a)).filter((a: any) => a.length > 0)
 
       if (textAnswers.length > 0) {
         const avgLength = Math.round(
-          textAnswers.reduce((sum, text) => sum + text.length, 0) / textAnswers.length
+          textAnswers.reduce((sum: number, text: any) => sum + text.length, 0) / textAnswers.length
         )
 
         // 简单词频统计
         const wordCountMap = new Map<string, number>()
-        textAnswers.forEach(text => {
-          const words = text.split(/\s+/).filter(w => w.length > 1)
-          words.forEach(word => {
+        textAnswers.forEach((text: any) => {
+          const words = text.split(/\s+/).filter((w: any) => w.length > 1)
+          words.forEach((word: any) => {
             wordCountMap.set(word, (wordCountMap.get(word) || 0) + 1)
           })
         })

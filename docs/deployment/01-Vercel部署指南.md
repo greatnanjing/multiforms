@@ -591,6 +591,32 @@ supabase.auth.onAuthStateChange(async (event, session) => { // ❌ event 隐式 
 supabase.auth.onAuthStateChange(
   async (event: 'INITIAL_SESSION' | 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED', session: any) => {
 
+#### 12. TypeScript 错误：数组回调参数类型缺失（批量）
+
+**错误信息**：
+```
+Type error: Parameter 's' implicitly has an 'any' type.
+./src/lib/api/analytics.ts:97:46
+```
+
+**原因**：TypeScript strict 模式下，所有数组方法（map, filter, forEach, reduce）的回调参数都需要明确类型注解。
+
+**解决方案**：为所有回调参数添加 `: any` 类型注解：
+
+```typescript
+// 错误写法
+submissions?.filter(s => s.created_at >= todayStart)
+answers.map(a => a[question.id])
+ratings.reduce((a, b) => a + b, 0)
+
+// 正确写法
+submissions?.filter((s: any) => s.created_at >= todayStart)
+answers.map((a: any) => a[question.id])
+ratings.reduce((a: number, b: number) => a + b, 0)
+```
+
+**注意**：此问题通常出现在多个位置，需要全局搜索 `\.filter\(`、`\.map\(`、`\.forEach\(`、`\.reduce\(` 并统一修复。
+
 ### 获取帮助
 
 - [Vercel 文档](https://vercel.com/docs)

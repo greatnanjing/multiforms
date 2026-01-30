@@ -90,7 +90,7 @@ export function Number({
     const val = e.target.value
     if (val === '') {
       setInternalValue('')
-      onChange?.(undefined)
+      onChange?.(null)
       return
     }
 
@@ -226,7 +226,7 @@ export function Number({
           )}
           <input
             type="number"
-            value={currentValue ?? ''}
+            value={numericValue}
             onChange={handleInputChange}
             onBlur={handleBlur}
             placeholder={placeholder}

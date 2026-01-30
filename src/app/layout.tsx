@@ -13,6 +13,9 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
+import { ErrorBoundary } from '@/components/error-boundary'
+import { ToastProvider } from '@/components/shared/toast'
+import { ConfirmProvider } from '@/components/shared/confirm-dialog'
 
 // 字体配置
 const inter = Inter({
@@ -66,9 +69,15 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider defaultTheme="nebula" defaultMode="dark">
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <ErrorBoundary>
+            <ToastProvider>
+              <ConfirmProvider>
+                <AuthProvider>
+                  {children}
+                </AuthProvider>
+              </ConfirmProvider>
+            </ToastProvider>
+          </ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>

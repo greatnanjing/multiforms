@@ -67,9 +67,30 @@ export interface GetFormsResponse {
 
 /**
  * 生成短链接 ID
+ * 使用加密安全的随机数生成器
  */
 function generateShortId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+
+  // 使用 crypto API 生成安全随机数
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const array = new Uint8Array(6)
+    crypto.getRandomValues(array)
+    return Array.from(array, byte => chars[byte % chars.length]).join('')
+  }
+
+  // 服务端降级方案（使用 Node.js crypto）
+  if (typeof require === 'function') {
+    try {
+      const nodeCrypto = require('crypto')
+      const buffer = nodeCrypto.randomBytes(6)
+      return Array.from(buffer, (byte: number) => chars[byte % chars.length]).join('')
+    } catch {
+      // 继续使用 Math.random() 作为最后的降级方案
+    }
+  }
+
+  // 最终降级方案（仅在 crypto 不可用时使用）
   let result = ''
   for (let i = 0; i < 6; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length))
@@ -411,7 +432,7 @@ export async function publishForm(formId: string): Promise<Form> {
   return updateForm(formId, {
     status: 'published',
     published_at: new Date().toISOString(),
-  })
+  } as FormUpdateInput)
 }
 
 /**

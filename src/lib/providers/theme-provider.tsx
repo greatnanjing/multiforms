@@ -14,8 +14,8 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-type ThemeId = 'nebula' | 'ocean' | 'sunset' | 'forest' | 'sakura' | 'cyber' | 'minimal' | 'royal'
-type ThemeMode = 'dark' | 'light'
+export type ThemeId = 'nebula' | 'ocean' | 'sunset' | 'forest' | 'sakura' | 'cyber' | 'minimal' | 'royal'
+export type ThemeMode = 'dark' | 'light'
 
 interface ThemeContextValue {
   theme: ThemeId

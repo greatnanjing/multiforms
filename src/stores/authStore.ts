@@ -108,9 +108,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const authUser: AuthUser = {
           id: data.user.id,
           email: data.user.email || '',
-          email_confirmed_at: data.user.email_confirmed_at,
+          email_confirmed_at: data.user.email_confirmed_at || null,
           created_at: data.user.created_at,
-          updated_at: data.user.updated_at,
+          updated_at: data.user.updated_at || new Date().toISOString(),
         }
 
         set({ user: authUser, isLoading: false })
@@ -160,9 +160,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const authUser: AuthUser = {
           id: data.session.user.id,
           email: data.session.user.email || '',
-          email_confirmed_at: data.session.user.email_confirmed_at,
+          email_confirmed_at: data.session.user.email_confirmed_at || null,
           created_at: data.session.user.created_at,
-          updated_at: data.session.user.updated_at,
+          updated_at: data.session.user.updated_at || new Date().toISOString(),
         }
 
         set({ user: authUser, isLoading: false })
@@ -258,9 +258,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const authUser: AuthUser = {
           id: data.session.user.id,
           email: data.session.user.email || '',
-          email_confirmed_at: data.session.user.email_confirmed_at,
+          email_confirmed_at: data.session.user.email_confirmed_at || null,
           created_at: data.session.user.created_at,
-          updated_at: data.session.user.updated_at,
+          updated_at: data.session.user.updated_at || new Date().toISOString(),
         }
 
         set({ user: authUser, isLoading: false })

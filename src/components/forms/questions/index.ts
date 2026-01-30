@@ -31,43 +31,33 @@ export * from './types'
 
 // 单选题
 export { SingleChoice, SingleChoiceSkeleton } from './single-choice'
-export type { SingleChoiceProps } from './single-choice'
 
 // 多选题
 export { MultipleChoice, MultipleChoiceSkeleton } from './multiple-choice'
-export type { MultipleChoiceProps } from './multiple-choice'
 
 // 下拉选择
 export { Dropdown, DropdownSkeleton } from './dropdown'
-export type { DropdownProps } from './dropdown'
 
 // 评分题
 export { Rating, RatingSkeleton } from './rating'
-export type { RatingProps } from './rating'
 
 // 文本题
 export { Text, TextSkeleton } from './text'
-export type { TextProps } from './text'
 
 // 数字题
 export { Number, NumberSkeleton } from './number'
-export type { NumberProps } from './number'
 
 // 日期题
 export { DateQuestion as Date, DateSkeleton } from './date'
-export type { DateProps } from './date'
 
 // 文件上传
 export { FileUpload, FileUploadSkeleton } from './file-upload'
-export type { FileUploadProps } from './file-upload'
 
 // 矩阵题
 export { Matrix, MatrixSkeleton } from './matrix'
-export type { MatrixProps } from './matrix'
 
 // 排序题
 export { Sorting, SortingSkeleton } from './sorting'
-export type { SortingProps } from './sorting'
 
 // ============================================
 // Question Type Mappings

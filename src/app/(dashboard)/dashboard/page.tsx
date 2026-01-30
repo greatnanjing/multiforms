@@ -18,6 +18,8 @@ import { Plus, FileText, Users, Target, TrendingUp, ArrowRight } from 'lucide-re
 import { useAuth } from '@/hooks/useAuth'
 import { getForms } from '@/lib/api/forms'
 import { FormCard, FormCardSkeleton } from '@/components/forms/form-card'
+import { useToast } from '@/components/shared/toast'
+import { useConfirm } from '@/components/shared/confirm-dialog'
 import { cn } from '@/lib/utils'
 import type { Form } from '@/types'
 
@@ -110,6 +112,8 @@ function EmptyState({ onCreateForm }: EmptyStateProps) {
 export default function DashboardPage() {
   const router = useRouter()
   const { user, profile, isLoading: authLoading, isAuthenticated } = useAuth()
+  const toast = useToast()
+  const { confirm } = useConfirm()
 
   const [forms, setForms] = useState<Form[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -169,9 +173,10 @@ export default function DashboardPage() {
     const shareUrl = `${window.location.origin}/f/${formId}`
     try {
       await navigator.clipboard.writeText(shareUrl)
-      alert('链接已复制到剪贴板')
+      toast.success('链接已复制到剪贴板')
     } catch {
-      alert(`分享链接: ${shareUrl}`)
+      toast.error('复制失败，请手动复制链接')
+      console.log('分享链接:', shareUrl)
     }
   }
 
@@ -180,18 +185,27 @@ export default function DashboardPage() {
   }
 
   const handleDeleteForm = async (formId: string) => {
-    if (!confirm('确定要删除这个表单吗？此操作不可撤销。')) {
+    const confirmed = await confirm({
+      title: '确认删除表单',
+      message: '确定要删除这个表单吗？此操作不可撤销。',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'danger',
+    })
+
+    if (!confirmed) {
       return
     }
 
     try {
       const { deleteForm } = await import('@/lib/api/forms')
       await deleteForm(formId)
+      toast.success('表单已删除')
       // 重新获取表单列表
       await fetchForms()
     } catch (error) {
       console.error('Failed to delete form:', error)
-      alert('删除失败，请稍后重试')
+      toast.error('删除失败，请稍后重试')
     }
   }
 

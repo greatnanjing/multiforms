@@ -30,7 +30,7 @@ const inputTypeConfig: Record<TextType, {
   icon: React.ReactNode
   placeholder: string
   inputType?: string
-  pattern?: string
+  pattern?: RegExp
 }> = {
   text: {
     icon: <Type className="w-4 h-4" />,
@@ -102,10 +102,10 @@ export function Text({
     if (maxLength && val.length > maxLength) {
       return `最多 ${maxLength} 个字符`
     }
-    if (textType === 'email' && val && config.pattern && !config.pattern.test(val)) {
+    if (textType === 'email' && val && config.pattern instanceof RegExp && !config.pattern.test(val)) {
       return '请输入有效的邮箱地址'
     }
-    if (textType === 'phone' && val && config.pattern && !config.pattern.test(val)) {
+    if (textType === 'phone' && val && config.pattern instanceof RegExp && !config.pattern.test(val)) {
       return '请输入有效的手机号码'
     }
     return undefined
@@ -246,7 +246,7 @@ export function Text({
           <div className="relative">
             <textarea
               ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-              value={currentValue}
+              value={String(currentValue || '')}
               onChange={handleChange}
               onBlur={handleBlur}
               placeholder={currentPlaceholder}
@@ -279,7 +279,7 @@ export function Text({
             <input
               ref={inputRef as React.RefObject<HTMLInputElement>}
               type={config.inputType}
-              value={currentValue}
+              value={String(currentValue || '')}
               onChange={handleChange}
               onBlur={handleBlur}
               placeholder={currentPlaceholder}

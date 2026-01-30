@@ -131,9 +131,13 @@ export const QuestionRenderer = forwardRef<HTMLDivElement, QuestionRendererProps
         break
 
       case 'email':
+        componentProps.placeholder = options?.placeholder || '请输入邮箱'
+        componentProps.inputType = 'email'
+        break
+
       case 'phone':
-        componentProps.placeholder = options?.placeholder || (question_type === 'email' ? '请输入邮箱' : '请输入手机号')
-        componentProps.inputType = question_type === 'email' ? 'email' : 'tel'
+        componentProps.placeholder = options?.placeholder || '请输入手机号'
+        componentProps.inputType = 'tel'
         break
 
       case 'file_upload':

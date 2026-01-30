@@ -26,7 +26,7 @@ interface DateProps extends DateQuestionProps {
 // Helpers
 // ============================================
 
-const formatDateForDisplay = (dateStr: string, format: DateFormat): string => {
+const formatDateForDisplay = (dateStr: string | null | undefined, format: DateFormat): string => {
   if (!dateStr) return ''
   const date = new Date(dateStr)
 
@@ -78,14 +78,16 @@ export function DateQuestion({
   const currentValue = value !== undefined ? value : internalValue
 
   // 转换为 input 需要的格式 (YYYY-MM-DD)
-  const toInputFormat = (dateStr: string): string => {
+  const toInputFormat = (dateStr: string | null | undefined): string => {
     if (!dateStr) return ''
     const date = new Date(dateStr)
     if (isNaN(date.getTime())) return ''
     return date.toISOString().split('T')[0]
   }
 
-  const inputFormat = toInputFormat(currentValue ?? '')
+  // 将 AnswerValue 转换为字符串
+  const stringValue = typeof currentValue === 'string' ? currentValue : String(currentValue ?? '')
+  const inputFormat = toInputFormat(stringValue)
 
   // 验证
   const validate = (val: string): string | undefined => {
@@ -113,7 +115,7 @@ export function DateQuestion({
     return undefined
   }
 
-  const validationError = touched ? validate(currentValue ?? '') : undefined
+  const validationError = touched ? validate(stringValue) : undefined
   const displayError = error || validationError
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -248,9 +250,9 @@ export function DateQuestion({
         />
 
         {/* 显示格式化的日期值 */}
-        {currentValue && (
+        {stringValue && (
           <div className="mt-2 text-sm text-[var(--text-secondary)]">
-            已选择: {formatDateForDisplay(currentValue, format)}
+            已选择: {formatDateForDisplay(stringValue, format)}
           </div>
         )}
       </div>

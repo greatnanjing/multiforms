@@ -275,7 +275,10 @@ export function Rating({
   )
   const [internalType, setInternalType] = useState<RatingType>(ratingType)
 
-  const currentValue = value !== undefined ? value : internalValue
+  // 确保 currentValue 始终是 number 类型
+  const currentValue: number = value !== undefined
+    ? (typeof value === 'number' ? value : parseFloat(String(value)) || 0)
+    : internalValue ?? 0
 
   const handleChange = (newValue: number) => {
     setInternalValue(newValue)

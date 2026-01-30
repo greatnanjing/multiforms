@@ -66,7 +66,7 @@ export function PasswordGate({ form, onSuccess }: PasswordGateProps) {
       if (isCorrect) {
         // Store verification in session storage
         sessionStorage.setItem(`form_${form.short_id}_verified`, 'true')
-        sessionStorage.setItem(`form_${form.shortId}_timestamp`, Date.now().toString())
+        sessionStorage.setItem(`form_${form.short_id}_timestamp`, Date.now().toString())
         onSuccess?.()
       } else {
         const newAttempts = attempts + 1
@@ -87,14 +87,17 @@ export function PasswordGate({ form, onSuccess }: PasswordGateProps) {
     }
   }
 
-  // Simple password verification (demo)
-  // In production, use bcrypt or similar
+  // 密码验证函数
+  // 注意：这使用简单的字符串比较，仅用于演示。
+  // 生产环境应该使用 bcrypt 进行安全的密码哈希比较：
+  // import bcrypt from 'bcryptjs'
+  // return bcrypt.compare(input, storedHash)
   const verifyPassword = async (input: string, storedHash: string | null): Promise<boolean> => {
     if (!storedHash) return false
 
-    // For demo: simple comparison (NOT SECURE for production)
-    // In production, use: bcrypt.compare(input, storedHash)
-    return input === storedHash || input === 'demo123' // Demo fallback
+    // 简单的字符串比较（不安全，仅供演示）
+    // 生产环境应该使用 bcrypt.compare(input, storedHash)
+    return input === storedHash
   }
 
   return (

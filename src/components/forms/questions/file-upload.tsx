@@ -13,6 +13,7 @@ import { useState, useRef, useCallback } from 'react'
 import { Upload, X, File, Image as ImageIcon, FileText, Film, Music } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FileUploadQuestionProps, UploadedFile, QuestionMode } from './types'
+import type { AnswerValue } from '@/types'
 
 // ============================================
 // Types
@@ -162,14 +163,14 @@ export function FileUpload({
       }
 
       setInternalFiles(updatedFiles)
-      onChange?.(updatedFiles)
+      onChange?.(updatedFiles as unknown as AnswerValue)
     }
   }
 
   const handleRemoveFile = (fileId: string) => {
     const updatedFiles = currentFiles.filter(f => f.id !== fileId)
     setInternalFiles(updatedFiles)
-    onChange?.(updatedFiles)
+    onChange?.(updatedFiles as unknown as AnswerValue)
   }
 
   const handleClick = () => {

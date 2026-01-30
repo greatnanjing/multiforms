@@ -49,12 +49,12 @@ interface AuthProviderProps {
  * 监听 Supabase 的认证状态变化，并自动更新 Zustand store
  */
 export function AuthProvider({ children }: AuthProviderProps) {
+  // 使用 selector 获取稳定的函数引用
   const setUser = useAuthStore((state) => state.setUser)
   const setProfile = useAuthStore((state) => state.setProfile)
   const setInitialized = useAuthStore((state) => state.setInitialized)
   const fetchProfile = useAuthStore((state) => state.fetchProfile)
   const setLoading = useAuthStore((state) => state.setLoading)
-  const signOut = useAuthStore((state) => state.signOut)
 
   useEffect(() => {
     // 创建 Supabase 客户端
@@ -78,9 +78,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const authUser: AuthUser = {
             id: session.user.id,
             email: session.user.email || '',
-            email_confirmed_at: session.user.email_confirmed_at,
+            email_confirmed_at: session.user.email_confirmed_at || null,
             created_at: session.user.created_at,
-            updated_at: session.user.updated_at,
+            updated_at: session.user.updated_at || new Date().toISOString(),
           }
 
           setUser(authUser)
@@ -102,14 +102,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initializeAuth()
 
     // 监听认证状态变化
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event)
 
       switch (event) {
         case 'INITIAL_SESSION':
-          // 初始会话已加载
+          // 初始会话已加载（由 initializeAuth 处理，这里只标记初始化完成）
           setInitialized(true)
           break
 
@@ -119,9 +117,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             const authUser: AuthUser = {
               id: session.user.id,
               email: session.user.email || '',
-              email_confirmed_at: session.user.email_confirmed_at,
+              email_confirmed_at: session.user.email_confirmed_at || null,
               created_at: session.user.created_at,
-              updated_at: session.user.updated_at,
+              updated_at: session.user.updated_at || new Date().toISOString(),
             }
 
             setUser(authUser)
@@ -141,9 +139,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             const authUser: AuthUser = {
               id: session.user.id,
               email: session.user.email || '',
-              email_confirmed_at: session.user.email_confirmed_at,
+              email_confirmed_at: session.user.email_confirmed_at || null,
               created_at: session.user.created_at,
-              updated_at: session.user.updated_at,
+              updated_at: session.user.updated_at || new Date().toISOString(),
             }
 
             setUser(authUser)
@@ -156,9 +154,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             const authUser: AuthUser = {
               id: session.user.id,
               email: session.user.email || '',
-              email_confirmed_at: session.user.email_confirmed_at,
+              email_confirmed_at: session.user.email_confirmed_at || null,
               created_at: session.user.created_at,
-              updated_at: session.user.updated_at,
+              updated_at: session.user.updated_at || new Date().toISOString(),
             }
 
             setUser(authUser)
@@ -177,7 +175,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [setUser, setProfile, setInitialized, fetchProfile, setLoading, signOut])
+  }, [setUser, setProfile, setInitialized, fetchProfile, setLoading])
 
   return <>{children}</>
 }

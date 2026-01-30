@@ -259,7 +259,7 @@ export async function getQuestionStats(options: GetQuestionStatsOptions): Promis
       const choiceCountMap = new Map<string, number>()
 
       // 初始化选项计数
-      choices.forEach(choice => {
+      choices.forEach((choice: { value: string; label: string }) => {
         choiceCountMap.set(choice.value, 0)
       })
 
@@ -271,7 +271,7 @@ export async function getQuestionStats(options: GetQuestionStatsOptions): Promis
         })
       })
 
-      const choiceDistribution = choices.map(choice => {
+      const choiceDistribution = choices.map((choice: { value: string; label: string }) => {
         const count = choiceCountMap.get(choice.value) || 0
         return {
           option: choice.label,
@@ -436,9 +436,15 @@ export async function getSubmissions(
 export async function exportSubmissions(options: GetSubmissionsOptions & {
   questions: Array<{ id: string; question_text: string; question_type: string }>
 }): Promise<string> {
-  const { data, total } = await getSubmissions({
+  // 首先获取总数
+  const countResult = await getSubmissions({
     ...options,
-    pageSize: total, // 导出全部数据
+    pageSize: 1,
+  })
+
+  const { data, total: totalCount } = await getSubmissions({
+    ...options,
+    pageSize: countResult.total, // 导出全部数据
   })
 
   if (!data || data.length === 0) {

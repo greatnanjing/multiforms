@@ -77,12 +77,18 @@ export default function FormViewPage() {
   // ============================================
 
   useEffect(() => {
+    const abortController = new AbortController()
+
     const loadForm = async () => {
       try {
         setLoading(true)
 
         // Fetch form by short_id
         const formData = await getFormByShortId(shortId)
+
+        // 检查请求是否已取消
+        if (abortController.signal.aborted) return
+
         setForm(formData)
 
         // Check password protection
@@ -97,6 +103,9 @@ export default function FormViewPage() {
 
         // Increment view count
         await incrementFormViewCount(formData.id)
+
+        // 检查请求是否已取消
+        if (abortController.signal.aborted) return
 
         // Fetch questions for this form
         // TODO: Replace with actual API call to form_questions table
@@ -149,14 +158,25 @@ export default function FormViewPage() {
 
         setQuestions(sampleQuestions)
       } catch (err) {
+        // 检查是否是取消错误
+        if (abortController.signal.aborted) return
+
         console.error('Failed to load form:', err)
         setError('表单不存在或已关闭')
       } finally {
-        setLoading(false)
+        // 只在未取消时设置加载状态
+        if (!abortController.signal.aborted) {
+          setLoading(false)
+        }
       }
     }
 
     loadForm()
+
+    // 清理函数：取消未完成的请求
+    return () => {
+      abortController.abort()
+    }
   }, [shortId])
 
   // ============================================

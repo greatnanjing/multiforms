@@ -427,7 +427,7 @@ export function MultipleChoice({
               label={option.label}
               checked={isSelected(option.value)}
               onChange={() => handleChange(option.value, !isSelected(option.value))}
-              disabled={disabled || (hasReachedMax && !isSelected(option.value))}
+              disabled={!!(disabled || (hasReachedMax && !isSelected(option.value)))}
               error={!!error}
               imageUrl={option.image_url}
               optionStyle={optionStyle}
@@ -442,7 +442,7 @@ export function MultipleChoice({
                 onChange={() => {
                   setShowOtherInput(true)
                 }}
-                disabled={disabled || (hasReachedMax && !isOtherSelected)}
+                disabled={!!(disabled || (hasReachedMax && !isOtherSelected))}
                 className="sr-only"
               />
               <div className={cn(

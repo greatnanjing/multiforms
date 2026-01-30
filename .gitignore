@@ -98,5 +98,6 @@ supabase/.db.git
 # ============================================
 Thumbs.db
 Desktop.ini
+nul
 
 .vercel

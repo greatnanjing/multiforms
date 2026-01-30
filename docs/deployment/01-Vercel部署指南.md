@@ -122,9 +122,67 @@ vercel
 vercel --prod
 ```
 
+### 管理 Vercel 项目
+
+```bash
+# 删除项目
+vercel rm multiforms --yes
+
+# 查看所有部署
+vercel ls
+
+# 查看项目详情
+vercel inspect
+
+# 查看部署日志
+vercel logs [deployment-url]
+```
+
 ---
 
-## 4. 配置文件
+## 4. 本地开发
+
+### 启动开发服务器
+
+```bash
+# 使用 npm（项目推荐）
+npm run dev
+
+# 或使用 pnpm
+pnpm dev
+
+# 或使用 yarn
+yarn dev
+```
+
+服务器将在 http://localhost:3000 启动。
+
+### 常用命令
+
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 启动开发服务器（端口 3000） |
+| `npm run build` | 构建生产版本 |
+| `npm run start` | 启动生产服务器（需先 build） |
+| `npm run lint` | 检查代码规范 |
+| `npm install` | 安装依赖 |
+
+### 包管理器选择
+
+项目使用 `package-lock.json`（npm），但 npm 和 pnpm 都可以运行脚本：
+
+```bash
+# 以下命令等价
+npm run dev    # pnpm dev
+npm install    # pnpm install
+npm run build  # pnpm build
+```
+
+建议保持一致使用 npm，因为项目已有 `package-lock.json`。
+
+---
+
+## 5. 配置文件
 
 ### 4.1 vercel.json（可选）
 
@@ -256,6 +314,46 @@ Vercel 会自动为你的域名配置 Let's Encrypt SSL 证书，通常几分钟
 | Production | 生产环境 | 正式运行的环境 |
 | Preview | 预览环境 | 每个 PR 的预览部署 |
 | Development | 开发环境 | 本地开发 |
+
+### 环境变量配置方式
+
+**方式一：通过 Vercel Dashboard（推荐）**
+
+1. 进入项目 Settings > Environment Variables
+2. 添加变量：
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. 选择环境（Production / Preview / All）
+
+**方式二：通过 .env.production 文件**
+
+在项目根目录创建 `.env.production`：
+
+```env
+# Production Environment Variables for Vercel
+NEXT_PUBLIC_SUPABASE_URL=https://你的项目.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=你的密钥
+```
+
+**注意**：
+- `NEXT_PUBLIC_*` 变量会暴露在浏览器中，不属于敏感信息，可以提交到仓库
+- 真正的敏感变量（如 `SUPABASE_SERVICE_ROLE_KEY`）应通过 Dashboard 配置，不要提交
+
+### 敏感变量限制
+
+在 Vercel Dashboard 中添加敏感环境变量时，可能遇到以下错误：
+
+```
+Cannot create a Sensitive Environment Variable with target=development.
+Sensitive Environment Variables are enforced for the entire team.
+```
+
+**原因**：敏感环境变量必须对整个团队的所有环境生效，不能只设置给 development。
+
+**解决方案**：
+- 选择 **All Environments** 而不是单个环境
+- 或分别设置 Production 和 Preview
+- Development 环境使用本地 `.env.local` 文件
 
 ### 使用环境变量
 
@@ -618,6 +716,49 @@ ratings.reduce((a: number, b: number) => a + b, 0)
 **注意**：此问题通常出现在多个位置，需要全局搜索 `\.filter\(`、`\.map\(`、`\.forEach\(`、`\.reduce\(` 并统一修复。
 
 #### 13. 预渲染错误：Supabase SSR 需要运行时环境变量
+
+**错误信息**：
+```
+Error occurred prerendering page "/login".
+Error: @supabase/ssr: Your project's URL and API key are required to create a Supabase client!
+```
+
+**原因**：Next.js 在构建时尝试静态生成（pre-render）页面，此时 Supabase 环境变量尚未设置。`@supabase/ssr` 的 `createServerClient()` 会验证 URL 和密钥是否为空字符串。
+
+**重要**：`export const dynamic = 'force-dynamic'` 必须添加在**服务端组件**中，在客户端组件（`'use client'`）中无效！
+
+**解决方案**：在服务端布局文件中添加 `export const dynamic = 'force-dynamic'`：
+
+```typescript
+// app/layout.tsx (根布局)
+// app/(public)/layout.tsx (公开页面布局)
+
+// 强制动态渲染，防止构建时 Supabase 错误
+export const dynamic = 'force-dynamic'
+
+import type { Metadata } from 'next'
+// ... rest of the layout
+```
+
+**受影响的文件**：
+- `app/layout.tsx` - 根布局（包含 AuthProvider）
+- `app/(public)/layout.tsx` - 公开页面布局
+- 任何其他使用 Supabase 的服务端组件
+
+#### 14. Dashboard 环境变量页面 "Failed to fetch"
+
+**错误信息**：
+```
+删除环境变量后保存: Failed to fetch
+```
+
+**原因**：Vercel Dashboard API 临时不可用，或网络连接问题。
+
+**解决方案**：
+1. 刷新页面（F5 或 Ctrl+R）
+2. 检查网络连接
+3. 等待几分钟后重试
+4. 如持续失败，使用 CLI 操作环境变量
 
 **错误信息**：
 ```

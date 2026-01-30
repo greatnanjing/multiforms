@@ -450,6 +450,89 @@ Export useDrag doesn't exist in target module. Did you mean to import useDraggab
 
 **解决方案**：将 `import { useDrag }` 改为 `import { useDraggable }`
 
+#### 7. 构建错误：dnd-kit useDraggable onDragStart 属性
+
+**错误信息**：
+```
+Type error: Object literal may only specify known properties, and 'onDragStart' does not exist in type 'UseDraggableArguments'.
+```
+
+**原因**：`@dnd-kit/core` 的 `useDraggable` hook 不接受 `onDragStart` 作为配置参数。
+
+**解决方案**：移除 `onDragStart` 配置，使用 `useEffect` 监听 `isDragging` 状态来触发回调：
+
+```typescript
+// 错误写法
+const { attributes, listeners, setNodeRef } = useDraggable({
+  id: `toolbox-${config.type}`,
+  onDragStart: () => handleDragStart(config.type), // ❌ 不支持
+})
+
+// 正确写法
+const hasCalledDragStart = useRef(false)
+const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  id: `toolbox-${config.type}`,
+  data: {
+    type: config.type,
+    source: 'toolbox',
+  },
+})
+
+// 使用 useEffect 触发回调
+useEffect(() => {
+  if (isDragging && !hasCalledDragStart.current) {
+    hasCalledDragStart.current = true
+    handleDragStart(config.type)
+  } else if (!isDragging) {
+    hasCalledDragStart.current = false
+  }
+}, [isDragging, config.type])
+```
+
+#### 8. 构建错误：组件名与全局构造函数冲突
+
+**错误信息**：
+```
+Type error: 'new' expression, whose target lacks a construct signature, implicitly has an 'any' type.
+```
+
+**原因**：组件名为 `Date`，与 JavaScript 全局构造函数 `Date` 冲突，导致类型推断错误。
+
+**解决方案**：重命名组件，然后在导出时使用别名：
+
+```typescript
+// date.tsx - 重命名组件
+export function DateQuestion({ value, onChange, ... }: DateProps) {
+  // 组件实现
+}
+
+// index.ts - 使用别名导出
+export { DateQuestion as Date, DateSkeleton } from './date'
+export type { DateProps } from './date'
+```
+
+#### 9. 构建错误：联合类型 null 值处理
+
+**错误信息**：
+```
+Type error: Argument of type 'AnswerValue' is not assignable to parameter of type 'string'.
+Type 'null' is not assignable to type 'string'.
+```
+
+**原因**：`AnswerValue` 是联合类型 `string | null | string[] | ...`，但函数只接受 `string` 类型。
+
+**解决方案**：使用空值合并运算符 `??` 或可选链 `?.` 处理可能的 null 值：
+
+```typescript
+// 错误写法
+const inputFormat = toInputFormat(currentValue) // ❌ currentValue 可能是 null
+const validationError = validate(currentValue)
+
+// 正确写法
+const inputFormat = toInputFormat(currentValue ?? '') // ✅ 提供 fallback
+const validationError = validate(currentValue ?? '')
+```
+
 ### 获取帮助
 
 - [Vercel 文档](https://vercel.com/docs)

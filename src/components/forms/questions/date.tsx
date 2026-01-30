@@ -85,7 +85,7 @@ export function DateQuestion({
     return date.toISOString().split('T')[0]
   }
 
-  const inputFormat = toInputFormat(currentValue)
+  const inputFormat = toInputFormat(currentValue ?? '')
 
   // 验证
   const validate = (val: string): string | undefined => {
@@ -113,7 +113,7 @@ export function DateQuestion({
     return undefined
   }
 
-  const validationError = touched ? validate(currentValue) : undefined
+  const validationError = touched ? validate(currentValue ?? '') : undefined
   const displayError = error || validationError
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -589,10 +589,7 @@ supabase.auth.onAuthStateChange(async (event, session) => { // ❌ event 隐式 
 
 // 正确写法
 supabase.auth.onAuthStateChange(
-  async (
-    event: 'INITIAL_SESSION' | 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED',
-    session: { data: { user: { id: string; email: string | null; email_confirmed_at: string | null; created_at: string; updated_at?: string } | null } | null } | null
-  ) => {
+  async (event: 'INITIAL_SESSION' | 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED', session: any) => {
 
 ### 获取帮助
 

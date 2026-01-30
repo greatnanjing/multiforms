@@ -54,7 +54,7 @@ const formatDateForDisplay = (dateStr: string, format: DateFormat): string => {
 // Main Component
 // ============================================
 
-export function Date({
+export function DateQuestion({
   mode = 'fill',
   questionId,
   questionText,

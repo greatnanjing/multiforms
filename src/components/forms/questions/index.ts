@@ -54,7 +54,7 @@ export { Number, NumberSkeleton } from './number'
 export type { NumberProps } from './number'
 
 // 日期题
-export { Date, DateSkeleton } from './date'
+export { DateQuestion as Date, DateSkeleton } from './date'
 export type { DateProps } from './date'
 
 // 文件上传

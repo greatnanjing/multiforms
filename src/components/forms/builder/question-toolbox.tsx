@@ -9,7 +9,7 @@
 
 'use client'
 
-import { memo } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import {
   Circle,
   Square,
@@ -158,14 +158,24 @@ interface DraggableTypeCardProps {
 }
 
 function DraggableTypeCard({ config, onDragStart, onClick }: DraggableTypeCardProps) {
+  const hasCalledDragStart = useRef(false)
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `toolbox-${config.type}`,
     data: {
       type: config.type,
       source: 'toolbox',
     },
-    onDragStart: () => onDragStart?.(config.type),
   })
+
+  // Trigger onDragStart callback when dragging begins
+  useEffect(() => {
+    if (isDragging && !hasCalledDragStart.current) {
+      hasCalledDragStart.current = true
+      onDragStart?.(config.type)
+    } else if (!isDragging) {
+      hasCalledDragStart.current = false
+    }
+  }, [isDragging, config.type, onDragStart])
 
   return (
     <div

@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiForms - 5分钟创建专业表单 | 投票 评分 问卷 信息收集</title>
+  <meta name="description" content="MultiForms 是一款在线表单构建工具，支持投票、评分、问卷、信息收集等多种场景。拖拽式操作，5分钟即可创建专业表单。">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../theme-system.css">
+
+  <!-- Page Styles -->
+  <style>
+    /* Navbar */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 0;
+      background: rgba(15, 15, 35, 0.8);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .navbar-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .navbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .navbar-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .navbar-logo-icon svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    .navbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .navbar-link {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      position: relative;
+    }
+
+    .navbar-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+      transition: width 0.3s var(--ease-out);
+    }
+
+    .navbar-link:hover {
+      color: var(--text-primary);
+    }
+
+    .navbar-link:hover::after {
+      width: 100%;
+    }
+
+    .navbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 24px 80px;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.05) 0%, transparent 70%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 25%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 25%);
+      animation: heroFloat 20s ease-in-out infinite;
+    }
+
+    @keyframes heroFloat {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(30px, -30px) rotate(5deg); }
+      66% { transform: translate(-20px, 20px) rotate(-5deg); }
+    }
+
+    .hero-content {
+      text-align: center;
+      max-width: 800px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 100px;
+      font-size: 14px;
+      color: var(--primary-glow);
+      margin-bottom: 24px;
+    }
+
+    .hero-title {
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero-subtitle {
+      font-size: 20px;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .hero-cta .btn {
+      padding: 16px 32px;
+      font-size: 18px;
+    }
+
+    .hero-preview {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 700px;
+      margin: 0 auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-preview {
+      background: var(--bg-primary);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: left;
+    }
+
+    .form-preview-header {
+      margin-bottom: 24px;
+    }
+
+    .form-preview-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .form-preview-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .form-preview-question {
+      margin-bottom: 20px;
+    }
+
+    .form-preview-label {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .form-preview-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .form-preview-option:hover {
+      border-color: var(--primary-start);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .form-preview-option input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary-start);
+    }
+
+    .form-preview-submit {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    /* Features Section */
+    .features {
+      padding: 100px 24px;
+      background: var(--bg-secondary);
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 60px;
+    }
+
+    .section-title {
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      font-size: 18px;
+      color: var(--text-secondary);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 40px 32px;
+      text-align: center;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+    }
+
+    .feature-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .feature-icon svg {
+      width: 32px;
+      height: 32px;
+      color: var(--primary-glow);
+    }
+
+    .feature-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .feature-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Templates Section */
+    .templates {
+      padding: 100px 24px;
+    }
+
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .template-card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s var(--ease-out);
+      cursor: pointer;
+    }
+
+    .template-card:hover {
+      transform: scale(1.03);
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .template-preview {
+      height: 140px;
+      background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .template-preview svg {
+      width: 48px;
+      height: 48px;
+      color: var(--text-muted);
+    }
+
+    .template-info {
+      padding: 20px;
+    }
+
+    .template-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .template-type {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Testimonials Section */
+    .testimonials {
+      padding: 100px 24px;
+      background: var(--bg-secondary);
+    }
+
+    .testimonials-slider {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .testimonial-card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 48px;
+      text-align: center;
+    }
+
+    .testimonial-quote {
+      font-size: 22px;
+      font-weight: 500;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .testimonial-avatar {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .testimonial-info {
+      text-align: left;
+    }
+
+    .testimonial-name {
+      font-weight: 600;
+    }
+
+    .testimonial-role {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .testimonial-dots {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 32px;
+    }
+
+    .testimonial-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .testimonial-dot.active {
+      width: 24px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+    }
+
+    /* CTA Section */
+    .cta {
+      padding: 100px 24px;
+      text-align: center;
+      background:
+        radial-gradient(ellipse at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    }
+
+    .cta-card {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .cta-title {
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .cta-desc {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 40px;
+      font-size: 18px;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      color: white;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+      transition: all 0.3s var(--ease-out);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+      }
+      50% {
+        box-shadow: 0 8px 40px rgba(99, 102, 241, 0.6);
+      }
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-4px);
+      animation: none;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 60px 24px 30px;
+      background: var(--bg-secondary);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .footer-content {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .footer-desc {
+      max-width: 250px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 60px;
+    }
+
+    .footer-section h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+
+    .footer-section ul {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-section a {
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+
+    .footer-section a:hover {
+      color: var(--primary-glow);
+    }
+
+    .footer-bottom {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Mobile Menu */
+    .mobile-menu-btn {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .mobile-menu-btn span {
+      width: 24px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .templates-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .hero-title {
+        font-size: 44px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar-nav {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
+      }
+
+      .hero-title {
+        font-size: 32px;
+      }
+
+      .hero-subtitle {
+        font-size: 16px;
+      }
+
+      .hero-cta {
+        flex-direction: column;
+      }
+
+      .section-title {
+        font-size: 32px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .templates-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-content {
+        flex-direction: column;
+      }
+
+      .footer-links {
+        flex-wrap: wrap;
+        gap: 40px;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+
+      .cta-title {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="/" class="navbar-logo">
+        <div class="navbar-logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="9"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="13" y2="17"/>
+          </svg>
+        </div>
+        MultiForms
+      </a>
+
+      <ul class="navbar-nav">
+        <li><a href="#features" class="navbar-link">功能</a></li>
+        <li><a href="#templates" class="navbar-link">模板</a></li>
+        <li><a href="#pricing" class="navbar-link">价格</a></li>
+      </ul>
+
+      <div class="navbar-actions">
+        <a href="login.html" class="btn btn-ghost">登录</a>
+        <a href="register.html" class="btn btn-primary">注册</a>
+        <button class="mobile-menu-btn" aria-label="菜单">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        免费开始，无需信用卡
+      </div>
+
+      <h1 class="hero-title">
+        <span class="gradient-text">5分钟创建</span>专业表单
+      </h1>
+
+      <p class="hero-subtitle">
+        投票 · 评分 · 问卷 · 信息收集<br>
+        拖拽式操作，无需任何代码
+      </p>
+
+      <div class="hero-cta">
+        <a href="register.html" class="btn btn-primary">
+          开始免费使用
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </a>
+        <a href="#features" class="btn btn-outline">
+          观看演示
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </a>
+      </div>
+
+      <div class="hero-preview">
+        <div class="form-preview">
+          <div class="form-preview-header">
+            <h3 class="form-preview-title">产品满意度调研</h3>
+            <p class="form-preview-desc">请告诉我们您对产品的看法</p>
+          </div>
+
+          <div class="form-preview-question">
+            <label class="form-preview-label">1. 您使用多久了？</label>
+            <label class="form-preview-option">
+              <input type="radio" name="q1">
+              <span>不到1个月</span>
+            </label>
+            <label class="form-preview-option">
+              <input type="radio" name="q1">
+              <span>1-6个月</span>
+            </label>
+            <label class="form-preview-option">
+              <input type="radio" name="q1">
+              <span>6-12个月</span>
+            </label>
+          </div>
+
+          <button class="form-preview-submit">提交</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <h2 class="section-title">核心功能</h2>
+      <p class="section-subtitle">强大的功能，简单的操作</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">拖拽式创建</h3>
+        <p class="feature-desc">直观的拖拽界面，轻松添加各种题型，自由布局，所见即所得</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">实时数据统计</h3>
+        <p class="feature-desc">自动生成可视化图表，实时查看回复趋势和数据分析结果</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+            <line x1="12" y1="18" x2="12.01" y2="18"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">多端完美适配</h3>
+        <p class="feature-desc">响应式设计，确保在手机、平板、电脑上都有最佳的填写体验</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">隐私安全保护</h3>
+        <p class="feature-desc">支持密码保护、限制回复、数据加密，全面保护用户隐私安全</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">丰富模板库</h3>
+        <p class="feature-desc">精心设计的模板覆盖各种场景，一键套用，快速开始</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">智能逻辑跳转</h3>
+        <p class="feature-desc">根据用户答案智能跳转题目，创建个性化的表单流程</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Templates Section -->
+  <section class="templates" id="templates">
+    <div class="section-header">
+      <h2 class="section-title">精选模板</h2>
+      <p class="section-subtitle">快速开始，省时省力</p>
+    </div>
+
+    <div class="templates-grid">
+      <div class="template-card">
+        <div class="template-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+          </svg>
+        </div>
+        <div class="template-info">
+          <h4 class="template-title">活动投票</h4>
+          <p class="template-type">投票</p>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div class="template-info">
+          <h4 class="template-title">满意度调研</h4>
+          <p class="template-type">问卷</p>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </div>
+        <div class="template-info">
+          <h4 class="template-title">员工评分</h4>
+          <p class="template-type">评分</p>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+          </svg>
+        </div>
+        <div class="template-info">
+          <h4 class="template-title">活动报名</h4>
+          <p class="template-type">信息收集</p>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="template-info">
+          <h4 class="template-title">用户反馈</h4>
+          <p class="template-type">反馈</p>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="template-info">
+          <h4 class="template-title">会议预约</h4>
+          <p class="template-type">预约</p>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="template-info">
+          <h4 class="template-title">团队招募</h4>
+          <p class="template-type">报名</p>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+        </div>
+        <div class="template-info">
+          <h4 class="template-title">问卷调查</h4>
+          <p class="template-type">问卷</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="testimonials">
+    <div class="section-header">
+      <h2 class="section-title">用户评价</h2>
+      <p class="section-subtitle">听听用户怎么说</p>
+    </div>
+
+    <div class="testimonials-slider">
+      <div class="testimonial-card">
+        <p class="testimonial-quote">"超级好用！5分钟就搞定了一个专业问卷，界面设计很漂亮，用户体验一流！"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">张</div>
+          <div class="testimonial-info">
+            <p class="testimonial-name">张三</p>
+            <p class="testimonial-role">产品经理</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-dots">
+        <span class="testimonial-dot active"></span>
+        <span class="testimonial-dot"></span>
+        <span class="testimonial-dot"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <div class="cta-card">
+      <h2 class="cta-title">
+        <span class="gradient-text">开始使用 MultiForms</span>
+      </h2>
+      <p class="cta-desc">免费创建第一个表单，开启高效数据收集之旅</p>
+      <a href="register.html" class="cta-btn">
+        免费创建第一个表单
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="9"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="13" y2="17"/>
+          </svg>
+          MultiForms
+        </div>
+        <p class="footer-desc">5分钟创建专业表单，让数据收集变得简单高效</p>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-section">
+          <h4>产品</h4>
+          <ul>
+            <li><a href="#features">功能</a></li>
+            <li><a href="#templates">模板</a></li>
+            <li><a href="#pricing">价格</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>公司</h4>
+          <ul>
+            <li><a href="#">关于</a></li>
+            <li><a href="#">帮助</a></li>
+            <li><a href="#">联系</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>法律</h4>
+          <ul>
+            <li><a href="#">隐私</a></li>
+            <li><a href="#">条款</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 MultiForms. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href !== '#') {
+          e.preventDefault();
+          const target = document.querySelector(href);
+          if (target) {
+            target.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+            // Close mobile menu if open
+            document.body.classList.remove('mobile-menu-open');
+          }
+        }
+      });
+    });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+
+    // Create mobile menu if not exists
+    if (!document.querySelector('.mobile-menu')) {
+      const mobileMenu = document.createElement('div');
+      mobileMenu.className = 'mobile-menu';
+      mobileMenu.innerHTML = `
+        <div class="mobile-menu-overlay"></div>
+        <div class="mobile-menu-content">
+          <button class="mobile-menu-close">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+          <nav class="mobile-nav">
+            <a href="#features">功能</a>
+            <a href="#templates">模板</a>
+            <a href="#pricing">价格</a>
+            <a href="login.html">登录</a>
+            <a href="register.html" class="mobile-cta">免费注册</a>
+          </nav>
+        </div>
+      `;
+      document.body.appendChild(mobileMenu);
+
+      // Add mobile menu styles
+      const style = document.createElement('style');
+      style.textContent = `
+        .mobile-menu {
+          display: none;
+        }
+        .mobile-menu.open {
+          display: block;
+        }
+        .mobile-menu-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 200;
+        }
+        .mobile-menu-content {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: 280px;
+          background: rgba(15, 15, 35, 0.98);
+          backdrop-filter: blur(20px);
+          z-index: 201;
+          padding: 24px;
+          transform: translateX(100%);
+          transition: transform 0.3s ease-out;
+        }
+        .mobile-menu.open .mobile-menu-content {
+          transform: translateX(0);
+        }
+        .mobile-menu-close {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          width: 40px;
+          height: 40px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-secondary);
+          cursor: pointer;
+        }
+        .mobile-menu-close:hover {
+          color: var(--text-primary);
+          background: rgba(255, 255, 255, 0.1);
+        }
+        .mobile-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-top: 60px;
+        }
+        .mobile-nav a {
+          padding: 16px 20px;
+          font-size: 16px;
+          font-weight: 500;
+          color: var(--text-secondary);
+          text-decoration: none;
+          border-radius: 12px;
+          transition: all 0.2s;
+        }
+        .mobile-nav a:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: var(--text-primary);
+        }
+        .mobile-cta {
+          background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+          color: white;
+          text-align: center;
+          margin-top: 16px;
+        }
+        @media (max-width: 768px) {
+          .mobile-menu {
+            display: block;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Close menu on overlay click
+      mobileMenu.querySelector('.mobile-menu-overlay').addEventListener('click', closeMobileMenu);
+      mobileMenu.querySelector('.mobile-menu-close').addEventListener('click', closeMobileMenu);
+
+      // Close menu on link click
+      mobileMenu.querySelectorAll('.mobile-nav a').forEach(link => {
+        link.addEventListener('click', closeMobileMenu);
+      });
+    }
+
+    function closeMobileMenu() {
+      document.querySelector('.mobile-menu').classList.remove('open');
+    }
+
+    mobileMenuBtn?.addEventListener('click', function() {
+      document.querySelector('.mobile-menu').classList.add('open');
+    });
+
+    // Template cards click
+    document.querySelectorAll('.template-card').forEach(card => {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', function() {
+        const templateTitle = this.querySelector('.template-title').textContent;
+        window.location.href = `register.html?template=${encodeURIComponent(templateTitle)}`;
+      });
+    });
+
+    // CTA buttons
+    document.querySelectorAll('.cta-btn, .btn-primary').forEach(btn => {
+      const href = btn.getAttribute('href');
+      if (!href || href === '#') {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          window.location.href = 'register.html';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -17,7 +17,7 @@ export function HeroSection() {
         </div>
       </div>
 
-      <div className="w-full max-w-4xl mx-auto text-center relative z-10">
+      <div className="w-full max-w-[800px] mx-auto text-center relative z-10">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#6366F1]/10 border border-[#6366F1]/30 text-[#A78BFA] text-sm mb-6">
           <Star className="w-4 h-4 fill-current" />

@@ -30,7 +30,7 @@ export function TestimonialsSection() {
 
   return (
     <section className="py-24 px-6 bg-[var(--bg-secondary)]">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-[700px] mx-auto">
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto mb-16">
           <h2 className="text-4xl font-bold mb-4">用户评价</h2>

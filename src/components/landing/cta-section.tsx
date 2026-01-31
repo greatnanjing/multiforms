@@ -12,7 +12,7 @@ export function CTASection() {
         <div className="w-[800px] h-[800px] rounded-full bg-[#6366F1]/15 blur-[100px]" />
       </div>
 
-      <div className="max-w-3xl mx-auto relative z-10">
+      <div className="max-w-[700px] mx-auto relative z-10">
         <h2 className="text-4xl font-bold mb-6">
           <span className="gradient-text">开始使用 MultiForms</span>
         </h2>

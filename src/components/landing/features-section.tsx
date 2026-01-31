@@ -46,7 +46,7 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="py-[100px] px-6 bg-[var(--bg-secondary)]">
+    <section id="features" className="bg-[var(--bg-secondary)]" style={{ padding: '100px 24px' }}>
       <div className="max-w-[1000px] mx-auto">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">

@@ -29,7 +29,7 @@ export function TestimonialsSection() {
   const [activeIndex, setActiveIndex] = useState(0)
 
   return (
-    <section className="py-[100px] px-6 bg-[var(--bg-secondary)]">
+    <section className="bg-[var(--bg-secondary)]" style={{ padding: '100px 24px' }}>
       <div className="max-w-[700px] mx-auto">
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto mb-16">

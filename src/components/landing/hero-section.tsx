@@ -7,7 +7,10 @@ import { FileText, Star, ArrowRight, Play } from 'lucide-react'
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-6 pt-[120px] pb-20 overflow-hidden">
+    <section
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      style={{ padding: '120px 24px 80px' }}
+    >
       {/* Background Gradients */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-0 w-full h-full">

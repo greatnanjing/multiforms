@@ -7,7 +7,7 @@ import { FileText } from 'lucide-react'
 
 export function LandingFooter() {
   return (
-    <footer className="pt-[60px] pb-[30px] px-6 bg-[var(--bg-secondary)] border-t border-white/5">
+    <footer className="bg-[var(--bg-secondary)] border-t border-white/5" style={{ padding: '60px 24px 30px' }}>
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-wrap justify-between gap-10 mb-12">
           {/* Brand */}

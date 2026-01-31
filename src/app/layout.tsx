@@ -12,20 +12,12 @@
 export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { ToastProvider } from '@/components/shared/toast'
 import { ConfirmProvider } from '@/components/shared/confirm-dialog'
-
-// 字体配置
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
 
 // 元数据配置
 export const metadata: Metadata = {
@@ -68,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans antialiased`}
+        className="antialiased"
         suppressHydrationWarning
       >
         <ThemeProvider defaultTheme="nebula" defaultMode="dark">

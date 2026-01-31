@@ -22,7 +22,7 @@ export function TemplatesSection() {
       <div className="max-w-[1100px] mx-auto">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-4xl font-bold mb-4">精选模板</h2>
+          <h2 className="font-bold mb-4" style={{ fontSize: '40px' }}>精选模板</h2>
           <p className="text-lg text-[var(--text-secondary)]">快速开始，省时省力</p>
         </div>
 

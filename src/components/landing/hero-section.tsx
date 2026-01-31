@@ -8,8 +8,8 @@ import { FileText, Star, ArrowRight, Play } from 'lucide-react'
 export function HeroSection() {
   return (
     <section
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
-      style={{ padding: '120px 24px 80px' }}
+      className="relative overflow-hidden"
+      style={{ minHeight: '100vh', padding: '120px 24px 80px' }}
     >
       {/* Background Gradients */}
       <div className="absolute inset-0 -z-10">
@@ -28,7 +28,7 @@ export function HeroSection() {
         </div>
 
         {/* Title */}
-        <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
+        <h1 className="font-bold mb-4 leading-tight" style={{ fontSize: '56px' }}>
           <span className="gradient-text">5分钟创建</span>专业表单
         </h1>
 
@@ -58,7 +58,7 @@ export function HeroSection() {
         </div>
 
         {/* Form Preview */}
-        <div className="bg-[rgba(26,26,46,0.6)] backdrop-blur-xl border border-white/8 rounded-3xl p-10 max-w-2xl mx-auto" style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)' }}>
+        <div className="bg-[rgba(26,26,46,0.6)] backdrop-blur-xl border border-white/8 rounded-3xl p-10 mx-auto" style={{ maxWidth: '700px', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)' }}>
           <div className="bg-[var(--bg-primary)] rounded-2xl p-8 text-left">
             <div className="mb-6">
               <h3 className="text-xl font-semibold mb-2">产品满意度调研</h3>

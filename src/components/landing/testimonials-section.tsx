@@ -33,7 +33,7 @@ export function TestimonialsSection() {
       <div className="max-w-[700px] mx-auto">
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto mb-16">
-          <h2 className="text-4xl font-bold mb-4">用户评价</h2>
+          <h2 className="font-bold mb-4" style={{ fontSize: '40px' }}>用户评价</h2>
           <p className="text-lg text-[var(--text-secondary)]">听听用户怎么说</p>
         </div>
 

@@ -13,7 +13,7 @@ export function CTASection() {
       </div>
 
       <div className="max-w-[700px] mx-auto relative z-10">
-        <h2 className="text-4xl font-bold mb-6">
+        <h2 className="font-bold mb-6" style={{ fontSize: '40px' }}>
           <span className="gradient-text">开始使用 MultiForms</span>
         </h2>
         <p className="text-xl text-[var(--text-secondary)] mb-8">

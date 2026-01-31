@@ -7,7 +7,7 @@ import { ArrowRight } from 'lucide-react'
 
 export function CTASection() {
   return (
-    <section className="py-24 px-6 text-center relative">
+    <section className="py-[100px] px-6 text-center relative">
       <div className="absolute inset-0 flex items-center justify-center -z-10">
         <div className="w-[800px] h-[800px] rounded-full bg-[#6366F1]/15 blur-[100px]" />
       </div>

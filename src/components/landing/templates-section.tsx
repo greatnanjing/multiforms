@@ -19,9 +19,9 @@ const templates = [
 export function TemplatesSection() {
   return (
     <section id="templates" className="py-24 px-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Section Header */}
-        <div className="text-center max-w-xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-4xl font-bold mb-4">精选模板</h2>
           <p className="text-lg text-[var(--text-secondary)]">快速开始，省时省力</p>
         </div>

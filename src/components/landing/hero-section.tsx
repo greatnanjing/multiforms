@@ -55,7 +55,7 @@ export function HeroSection() {
         </div>
 
         {/* Form Preview */}
-        <div className="glass-card rounded-3xl p-10 max-w-2xl mx-auto shadow-2xl">
+        <div className="bg-[rgba(26,26,46,0.6)] backdrop-blur-xl border border-white/8 rounded-3xl p-10 max-w-2xl mx-auto" style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)' }}>
           <div className="bg-[var(--bg-primary)] rounded-2xl p-8 text-left">
             <div className="mb-6">
               <h3 className="text-xl font-semibold mb-2">产品满意度调研</h3>

@@ -47,9 +47,9 @@ const features = [
 export function FeaturesSection() {
   return (
     <section id="features" className="py-24 px-6 bg-[var(--bg-secondary)]">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Section Header */}
-        <div className="text-center max-w-xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-4xl font-bold mb-4">核心功能</h2>
           <p className="text-lg text-[var(--text-secondary)]">强大的功能，简单的操作</p>
         </div>

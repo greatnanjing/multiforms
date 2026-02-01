@@ -1,11 +1,11 @@
 /**
  * 浏览器端 Supabase 客户端
  *
- * 使用全局变量确保真正的单例模式
- * 避免 Next.js 热重载时重置模块变量
+ * 使用 @supabase/ssr 的 createBrowserClient
+ * 确保会话存储在 cookies 中，让 middleware 能正确读取
  */
 
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -24,12 +24,13 @@ export function getBrowserClient() {
   const global = getGlobal()
   if (!global.client) {
     console.log('[Supabase] Creating singleton browser client...')
-    global.client = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+    global.client = createBrowserClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
-        storage: window.localStorage,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        // 使用 cookies 存储，确保 middleware 能读取会话
+        flowType: 'pkce', // 使用 PKCE flow，更安全
       },
     })
     console.log('[Supabase] Singleton client created')

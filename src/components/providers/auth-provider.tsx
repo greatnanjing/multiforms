@@ -5,12 +5,12 @@
    - 监听 Supabase 认证状态变化
    - 自动更新 authStore
    - 处理会话刷新
-   - 处理 Token 刷新
 ============================================ */
 
 'use client'
 
 import { useEffect, useRef, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { getBrowserClient } from '@/lib/supabase/client'
 import { useAuthStore, type AuthUser } from '@/stores/authStore'
 
@@ -19,9 +19,9 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const router = useRouter()
   const initializingRef = useRef(false)
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
-  const signInTimeRef = useRef<number>(0)
 
   useEffect(() => {
     if (initializingRef.current) return
@@ -78,20 +78,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   updated_at: session.user.updated_at || new Date().toISOString(),
                 }
                 store.setUser(authUser)
-                setTimeout(() => store.fetchProfile(), 100)
+                await store.fetchProfile()
 
-                // 只在登录页面且最近5秒内没有重定向过时才重定向
-                const now = Date.now()
+                // 登录成功后重定向
                 const currentPath = window.location.pathname
-
-                if ((currentPath === '/login' || currentPath === '/register') && now - signInTimeRef.current > 5000) {
+                if (currentPath === '/login' || currentPath === '/register') {
                   console.log('[Auth] Redirecting to /dashboard')
-                  signInTimeRef.current = now
-                  window.location.href = '/dashboard'
-                } else if (currentPath === '/admin-login' && now - signInTimeRef.current > 5000) {
+                  router.replace('/dashboard')
+                } else if (currentPath === '/admin-login') {
                   console.log('[Auth] Redirecting to /admin/dashboard')
-                  signInTimeRef.current = now
-                  window.location.href = '/admin/dashboard'
+                  router.replace('/admin/dashboard')
                 }
               }
               break
@@ -99,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             case 'SIGNED_OUT':
               store.setUser(null)
               store.setProfile(null)
-              signInTimeRef.current = 0
+              router.replace('/login')
               break
 
             case 'TOKEN_REFRESHED':
@@ -131,7 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       initializingRef.current = false
     }
-  }, [])
+  }, [router])
 
   return <>{children}</>
 }

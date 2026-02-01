@@ -284,6 +284,19 @@ export default function AdminLoginPage() {
               )}
             </div>
 
+            {/* 记住我 */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="admin-remember"
+                defaultChecked={true}
+                className="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0 focus:ring-offset-[var(--bg-primary)] transition-all"
+              />
+              <label htmlFor="admin-remember" className="text-sm text-[var(--text-secondary)] cursor-pointer hover:text-[var(--text-primary)] transition-colors">
+                记住我
+              </label>
+            </div>
+
             {/* 登录按钮 */}
             <button
               type="submit"

@@ -31,7 +31,7 @@ import {
   Clock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { createClient } from '@/lib/supabase/client'
+import { useAuthStore } from '@/stores/authStore'
 
 export interface SidebarNavItem {
   id: string
@@ -95,9 +95,10 @@ export function Sidebar({
 
   // 退出登录
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    const signOut = useAuthStore.getState().signOut
+    await signOut()
     router.push('/login')
+    router.refresh()
   }
 
   return (

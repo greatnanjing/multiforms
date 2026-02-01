@@ -41,6 +41,7 @@ interface AuthState {
   isLoading: boolean
   isInitialized: boolean
   error: string | null
+  _fetchingProfile: boolean // 内部状态：防止并发请求
 
   // Actions
   setUser: (user: AuthUser | null) => void
@@ -75,6 +76,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   isInitialized: false,
   error: null,
+  _fetchingProfile: false, // 内部状态：防止并发请求
 
   // Setters
   setUser: (user) => set({ user }),
@@ -209,12 +211,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // 获取用户资料
   // ============================================
   fetchProfile: async () => {
-    const { user } = get()
+    const { user, _fetchingProfile } = get()
+
+    // 防止并发请求
+    if (_fetchingProfile) {
+      return
+    }
 
     if (!user) {
       set({ profile: null })
       return
     }
+
+    // 标记正在获取
+    set({ _fetchingProfile: true })
 
     try {
       const supabase = createClient()
@@ -232,22 +242,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                                   error.code === '42P01'
 
         if (!isTableNotExist) {
-          console.warn('Failed to fetch profile:', error.message)
+          console.warn('[AuthStore] Failed to fetch profile:', error.message)
         }
 
-        set({ profile: null })
+        set({ profile: null, _fetchingProfile: false })
         return
       }
 
-      set({ profile: data })
+      set({ profile: data, _fetchingProfile: false })
     } catch (error) {
       // 静默处理预期内的错误
       if ((error as any).message?.includes('fetch') || (error as any).code === 'PGRST116') {
         // 表不存在等预期错误，静默处理
       } else {
-        console.warn('Error fetching profile:', error)
+        console.warn('[AuthStore] Error fetching profile:', error)
       }
-      set({ profile: null })
+      set({ profile: null, _fetchingProfile: false })
     }
   },
 

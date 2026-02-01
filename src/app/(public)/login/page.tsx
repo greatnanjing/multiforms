@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
@@ -46,6 +46,7 @@ function validatePassword(password: string): string | null {
 // ============================================
 
 export default function LoginPage() {
+  console.log('[Login Page] Component rendering')
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -61,6 +62,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('[Login] Form submitted, email:', email)
     setAuthError(null)
 
     // Validate
@@ -80,9 +82,11 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
+      console.log('[Login] Creating Supabase client...')
       const supabase = createClient()
+      console.log('[Login] Client created, attempting sign in...')
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -96,8 +100,17 @@ export default function LoginPage() {
       router.push('/dashboard')
       router.refresh()
     } catch (error) {
-      setAuthError('登录失败，请稍后重试')
-      console.error('Login error:', error)
+      console.error('[Login] Unexpected error:', error)
+      // 检测网络错误
+      if (error instanceof Error) {
+        if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('timeout')) {
+          setAuthError('网络连接失败，请检查浏览器代理设置')
+        } else {
+          setAuthError(`登录失败: ${error.message}`)
+        }
+      } else {
+        setAuthError('登录失败，请稍后重试')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -108,6 +121,8 @@ export default function LoginPage() {
       setAuthError('邮箱或密码错误')
     } else if (error.message?.includes('Email not confirmed')) {
       setAuthError('请先验证您的邮箱')
+    } else if (error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('timeout')) {
+      setAuthError('网络连接失败，请检查浏览器代理设置')
     } else {
       setAuthError(error.message || '登录失败，请稍后重试')
     }
@@ -198,8 +213,28 @@ export default function LoginPage() {
 
           {/* 错误提示 */}
           {authError && (
-            <div className="mb-5 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-              <p className="text-sm text-red-400 text-center">{authError}</p>
+            <div className={`mb-5 p-3 rounded-lg flex items-start gap-2 ${
+              authError.includes('网络') || authError.includes('代理')
+                ? 'bg-yellow-500/10 border border-yellow-500/20'
+                : 'bg-red-500/10 border border-red-500/20'
+            }`}>
+              <AlertCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                authError.includes('网络') || authError.includes('代理')
+                  ? 'text-yellow-400'
+                  : 'text-red-400'
+              }`} />
+              <p className={`text-sm flex-1 ${
+                authError.includes('网络') || authError.includes('代理')
+                  ? 'text-yellow-200'
+                  : 'text-red-400'
+              }`}>
+                {authError}
+                {(authError.includes('网络') || authError.includes('代理')) && (
+                  <span className="block mt-1 text-xs opacity-80">
+                    请确保浏览器已配置代理（Clash/V2Ray 系统代理模式或浏览器代理扩展）
+                  </span>
+                )}
+              </p>
             </div>
           )}
 
@@ -285,8 +320,19 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* 忘记密码链接 */}
-            <div className="flex justify-end">
+            {/* 记住我 & 忘记密码 */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  defaultChecked={true}
+                  className="w-4 h-4 rounded border-white/20 bg-white/5 text-[var(--primary-start)] focus:ring-2 focus:ring-[var(--primary-start)] focus:ring-offset-0 focus:ring-offset-[var(--bg-primary)] transition-all"
+                />
+                <span className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
+                  记住我
+                </span>
+              </label>
               <a
                 href="/forgot-password"
                 className="text-sm text-[var(--text-secondary)] hover:text-[var(--primary-glow)] transition-colors"

@@ -17,10 +17,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Menu, X, Sun, Moon, User, LogOut, Settings, LayoutDashboard } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { createClient } from '@/lib/supabase/client'
+import { useAuthStore } from '@/stores/authStore'
 
 // Theme types
 type ThemeId = 'nebula' | 'ocean' | 'sunset' | 'forest' | 'sakura' | 'cyber' | 'minimal' | 'royal'
@@ -52,7 +52,6 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
   const [theme, setTheme] = useState<ThemeId>('nebula')
   const [mode, setMode] = useState<ThemeMode>('dark')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const supabase = createClient()
 
   // 初始化主题
   useEffect(() => {
@@ -110,7 +109,8 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
 
   // 退出登录
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    const signOut = useAuthStore.getState().signOut
+    await signOut()
     window.location.href = '/login'
   }
 

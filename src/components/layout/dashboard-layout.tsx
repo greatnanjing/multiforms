@@ -15,9 +15,9 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { getBrowserClient } from '@/lib/supabase/client'
 import { Sidebar } from './sidebar'
 import { TabBarSpacer } from './tabbar'
 import { cn } from '@/lib/utils'
@@ -44,36 +44,100 @@ export function DashboardLayout({
   const router = useRouter()
   const [user, setUser] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const mountedRef = useRef(true)
+  const supabaseRef = useRef<ReturnType<typeof getBrowserClient> | null>(null)
 
   // 获取当前用户信息
   useEffect(() => {
+    mountedRef.current = true
+
     const getUser = async () => {
       try {
-        const supabase = createClient()
+        // 使用单例客户端
+        if (!supabaseRef.current) {
+          supabaseRef.current = getBrowserClient()
+        }
+        const supabase = supabaseRef.current
+
         const { data: { session } } = await supabase.auth.getSession()
 
         if (!session) {
-          router.push('/login')
+          if (mountedRef.current) {
+            router.push('/login')
+          }
           return
         }
 
-        // 获取用户 profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
+        // 获取用户 profile，处理表不存在的情况
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
 
-        setUser(profile)
+          if (mountedRef.current) {
+            // 如果 profiles 表不存在或查询失败，使用 session 数据作为 fallback
+            if (error || !profile) {
+              console.warn('Failed to fetch profile, using session data:', error?.message)
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                nickname: session.user.user_metadata?.nickname || session.user.user_metadata?.name,
+                avatar_url: session.user.user_metadata?.avatar_url,
+                role: session.user.user_metadata?.role || userRole,
+                status: 'active',
+                form_count: 0,
+                submission_count: 0,
+                storage_used: 0,
+                preferences: {},
+                email_verified: session.user.email_confirmed_at != null,
+                created_at: session.user.created_at,
+                updated_at: session.user.updated_at || session.user.created_at,
+                last_login_at: session.user.last_sign_in_at,
+              } as Profile)
+            } else {
+              setUser(profile)
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching profile:', err)
+          if (mountedRef.current) {
+            // 使用 session 数据作为 fallback
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              nickname: session.user.user_metadata?.nickname || session.user.user_metadata?.name,
+              avatar_url: session.user.user_metadata?.avatar_url,
+              role: session.user.user_metadata?.role || userRole,
+              status: 'active',
+              form_count: 0,
+              submission_count: 0,
+              storage_used: 0,
+              preferences: {},
+              email_verified: session.user.email_confirmed_at != null,
+              created_at: session.user.created_at,
+              updated_at: session.user.updated_at || session.user.created_at,
+              last_login_at: session.user.last_sign_in_at,
+            } as Profile)
+          }
+        }
       } catch (error) {
         console.error('Failed to get user:', error)
       } finally {
-        setLoading(false)
+        if (mountedRef.current) {
+          setLoading(false)
+        }
       }
     }
 
     getUser()
-  }, [router])
+
+    // 清理函数
+    return () => {
+      mountedRef.current = false
+    }
+  }, [router, userRole])
 
   if (loading) {
     return (

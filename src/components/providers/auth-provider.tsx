@@ -27,8 +27,8 @@
 
 'use client'
 
-import { useEffect, type ReactNode } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { getBrowserClient } from '@/lib/supabase/client'
 import { useAuthStore, type AuthUser } from '@/stores/authStore'
 
 // ============================================
@@ -49,28 +49,29 @@ interface AuthProviderProps {
  * 监听 Supabase 的认证状态变化，并自动更新 Zustand store
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  // 使用 selector 获取稳定的函数引用
-  const setUser = useAuthStore((state) => state.setUser)
-  const setProfile = useAuthStore((state) => state.setProfile)
-  const setInitialized = useAuthStore((state) => state.setInitialized)
-  const fetchProfile = useAuthStore((state) => state.fetchProfile)
-  const setLoading = useAuthStore((state) => state.setLoading)
+  const initializingRef = useRef(false)
+  const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
 
   useEffect(() => {
-    // 创建 Supabase 客户端
-    const supabase = createClient()
+    // 防止重复初始化
+    if (initializingRef.current) return
+    initializingRef.current = true
+
+    // 使用单例 Supabase 客户端
+    const supabase = getBrowserClient()
+    const store = useAuthStore.getState()
 
     // 获取当前会话
     const initializeAuth = async () => {
-      setLoading(true)
+      store.setLoading(true)
 
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
 
         if (error) {
           console.error('Error getting session:', error)
-          setInitialized(true)
-          setLoading(false)
+          store.setInitialized(true)
+          store.setLoading(false)
           return
         }
 
@@ -83,100 +84,100 @@ export function AuthProvider({ children }: AuthProviderProps) {
             updated_at: session.user.updated_at || new Date().toISOString(),
           }
 
-          setUser(authUser)
-
+          store.setUser(authUser)
           // 获取用户资料
-          await fetchProfile()
+          await store.fetchProfile()
         }
 
-        setInitialized(true)
-        setLoading(false)
+        store.setInitialized(true)
+        store.setLoading(false)
       } catch (error) {
         console.error('Error initializing auth:', error)
-        setInitialized(true)
-        setLoading(false)
+        store.setInitialized(true)
+        store.setLoading(false)
       }
     }
 
     // 初始化认证状态
     initializeAuth()
 
-    // 监听认证状态变化
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session: any) => {
-        console.log('Auth state changed:', event)
+    // 监听认证状态变化（只订阅一次）
+    if (!subscriptionRef.current) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event: string, session: any) => {
+          console.log('[Auth] State changed:', event)
 
-      switch (event) {
-        case 'INITIAL_SESSION':
-          // 初始会话已加载（由 initializeAuth 处理，这里只标记初始化完成）
-          setInitialized(true)
-          break
+          switch (event) {
+            case 'INITIAL_SESSION':
+              store.setInitialized(true)
+              break
 
-        case 'SIGNED_IN':
-          // 用户登录
-          if (session?.user) {
-            const authUser: AuthUser = {
-              id: session.user.id,
-              email: session.user.email || '',
-              email_confirmed_at: session.user.email_confirmed_at || null,
-              created_at: session.user.created_at,
-              updated_at: session.user.updated_at || new Date().toISOString(),
-            }
+            case 'SIGNED_IN':
+              if (session?.user) {
+                const authUser: AuthUser = {
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  email_confirmed_at: session.user.email_confirmed_at || null,
+                  created_at: session.user.created_at,
+                  updated_at: session.user.updated_at || new Date().toISOString(),
+                }
+                store.setUser(authUser)
+                // 延迟获取 profile，避免与 INITIAL_SESSION 冲突
+                setTimeout(() => store.fetchProfile(), 100)
+              }
+              break
 
-            setUser(authUser)
-            await fetchProfile()
+            case 'SIGNED_OUT':
+              store.setUser(null)
+              store.setProfile(null)
+              break
+
+            case 'TOKEN_REFRESHED':
+              if (session?.user) {
+                const authUser: AuthUser = {
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  email_confirmed_at: session.user.email_confirmed_at || null,
+                  created_at: session.user.created_at,
+                  updated_at: session.user.updated_at || new Date().toISOString(),
+                }
+                store.setUser(authUser)
+              }
+              break
+
+            case 'USER_UPDATED':
+              if (session?.user) {
+                const authUser: AuthUser = {
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  email_confirmed_at: session.user.email_confirmed_at || null,
+                  created_at: session.user.created_at,
+                  updated_at: session.user.updated_at || new Date().toISOString(),
+                }
+                store.setUser(authUser)
+              }
+              break
+
+            default:
+              break
           }
-          break
 
-        case 'SIGNED_OUT':
-          // 用户登出
-          setUser(null)
-          setProfile(null)
-          break
+          store.setLoading(false)
+        }
+      )
 
-        case 'TOKEN_REFRESHED':
-          // Token 已刷新
-          if (session?.user) {
-            const authUser: AuthUser = {
-              id: session.user.id,
-              email: session.user.email || '',
-              email_confirmed_at: session.user.email_confirmed_at || null,
-              created_at: session.user.created_at,
-              updated_at: session.user.updated_at || new Date().toISOString(),
-            }
-
-            setUser(authUser)
-          }
-          break
-
-        case 'USER_UPDATED':
-          // 用户信息更新
-          if (session?.user) {
-            const authUser: AuthUser = {
-              id: session.user.id,
-              email: session.user.email || '',
-              email_confirmed_at: session.user.email_confirmed_at || null,
-              created_at: session.user.created_at,
-              updated_at: session.user.updated_at || new Date().toISOString(),
-            }
-
-            setUser(authUser)
-            await fetchProfile()
-          }
-          break
-
-        default:
-          break
-      }
-
-      setLoading(false)
-    })
+      subscriptionRef.current = subscription
+    }
 
     // 清理函数
     return () => {
-      subscription.unsubscribe()
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe()
+        subscriptionRef.current = null
+      }
+      initializingRef.current = false
     }
-  }, [setUser, setProfile, setInitialized, fetchProfile, setLoading])
+  }, []) // 空依赖数组 - 只运行一次
 
   return <>{children}</>
 }

@@ -47,7 +47,7 @@ const features = [
 export function FeaturesSection() {
   return (
     <section id="features" className="bg-[var(--bg-secondary)]" style={{ padding: '100px 24px' }}>
-      <div className="max-w-[1000px] mx-auto">
+      <div className="w-full max-w-[1000px] mx-auto">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="font-bold mb-4" style={{ fontSize: '40px' }}>核心功能</h2>

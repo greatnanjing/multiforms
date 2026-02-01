@@ -30,7 +30,7 @@ export function TestimonialsSection() {
 
   return (
     <section className="bg-[var(--bg-secondary)]" style={{ padding: '100px 24px' }}>
-      <div className="max-w-[700px] mx-auto">
+      <div className="w-full max-w-[700px] mx-auto">
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto mb-16">
           <h2 className="font-bold mb-4" style={{ fontSize: '40px' }}>用户评价</h2>

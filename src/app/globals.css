@@ -160,11 +160,14 @@
 
 /* ============================================
    Reset & Base Styles
+   Using @layer base to avoid overriding Tailwind utilities
    ============================================ */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    /* Don't set margin: 0 here as it overrides Tailwind utilities */
+    padding: 0;
+  }
 }
 
 html {

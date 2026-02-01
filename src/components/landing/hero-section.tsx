@@ -8,7 +8,7 @@ import { FileText, Star, ArrowRight, Play } from 'lucide-react'
 export function HeroSection() {
   return (
     <section
-      className="relative overflow-hidden"
+      className="relative overflow-hidden flex items-center justify-center"
       style={{ minHeight: '100vh', padding: '120px 24px 80px' }}
     >
       {/* Background Gradients */}

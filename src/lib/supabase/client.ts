@@ -1,28 +1,44 @@
-import { createBrowserClient } from '@supabase/ssr'
-
 /**
- * 浏览器端 Supabase 客户端缓存
- * 确保只创建一个实例
- */
-let clientInstance: ReturnType<typeof createBrowserClient> | null = null
-
-/**
- * 创建浏览器端 Supabase 客户端
- * 用于客户端组件（使用 'use client' 指令的组件）
+ * 浏览器端 Supabase 客户端
  *
- * 注意：此函数仅在浏览器端运行，环境变量由构建时注入
+ * 使用标准 @supabase/supabase-js 客户端
+ * createBrowserClient from @supabase/ssr 在某些环境下会超时
  */
-export function createClient() {
-  // 浏览器端环境变量由 Next.js 在构建时注入
-  // 如果未设置，返回空字符串（运行时会有实际值）
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-  // 复用已创建的客户端实例
-  if (clientInstance) {
-    return clientInstance
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// 创建单例客户端
+export const createClient = () => {
+  if (typeof window === 'undefined') {
+    throw new Error('createClient should only be used in client components')
   }
 
-  clientInstance = createBrowserClient(url, key)
-  return clientInstance
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      storage: window.localStorage,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  })
+}
+
+// 导出一个共享的客户端实例（可选）
+let browserClient: ReturnType<typeof createSupabaseClient> | null = null
+
+export function getBrowserClient() {
+  if (!browserClient) {
+    browserClient = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        storage: window.localStorage,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
+  }
+  return browserClient
 }

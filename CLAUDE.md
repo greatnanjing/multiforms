@@ -66,19 +66,20 @@ supabase db reset
 
 ## Current Implementation Status
 
-**Last Updated:** 2026-01-31
+**Last Updated:** 2026-02-01
 
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Landing Page | ✅ Complete | All sections implemented |
 | Layout Components | ✅ Complete | Navbar, Sidebar, TabBar, Admin layouts |
-| Auth Pages | ✅ Complete | Login, Register pages |
+| Auth Pages | ✅ Complete | Login, Register, Admin Login pages |
 | Form Builder | ✅ Complete | Drag-and-drop with @dnd-kit |
 | Question Types | ✅ Complete | 10 question types implemented |
 | Public Form View | ✅ Complete | Form filling with password gate |
 | Dashboard | ✅ Complete | Bento grid layout, form cards |
 | Analytics | ✅ Complete | Charts with Recharts |
 | Theme System | ✅ Complete | 8 themes with switcher |
+| Admin Backend | ✅ Complete | Dashboard, Users, Forms, Review, Settings, Logs pages |
 | Supabase Integration | ✅ Complete | Auth, middleware, type generation |
 
 See [docs/design/04-静态页面规划.md](docs/design/04-静态页面规划.md#17-实现状态追踪) for detailed component status.
@@ -102,11 +103,19 @@ src/
 │   │   └── forms/[id]/          # Form management
 │   │       ├── edit/             # Form builder
 │   │       └── analytics/        # Form analytics
-│   ├── (admin)/                  # Admin routes (admin role)
+│   ├── admin/                    # Admin routes (admin role required)
+│   │   ├── dashboard/            # Admin dashboard with stats
+│   │   ├── users/                # User management
+│   │   ├── forms/                # Form moderation
+│   │   ├── review/               # Content review queue
+│   │   ├── settings/             # System settings
+│   │   └── logs/                 # Admin operation logs
+│   ├── admin-login/              # Admin login page (purple theme)
 │   ├── f/[shortId]/              # Public form view
 │   │   └── password-gate/        # Password protection
 │   ├── layout.tsx                # Root layout
 │   ├── page.tsx                  # Landing page
+│   ├── middleware.ts             # Route protection middleware
 │   └── globals.css               # Global styles + design system
 │
 ├── components/
@@ -122,16 +131,16 @@ src/
 │
 ├── lib/
 │   ├── supabase/                 # Supabase clients
-│   │   ├── client.ts             # Browser client
-│   │   ├── server.ts             # Server client
-│   │   ├── middleware.ts         # Auth middleware
+│   │   ├── client.ts             # Browser client (uses @supabase/supabase-js)
+│   │   ├── server.ts             # Server client (RSC)
 │   │   └── route-handler.ts      # API route client
 │   ├── api/                      # API wrappers
 │   │   ├── forms.ts              # Form CRUD
 │   │   └── analytics.ts          # Analytics data
 │   ├── themes.ts                 # Theme definitions
 │   ├── env.ts                    # Environment variable validation
-│   └── utils.ts                  # Utility functions (cn, etc.)
+│   ├── utils.ts                  # Utility functions (cn, etc.)
+│   └── database.types.ts         # Generated TypeScript types
 │
 ├── stores/                       # Zustand state management
 │   ├── authStore.ts              # Auth state
@@ -157,6 +166,7 @@ src/
 // Client components (browser)
 import { createClient } from '@/lib/supabase/client'
 const supabase = createClient()
+// Note: Uses @supabase/supabase-js (NOT @supabase/ssr) due to browser timeout issues
 
 // Server components (RSC)
 import { createClient } from '@/lib/supabase/server'
@@ -167,11 +177,28 @@ import { createClient } from '@/lib/supabase/route-handler'
 const supabase = createClient()
 ```
 
+**Important:** The browser client in `client.ts` uses `@supabase/supabase-js` instead of `@supabase/ssr`'s `createBrowserClient` because the latter was causing query timeouts in the browser environment.
+
+### Route Protection Middleware
+
+Route protection is handled by `src/middleware.ts`:
+
+```tsx
+// Protected routes:
+// - /admin/* → Requires admin role (redirects to /admin-login)
+// - /dashboard/*, /forms/* → Requires authentication (redirects to /login)
+// - /, /login, /register, /f/* → Public (no auth required)
+
+// The middleware checks:
+// 1. Session existence via supabase.auth.getSession()
+// 2. Admin role via profiles.role === 'admin'
+```
+
 ### Route Groups
 
 - `(public)` - No authentication required
 - `(dashboard)` - Requires authentication (user must be logged in)
-- `(admin)` - Requires admin role
+- `admin/` - Requires admin role (protected by middleware)
 
 ### State Management with Zustand
 
@@ -272,7 +299,49 @@ The form builder uses `@dnd-kit` for drag-and-drop:
 
 Bento grid layout using CSS Grid:
 ```tsx
-className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+// Use xl: instead of lg: for 4-column layouts to avoid narrow cards
+className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"
+```
+
+**Note:** The `lg:` breakpoint (1024px) was found to produce cards that are too narrow. Use `xl:` (1280px) for 4-column layouts.
+
+---
+
+## Admin Backend
+
+The admin backend (`/admin/*`) provides comprehensive administrative capabilities:
+
+| Page | Path | Purpose |
+|------|------|---------|
+| Admin Login | `/admin-login` | Dedicated admin login with purple gradient theme |
+| Dashboard | `/admin/dashboard` | Stats overview (users, forms, submissions, storage) |
+| User Management | `/admin/users` | View, search, ban/unban users |
+| Form Moderation | `/admin/forms` | View, ban, delete forms |
+| Content Review | `/admin/review` | Process user reports and content moderation |
+| System Settings | `/admin/settings` | Configure site parameters and feature toggles |
+| Operation Logs | `/admin/logs` | View admin actions and audit trail |
+
+### Admin Layout
+
+- Uses `AdminLayout` component in `src/components/layout/admin-layout.tsx`
+- Sidebar navigation with collapsible mobile menu
+- Header with gradient styling (purple/violet theme)
+- Sticky positioning: `sticky top-0` (not `top-16` - admin has no navbar)
+
+### Error Handling for Missing Tables
+
+The admin pages gracefully handle missing database tables (e.g., `profiles`):
+
+```tsx
+// Pattern used in authStore and admin-login
+try {
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).single()
+  isAdmin = profile?.role === 'admin'
+} catch (err) {
+  // Fallback to user metadata
+  const userMetadata = data.user.user_metadata
+  isAdmin = userMetadata?.role === 'admin'
+}
 ```
 
 ---
@@ -352,3 +421,38 @@ Validation is in `src/lib/env.ts`.
 - **Package Manager**: pnpm (configured in `vercel.json`)
 - **Framework**: Next.js 16 with App Router
 - **Deploy URL**: https://multiforms-filc7o0xa-greatnanjings-team.vercel.app/
+
+---
+
+## Troubleshooting
+
+### Browser Cache Issues
+
+If layout appears broken in Chrome but works in Edge:
+1. Clear browser cache (Ctrl+Shift+Delete)
+2. Hard refresh (Ctrl+Shift+R)
+3. Try incognito mode
+
+### Supabase Browser Query Timeouts
+
+If browser queries hang for 5+ seconds:
+- Verify `src/lib/supabase/client.ts` uses `@supabase/supabase-js`, not `@supabase/ssr`
+- The SSR client (`createBrowserClient`) has known timeout issues in browser environments
+
+### Admin Layout Header Gap
+
+If admin header has white space above it:
+- Check header uses `sticky top-0`, NOT `sticky top-16`
+- The `top-16` assumes a navbar that doesn't exist in admin layout
+
+### Console "Failed to fetch profile" Errors
+
+These are expected when `profiles` table doesn't exist yet:
+- `authStore.ts` handles this gracefully with `console.warn`
+- Falls back to `user_metadata.role` for admin checks
+
+### TypeScript Type Errors
+
+For `AuthChangeEvent` type mismatches:
+- Use `string` or `any` type for the event parameter in auth listeners
+- Supabase types may not always align with actual values received

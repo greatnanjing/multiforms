@@ -103,8 +103,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // 监听认证状态变化
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: 'INITIAL_SESSION' | 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED', session: any) => {
-      console.log('Auth state changed:', event)
+      async (event: string, session: any) => {
+        console.log('Auth state changed:', event)
 
       switch (event) {
         case 'INITIAL_SESSION':

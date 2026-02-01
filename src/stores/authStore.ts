@@ -226,14 +226,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .single()
 
       if (error) {
-        console.error('Failed to fetch profile:', error)
+        // 忽略 "表不存在" 错误 - 数据库可能还未初始化
+        const isTableNotExist = error.message?.includes('does not exist') ||
+                                  error.code === 'PGRST116' ||
+                                  error.code === '42P01'
+
+        if (!isTableNotExist) {
+          console.warn('Failed to fetch profile:', error.message)
+        }
+
         set({ profile: null })
         return
       }
 
       set({ profile: data })
     } catch (error) {
-      console.error('Error fetching profile:', error)
+      // 静默处理预期内的错误
+      if ((error as any).message?.includes('fetch') || (error as any).code === 'PGRST116') {
+        // 表不存在等预期错误，静默处理
+      } else {
+        console.warn('Error fetching profile:', error)
+      }
       set({ profile: null })
     }
   },

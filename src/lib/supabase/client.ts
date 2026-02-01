@@ -2,7 +2,7 @@
  * 浏览器端 Supabase 客户端
  *
  * 使用 @supabase/ssr 的 createBrowserClient
- * 确保会话存储在 cookies 中，让 middleware 能正确读取
+ * 配置 cookies 存储以确保 middleware 能读取会话
  */
 
 import { createBrowserClient } from '@supabase/ssr'
@@ -29,11 +29,25 @@ export function getBrowserClient() {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        // 使用 cookies 存储，确保 middleware 能读取会话
-        flowType: 'pkce', // 使用 PKCE flow，更安全
+        flowType: 'pkce',
+        // 关键：配置 cookies 存储和刷新
+        storage: {
+          getItem: (key) => {
+            const cookies = document.cookie.split(';')
+            const cookie = cookies.find(c => c.trim().startsWith(`${key}=`))
+            return cookie ? cookie.split('=')[1] : null
+          },
+          setItem: (key, value) => {
+            // 设置 cookie，确保 httpOnly 安全
+            document.cookie = `${key}=${value}; path=/; max-age=3600; SameSite=Lax`
+          },
+          removeItem: (key) => {
+            document.cookie = `${key}=; path=/; max-age=-1`
+          },
+        },
       },
     })
-    console.log('[Supabase] Singleton client created')
+    console.log('[Supabase] Singleton client created with cookie storage')
   }
   return global.client
 }

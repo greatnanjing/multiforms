@@ -139,11 +139,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 // 登录成功后重定向（只有在登录页面时才重定向）
                 if (!isSigningInRef.current) {
                   isSigningInRef.current = true
-                  const redirectPath = LOGIN_REDIRECTS[pathname]
+                  // 使用 startsWith 匹配，兼容带查询参数的 URL
+                  const currentPath = window.location.pathname
+                  console.log('[Auth] SIGNED_IN, current path:', currentPath)
+
+                  let redirectPath: string | null = null
+                  if (currentPath === '/login' || currentPath.startsWith('/login?')) {
+                    redirectPath = '/dashboard'
+                  } else if (currentPath === '/admin-login' || currentPath.startsWith('/admin-login?')) {
+                    redirectPath = '/admin/dashboard'
+                  } else if (currentPath === '/register' || currentPath.startsWith('/register?')) {
+                    redirectPath = '/dashboard'
+                  }
+
                   if (redirectPath) {
-                    console.log('[Auth] Redirecting to', redirectPath, 'after sign in, pathname:', pathname)
-                    // 使用 window.location.href 确保可靠跳转
+                    console.log('[Auth] Redirecting to', redirectPath)
                     window.location.href = redirectPath
+                  } else {
+                    isSigningInRef.current = false
                   }
                 }
               }

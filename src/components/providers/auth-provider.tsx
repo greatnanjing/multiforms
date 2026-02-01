@@ -66,8 +66,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (shouldRedirect && pathname !== shouldRedirect) {
       console.log('[Auth] Executing redirect to:', shouldRedirect, 'from:', pathname)
-      router.replace(shouldRedirect)
-      setShouldRedirect(null)
+      // 延迟执行，给 Supabase 时间设置 cookies
+      const timer = setTimeout(() => {
+        // 使用 window.location.href 确保完整页面刷新，让 middleware 能读取到新的 cookies
+        window.location.href = shouldRedirect
+      }, 300)
+      return () => clearTimeout(timer)
     } else if (shouldRedirect) {
       console.log('[Auth] Skipping redirect, already at target:', pathname)
       setShouldRedirect(null)

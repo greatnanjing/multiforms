@@ -141,12 +141,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   isSigningInRef.current = true
                   const redirectPath = LOGIN_REDIRECTS[pathname]
                   if (redirectPath) {
-                    console.log('[Auth] Redirecting to', redirectPath, 'after sign in')
-                    setTimeout(() => {
-                      router.push(redirectPath)
-                      router.refresh()
-                      isSigningInRef.current = false
-                    }, 100)
+                    console.log('[Auth] Redirecting to', redirectPath, 'after sign in, pathname:', pathname)
+                    // 使用 window.location.href 确保可靠跳转
+                    window.location.href = redirectPath
                   }
                 }
               }

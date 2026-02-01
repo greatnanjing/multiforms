@@ -6,23 +6,6 @@
    - 自动更新 authStore
    - 处理会话刷新
    - 处理 Token 刷新
-
-   Usage:
-   ```tsx
-   import { AuthProvider } from '@/components/providers/auth-provider'
-
-   export default function RootLayout({ children }) {
-     return (
-       <html>
-         <body>
-           <AuthProvider>
-             {children}
-           </AuthProvider>
-         </body>
-       </html>
-     )
-   }
-   ```
 ============================================ */
 
 'use client'
@@ -31,54 +14,29 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { getBrowserClient } from '@/lib/supabase/client'
 import { useAuthStore, type AuthUser } from '@/stores/authStore'
 
-// ============================================
-// Types
-// ============================================
-
 interface AuthProviderProps {
   children: ReactNode
 }
 
-// sessionStorage key for redirect tracking
-const REDIRECT_FLAG_KEY = 'auth-redirecting'
-
-// ============================================
-// Auth Provider Component
-// ============================================
-
-/**
- * 认证状态提供者
- *
- * 监听 Supabase 的认证状态变化，并自动更新 Zustand store
- */
 export function AuthProvider({ children }: AuthProviderProps) {
   const initializingRef = useRef(false)
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
+  const signInTimeRef = useRef<number>(0)
 
   useEffect(() => {
-    // 防止重复初始化
     if (initializingRef.current) return
     initializingRef.current = true
 
-    // 使用单例 Supabase 客户端
     const supabase = getBrowserClient()
     const store = useAuthStore.getState()
 
-    // 获取当前会话
     const initializeAuth = async () => {
       store.setLoading(true)
-
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
-
         if (error) {
           console.error('Error getting session:', error)
-          store.setInitialized(true)
-          store.setLoading(false)
-          return
-        }
-
-        if (session?.user) {
+        } else if (session?.user) {
           const authUser: AuthUser = {
             id: session.user.id,
             email: session.user.email || '',
@@ -86,12 +44,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             created_at: session.user.created_at,
             updated_at: session.user.updated_at || new Date().toISOString(),
           }
-
           store.setUser(authUser)
-          // 获取用户资料
           await store.fetchProfile()
         }
-
         store.setInitialized(true)
         store.setLoading(false)
       } catch (error) {
@@ -101,14 +56,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     }
 
-    // 初始化认证状态
     initializeAuth()
 
-    // 监听认证状态变化（只订阅一次）
     if (!subscriptionRef.current) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event: string, session: any) => {
-          console.log('[Auth] State changed:', event)
+          console.log('[Auth] Event:', event)
 
           switch (event) {
             case 'INITIAL_SESSION':
@@ -125,32 +78,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   updated_at: session.user.updated_at || new Date().toISOString(),
                 }
                 store.setUser(authUser)
-                // 延迟获取 profile
                 setTimeout(() => store.fetchProfile(), 100)
 
-                // 检查是否有重定向标记（防止循环）
-                const isRedirecting = sessionStorage.getItem(REDIRECT_FLAG_KEY)
-                if (isRedirecting) {
-                  console.log('[Auth] Skipping redirect, already redirecting')
-                  sessionStorage.removeItem(REDIRECT_FLAG_KEY)
-                  break
-                }
-
-                // 登录成功后重定向（只有在登录页面时才重定向）
+                // 只在登录页面且最近5秒内没有重定向过时才重定向
+                const now = Date.now()
                 const currentPath = window.location.pathname
-                if (currentPath === '/login' || currentPath === '/register') {
-                  console.log('[Auth] SIGNED_IN on login page, redirecting to /dashboard')
-                  sessionStorage.setItem(REDIRECT_FLAG_KEY, 'true')
-                  // 延迟重定向，给 Supabase 时间设置 cookies
-                  setTimeout(() => {
-                    window.location.href = '/dashboard'
-                  }, 500)
-                } else if (currentPath === '/admin-login') {
-                  console.log('[Auth] SIGNED_IN on admin-login page, redirecting to /admin/dashboard')
-                  sessionStorage.setItem(REDIRECT_FLAG_KEY, 'true')
-                  setTimeout(() => {
-                    window.location.href = '/admin/dashboard'
-                  }, 500)
+
+                if ((currentPath === '/login' || currentPath === '/register') && now - signInTimeRef.current > 5000) {
+                  console.log('[Auth] Redirecting to /dashboard')
+                  signInTimeRef.current = now
+                  window.location.href = '/dashboard'
+                } else if (currentPath === '/admin-login' && now - signInTimeRef.current > 5000) {
+                  console.log('[Auth] Redirecting to /admin/dashboard')
+                  signInTimeRef.current = now
+                  window.location.href = '/admin/dashboard'
                 }
               }
               break
@@ -158,22 +99,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
             case 'SIGNED_OUT':
               store.setUser(null)
               store.setProfile(null)
-              sessionStorage.removeItem(REDIRECT_FLAG_KEY)
+              signInTimeRef.current = 0
               break
 
             case 'TOKEN_REFRESHED':
-              if (session?.user) {
-                const authUser: AuthUser = {
-                  id: session.user.id,
-                  email: session.user.email || '',
-                  email_confirmed_at: session.user.email_confirmed_at || null,
-                  created_at: session.user.created_at,
-                  updated_at: session.user.updated_at || new Date().toISOString(),
-                }
-                store.setUser(authUser)
-              }
-              break
-
             case 'USER_UPDATED':
               if (session?.user) {
                 const authUser: AuthUser = {
@@ -186,9 +115,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 store.setUser(authUser)
               }
               break
-
-            default:
-              break
           }
 
           store.setLoading(false)
@@ -198,7 +124,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       subscriptionRef.current = subscription
     }
 
-    // 清理函数
     return () => {
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe()
@@ -206,13 +131,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       initializingRef.current = false
     }
-  }, []) // 空依赖数组 - 只运行一次
+  }, [])
 
   return <>{children}</>
 }
-
-// ============================================
-// Export
-// ============================================
 
 export default AuthProvider

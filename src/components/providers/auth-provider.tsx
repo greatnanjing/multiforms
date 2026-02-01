@@ -27,8 +27,7 @@
 
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { getBrowserClient } from '@/lib/supabase/client'
 import { useAuthStore, type AuthUser } from '@/stores/authStore'
 
@@ -40,6 +39,9 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
+// sessionStorage key for redirect tracking
+const REDIRECT_FLAG_KEY = 'auth-redirecting'
+
 // ============================================
 // Auth Provider Component
 // ============================================
@@ -50,33 +52,8 @@ interface AuthProviderProps {
  * 监听 Supabase 的认证状态变化，并自动更新 Zustand store
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const router = useRouter()
-  const pathname = usePathname()
   const initializingRef = useRef(false)
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
-  const pathnameRef = useRef(pathname)
-  const [shouldRedirect, setShouldRedirect] = useState<string | null>(null)
-
-  // 更新 pathname ref
-  useEffect(() => {
-    pathnameRef.current = pathname
-  }, [pathname])
-
-  // 单独的 useEffect 处理重定向，避免在 auth 回调中直接操作
-  useEffect(() => {
-    if (shouldRedirect && pathname !== shouldRedirect) {
-      console.log('[Auth] Executing redirect to:', shouldRedirect, 'from:', pathname)
-      // 延迟执行，给 Supabase 时间设置 cookies
-      const timer = setTimeout(() => {
-        // 使用 window.location.href 确保完整页面刷新，让 middleware 能读取到新的 cookies
-        window.location.href = shouldRedirect
-      }, 300)
-      return () => clearTimeout(timer)
-    } else if (shouldRedirect) {
-      console.log('[Auth] Skipping redirect, already at target:', pathname)
-      setShouldRedirect(null)
-    }
-  }, [shouldRedirect, router, pathname])
 
   useEffect(() => {
     // 防止重复初始化
@@ -131,21 +108,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (!subscriptionRef.current) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event: string, session: any) => {
-          console.log('[Auth] State changed:', event, 'pathname:', pathname)
+          console.log('[Auth] State changed:', event)
 
           switch (event) {
             case 'INITIAL_SESSION':
               store.setInitialized(true)
-
-              // 如果用户已登录且在登录页面，自动跳转
-              if (session?.user) {
-                const currentPath = pathnameRef.current
-                if (currentPath === '/login' || currentPath === '/register') {
-                  setShouldRedirect('/dashboard')
-                } else if (currentPath === '/admin-login') {
-                  setShouldRedirect('/admin/dashboard')
-                }
-              }
               break
 
             case 'SIGNED_IN':
@@ -158,15 +125,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   updated_at: session.user.updated_at || new Date().toISOString(),
                 }
                 store.setUser(authUser)
-                // 延迟获取 profile，避免与 INITIAL_SESSION 冲突
+                // 延迟获取 profile
                 setTimeout(() => store.fetchProfile(), 100)
 
+                // 检查是否有重定向标记（防止循环）
+                const isRedirecting = sessionStorage.getItem(REDIRECT_FLAG_KEY)
+                if (isRedirecting) {
+                  console.log('[Auth] Skipping redirect, already redirecting')
+                  sessionStorage.removeItem(REDIRECT_FLAG_KEY)
+                  break
+                }
+
                 // 登录成功后重定向（只有在登录页面时才重定向）
-                const currentPath = pathnameRef.current
+                const currentPath = window.location.pathname
                 if (currentPath === '/login' || currentPath === '/register') {
-                  setShouldRedirect('/dashboard')
+                  console.log('[Auth] SIGNED_IN on login page, redirecting to /dashboard')
+                  sessionStorage.setItem(REDIRECT_FLAG_KEY, 'true')
+                  // 延迟重定向，给 Supabase 时间设置 cookies
+                  setTimeout(() => {
+                    window.location.href = '/dashboard'
+                  }, 500)
                 } else if (currentPath === '/admin-login') {
-                  setShouldRedirect('/admin/dashboard')
+                  console.log('[Auth] SIGNED_IN on admin-login page, redirecting to /admin/dashboard')
+                  sessionStorage.setItem(REDIRECT_FLAG_KEY, 'true')
+                  setTimeout(() => {
+                    window.location.href = '/admin/dashboard'
+                  }, 500)
                 }
               }
               break
@@ -174,7 +158,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             case 'SIGNED_OUT':
               store.setUser(null)
               store.setProfile(null)
-              setShouldRedirect(null)
+              sessionStorage.removeItem(REDIRECT_FLAG_KEY)
               break
 
             case 'TOKEN_REFRESHED':
@@ -222,7 +206,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       initializingRef.current = false
     }
-  }, [pathname]) // 添加 pathname 依赖
+  }, []) // 空依赖数组 - 只运行一次
 
   return <>{children}</>
 }

@@ -27,7 +27,7 @@
 
 'use client'
 
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { getBrowserClient } from '@/lib/supabase/client'
 import { useAuthStore, type AuthUser } from '@/stores/authStore'
@@ -38,13 +38,6 @@ import { useAuthStore, type AuthUser } from '@/stores/authStore'
 
 interface AuthProviderProps {
   children: ReactNode
-}
-
-// 登录后需要重定向的路径
-const LOGIN_REDIRECTS: Record<string, string> = {
-  '/login': '/dashboard',
-  '/admin-login': '/admin/dashboard',
-  '/register': '/dashboard',
 }
 
 // ============================================
@@ -61,7 +54,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const pathname = usePathname()
   const initializingRef = useRef(false)
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
-  const isSigningInRef = useRef(false)
+  const pathnameRef = useRef(pathname)
+  const [shouldRedirect, setShouldRedirect] = useState<string | null>(null)
+
+  // 更新 pathname ref
+  useEffect(() => {
+    pathnameRef.current = pathname
+  }, [pathname])
+
+  // 单独的 useEffect 处理重定向，避免在 auth 回调中直接操作
+  useEffect(() => {
+    if (shouldRedirect && pathname !== shouldRedirect) {
+      console.log('[Auth] Executing redirect to:', shouldRedirect, 'from:', pathname)
+      router.replace(shouldRedirect)
+      setShouldRedirect(null)
+    } else if (shouldRedirect) {
+      console.log('[Auth] Skipping redirect, already at target:', pathname)
+      setShouldRedirect(null)
+    }
+  }, [shouldRedirect, router, pathname])
 
   useEffect(() => {
     // 防止重复初始化
@@ -116,11 +127,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (!subscriptionRef.current) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event: string, session: any) => {
-          console.log('[Auth] State changed:', event)
+          console.log('[Auth] State changed:', event, 'pathname:', pathname)
 
           switch (event) {
             case 'INITIAL_SESSION':
               store.setInitialized(true)
+
+              // 如果用户已登录且在登录页面，自动跳转
+              if (session?.user) {
+                const currentPath = pathnameRef.current
+                if (currentPath === '/login' || currentPath === '/register') {
+                  setShouldRedirect('/dashboard')
+                } else if (currentPath === '/admin-login') {
+                  setShouldRedirect('/admin/dashboard')
+                }
+              }
               break
 
             case 'SIGNED_IN':
@@ -137,27 +158,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 setTimeout(() => store.fetchProfile(), 100)
 
                 // 登录成功后重定向（只有在登录页面时才重定向）
-                if (!isSigningInRef.current) {
-                  isSigningInRef.current = true
-                  // 使用 startsWith 匹配，兼容带查询参数的 URL
-                  const currentPath = window.location.pathname
-                  console.log('[Auth] SIGNED_IN, current path:', currentPath)
-
-                  let redirectPath: string | null = null
-                  if (currentPath === '/login' || currentPath.startsWith('/login?')) {
-                    redirectPath = '/dashboard'
-                  } else if (currentPath === '/admin-login' || currentPath.startsWith('/admin-login?')) {
-                    redirectPath = '/admin/dashboard'
-                  } else if (currentPath === '/register' || currentPath.startsWith('/register?')) {
-                    redirectPath = '/dashboard'
-                  }
-
-                  if (redirectPath) {
-                    console.log('[Auth] Redirecting to', redirectPath)
-                    window.location.href = redirectPath
-                  } else {
-                    isSigningInRef.current = false
-                  }
+                const currentPath = pathnameRef.current
+                if (currentPath === '/login' || currentPath === '/register') {
+                  setShouldRedirect('/dashboard')
+                } else if (currentPath === '/admin-login') {
+                  setShouldRedirect('/admin/dashboard')
                 }
               }
               break
@@ -165,7 +170,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             case 'SIGNED_OUT':
               store.setUser(null)
               store.setProfile(null)
-              isSigningInRef.current = false
+              setShouldRedirect(null)
               break
 
             case 'TOKEN_REFRESHED':
@@ -213,7 +218,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       initializingRef.current = false
     }
-  }, []) // 空依赖数组 - 只运行一次
+  }, [pathname]) // 添加 pathname 依赖
 
   return <>{children}</>
 }

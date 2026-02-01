@@ -28,6 +28,7 @@
 'use client'
 
 import { useEffect, useRef, type ReactNode } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { getBrowserClient } from '@/lib/supabase/client'
 import { useAuthStore, type AuthUser } from '@/stores/authStore'
 
@@ -37,6 +38,13 @@ import { useAuthStore, type AuthUser } from '@/stores/authStore'
 
 interface AuthProviderProps {
   children: ReactNode
+}
+
+// 登录后需要重定向的路径
+const LOGIN_REDIRECTS: Record<string, string> = {
+  '/login': '/dashboard',
+  '/admin-login': '/admin/dashboard',
+  '/register': '/dashboard',
 }
 
 // ============================================
@@ -49,8 +57,11 @@ interface AuthProviderProps {
  * 监听 Supabase 的认证状态变化，并自动更新 Zustand store
  */
 export function AuthProvider({ children }: AuthProviderProps) {
+  const router = useRouter()
+  const pathname = usePathname()
   const initializingRef = useRef(false)
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
+  const isSigningInRef = useRef(false)
 
   useEffect(() => {
     // 防止重复初始化
@@ -124,12 +135,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 store.setUser(authUser)
                 // 延迟获取 profile，避免与 INITIAL_SESSION 冲突
                 setTimeout(() => store.fetchProfile(), 100)
+
+                // 登录成功后重定向（只有在登录页面时才重定向）
+                if (!isSigningInRef.current) {
+                  isSigningInRef.current = true
+                  const redirectPath = LOGIN_REDIRECTS[pathname]
+                  if (redirectPath) {
+                    console.log('[Auth] Redirecting to', redirectPath, 'after sign in')
+                    setTimeout(() => {
+                      router.push(redirectPath)
+                      router.refresh()
+                      isSigningInRef.current = false
+                    }, 100)
+                  }
+                }
               }
               break
 
             case 'SIGNED_OUT':
               store.setUser(null)
               store.setProfile(null)
+              isSigningInRef.current = false
               break
 
             case 'TOKEN_REFRESHED':

@@ -247,6 +247,46 @@ export default function AdminLoginPage() {
     }
   }
 
+  // 处理登出后清理表单（当"记住我"未勾选时）
+  useEffect(() => {
+    const checkAndCleanForm = async () => {
+      // 如果之前有临时会话标记但现在没有会话，说明已登出
+      const wasTempSession = localStorage.getItem('was_temp_session')
+
+      if (wasTempSession) {
+        try {
+          const supabase = createClient()
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) {
+            // 已登出且之前是临时会话，清理表单和标记
+            setEmail('')
+            setPassword('')
+            setRememberMe(true) // 重置为默认勾选
+            setPermissionDenied(false)
+            setAuthError(null)
+            localStorage.removeItem('was_temp_session')
+          }
+        } catch (error) {
+          console.error('Error checking session:', error)
+        }
+      }
+    }
+
+    checkAndCleanForm()
+
+    // 监听 storage 事件（其他标签页登出时同步清理）
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'supabase-auth-token' && !e.newValue) {
+        checkAndCleanForm()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
+
   return (
     <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg-primary)] relative overflow-hidden">
       {/* 背景渐变效果 - 紫色主题 */}

@@ -56,6 +56,7 @@ interface AuthState {
   isInitialized: boolean
   error: string | null
   _fetchingProfile: boolean // 内部状态：防止并发请求
+  _profilePromise: Promise<void> | null // 内部状态：共享的 profile 请求 promise
 
   // Actions
   setUser: (user: AuthUser | null) => void
@@ -91,6 +92,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   error: null,
   _fetchingProfile: false, // 内部状态：防止并发请求
+  _profilePromise: null, // 内部状态：共享的 profile 请求 promise
 
   // Setters
   setUser: (user) => set({ user }),
@@ -244,11 +246,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // 获取用户资料
   // ============================================
   fetchProfile: async () => {
-    const { user, _fetchingProfile } = get()
+    const { user, _fetchingProfile, _profilePromise } = get()
 
-    // 防止并发请求
-    if (_fetchingProfile) {
-      return
+    // 如果已有请求在进行中，等待该请求完成
+    if (_fetchingProfile && _profilePromise) {
+      return _profilePromise
     }
 
     if (!user) {
@@ -256,42 +258,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return
     }
 
-    // 标记正在获取
-    set({ _fetchingProfile: true })
+    // 创建新的请求 promise
+    const profilePromise = (async () => {
+      try {
+        const supabase = createClient()
 
-    try {
-      const supabase = createClient()
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+        if (error) {
+          // 忽略 "表不存在" 错误 - 数据库可能还未初始化
+          const isTableNotExist = error.message?.includes('does not exist') ||
+                                    error.code === 'PGRST116' ||
+                                    error.code === '42P01'
 
-      if (error) {
-        // 忽略 "表不存在" 错误 - 数据库可能还未初始化
-        const isTableNotExist = error.message?.includes('does not exist') ||
-                                  error.code === 'PGRST116' ||
-                                  error.code === '42P01'
+          if (!isTableNotExist) {
+            console.warn('[AuthStore] Failed to fetch profile:', error.message)
+          }
 
-        if (!isTableNotExist) {
-          console.warn('[AuthStore] Failed to fetch profile:', error.message)
+          set({ profile: null, _fetchingProfile: false, _profilePromise: null })
+          return
         }
 
-        set({ profile: null, _fetchingProfile: false })
-        return
+        set({ profile: data, _fetchingProfile: false, _profilePromise: null })
+      } catch (error) {
+        // AbortError 或 fetch 错误 - 静默处理
+        if (isAbortError(error) || (error as any).message?.includes('fetch') || (error as any).code === 'PGRST116') {
+          // 表不存在等预期错误，静默处理
+        } else {
+          console.warn('[AuthStore] Error fetching profile:', error)
+        }
+        set({ profile: null, _fetchingProfile: false, _profilePromise: null })
       }
+    })()
 
-      set({ profile: data, _fetchingProfile: false })
-    } catch (error) {
-      // AbortError 或 fetch 错误 - 静默处理
-      if (isAbortError(error) || (error as any).message?.includes('fetch') || (error as any).code === 'PGRST116') {
-        // 表不存在等预期错误，静默处理
-      } else {
-        console.warn('[AuthStore] Error fetching profile:', error)
-      }
-      set({ profile: null, _fetchingProfile: false })
-    }
+    // 标记正在获取并保存 promise
+    set({ _fetchingProfile: true, _profilePromise: profilePromise })
+
+    return profilePromise
   },
 
   // ============================================

@@ -39,6 +39,17 @@ import { cn } from '@/lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
 
 // ============================================
+// Helper Functions
+// ============================================
+
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  return Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
+}
+
+// ============================================
 // Types
 // ============================================
 
@@ -84,7 +95,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
 
   const confirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
     return new Promise((resolve) => {
-      const id = Math.random().toString(36).substring(2, 9)
+      const id = generateId()
       setDialog({ ...options, id, resolve })
     })
   }, [])

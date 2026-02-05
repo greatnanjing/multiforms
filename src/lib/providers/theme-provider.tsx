@@ -10,6 +10,8 @@
    <ThemeProvider><App /></ThemeProvider>
 ============================================ */
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
@@ -51,9 +53,15 @@ export function ThemeProvider({
   const [mode, setModeState] = useState<ThemeMode>(defaultMode)
   const [mounted, setMounted] = useState(false)
 
+  // 应用主题到 DOM
+  const applyTheme = (newTheme: ThemeId, newMode: ThemeMode) => {
+    const root = document.body
+    root.setAttribute('data-theme', newTheme)
+    root.setAttribute('data-mode', newMode)
+  }
+
   // 初始化主题（从 localStorage 读取）
   useEffect(() => {
-    setMounted(true)
     const savedTheme = localStorage.getItem('theme') as ThemeId
     const savedMode = localStorage.getItem('theme-mode') as ThemeMode
 
@@ -65,12 +73,9 @@ export function ThemeProvider({
     applyTheme(initialTheme, initialMode)
   }, [defaultTheme, defaultMode])
 
-  // 应用主题到 DOM
-  const applyTheme = (newTheme: ThemeId, newMode: ThemeMode) => {
-    const root = document.body
-    root.setAttribute('data-theme', newTheme)
-    root.setAttribute('data-mode', newMode)
-  }
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // 设置主题
   const setTheme = (newTheme: ThemeId) => {

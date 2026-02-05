@@ -85,7 +85,7 @@ MultiForms 是一个面向 C 端用户的智能表单云平台，支持创建投
 ### 技术栈
 | 层级 | 技术选型 |
 |------|----------|
-| 前端 | Next.js 15 (App Router) + React + Tailwind CSS + shadcn/ui |
+| 前端 | Next.js 16 (App Router) + React 19 + Tailwind CSS v4 |
 | 后端 | Supabase (PostgreSQL + Auth + Storage + Edge Functions) |
 | 数据库 | PostgreSQL 16 (Supabase 托管) |
 | 部署 | Vercel (前端) + Supabase Cloud (后端) |

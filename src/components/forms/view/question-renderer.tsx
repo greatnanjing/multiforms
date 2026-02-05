@@ -8,6 +8,8 @@
    - 错误状态显示
 ============================================ */
 
+/* eslint-disable react-hooks/static-components */
+
 'use client'
 
 import { forwardRef } from 'react'

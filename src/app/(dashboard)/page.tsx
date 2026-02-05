@@ -111,7 +111,7 @@ function EmptyState({ onCreateForm }: EmptyStateProps) {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { user, profile, isLoading: authLoading, isAuthenticated } = useAuth()
+  const { user, profile, isAuthenticated, isInitialized } = useAuth()
   const toast = useToast()
   const { confirm } = useConfirm()
 
@@ -126,26 +126,57 @@ export default function DashboardPage() {
 
   // 获取表单数据
   useEffect(() => {
+    // 10秒后强制停止加载状态，防止无限加载
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false)
+    }, 10000)
+
+    // 等待 auth 初始化完成后再决定是否获取数据
+    if (!isInitialized) {
+      // 还在初始化中，等待
+      return
+    }
+
     if (isAuthenticated) {
       fetchForms()
+    } else {
+      // 未认证，停止显示加载状态
+      setIsLoading(false)
     }
-  }, [isAuthenticated])
+
+    return () => clearTimeout(timeoutId)
+  }, [isInitialized, isAuthenticated])
 
   const fetchForms = async () => {
     setIsLoading(true)
+
+    // 添加超时保护
+    const timeoutId = setTimeout(() => {
+      console.warn('[Dashboard] fetchForms timeout, showing empty state')
+      setForms([])
+      setIsLoading(false)
+    }, 8000)
+
     try {
-      const result = await getForms({
-        sortBy: 'updated_at',
-        sortOrder: 'desc',
-        pageSize: 5,
-      })
+      const result = await Promise.race([
+        getForms({
+          sortBy: 'updated_at',
+          sortOrder: 'desc',
+          pageSize: 5,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), 7000)
+        ) as Promise<any>
+      ])
+
+      clearTimeout(timeoutId)
 
       setForms(result.data)
 
       // 计算统计数据
-      const totalResponses = result.data.reduce((sum, form) => sum + form.response_count, 0)
+      const totalResponses = result.data.reduce((sum: number, form: Form) => sum + form.response_count, 0)
       const completionRate = result.data.length > 0
-        ? Math.round((totalResponses / Math.max(result.data.reduce((sum, form) => sum + form.view_count, 0), 1)) * 100)
+        ? Math.round((totalResponses / Math.max(result.data.reduce((sum: number, form: Form) => sum + form.view_count, 0), 1)) * 100)
         : 0
 
       setStats({
@@ -155,7 +186,10 @@ export default function DashboardPage() {
         avgDuration: '2:34', // 模拟数据
       })
     } catch (error) {
+      clearTimeout(timeoutId)
       console.error('Failed to fetch forms:', error)
+      // 即使获取失败，也显示空状态而不是一直加载
+      setForms([])
     } finally {
       setIsLoading(false)
     }
@@ -176,7 +210,6 @@ export default function DashboardPage() {
       toast.success('链接已复制到剪贴板')
     } catch {
       toast.error('复制失败，请手动复制链接')
-      console.log('分享链接:', shareUrl)
     }
   }
 
@@ -209,8 +242,9 @@ export default function DashboardPage() {
     }
   }
 
-  // 加载状态
-  if (authLoading || isLoading) {
+  // 加载状态 - 只依赖本地数据加载状态，不依赖 authLoading
+  // 这样即使 auth 初始化有问题，页面也能正常渲染
+  if (isLoading) {
     return (
       <div className="space-y-6">
         {/* 统计卡片骨架 */}

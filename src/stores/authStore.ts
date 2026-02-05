@@ -21,6 +21,20 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile, UserRole } from '@/types'
 
 // ============================================
+// Utilities
+// ============================================
+
+/** 检查是否为 AbortError（请求被取消） */
+function isAbortError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.name === 'AbortError' ||
+     error.message.includes('abort') ||
+     error.message.includes('signal'))
+  )
+}
+
+// ============================================
 // Types
 // ============================================
 
@@ -126,6 +140,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: false })
       return { success: false, error: '登录失败' }
     } catch (error) {
+      // AbortError 是请求被取消，属于正常情况，静默处理
+      if (isAbortError(error)) {
+        set({ isLoading: false })
+        return { success: false, error: '请求已取消' }
+      }
       const message = error instanceof Error ? error.message : '登录失败，请稍后重试'
       set({ error: message, isLoading: false })
       return { success: false, error: message }
@@ -179,6 +198,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // 需要 email 验证
       return { success: true, requiresEmailVerification: true }
     } catch (error) {
+      if (isAbortError(error)) {
+        set({ isLoading: false })
+        return { success: false, error: '请求已取消' }
+      }
       const message = error instanceof Error ? error.message : '注册失败，请稍后重试'
       set({ error: message, isLoading: false })
       return { success: false, error: message }
@@ -195,13 +218,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const supabase = createClient()
       await supabase.auth.signOut()
 
+      // 清除本地状态
       set({
         user: null,
         profile: null,
         isLoading: false,
         error: null,
       })
+
+      // 刷新页面以确保状态完全清除
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
     } catch (error) {
+      if (isAbortError(error)) {
+        set({ isLoading: false })
+        return
+      }
       const message = error instanceof Error ? error.message : '登出失败'
       set({ error: message, isLoading: false })
     }
@@ -251,8 +284,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ profile: data, _fetchingProfile: false })
     } catch (error) {
-      // 静默处理预期内的错误
-      if ((error as any).message?.includes('fetch') || (error as any).code === 'PGRST116') {
+      // AbortError 或 fetch 错误 - 静默处理
+      if (isAbortError(error) || (error as any).message?.includes('fetch') || (error as any).code === 'PGRST116') {
         // 表不存在等预期错误，静默处理
       } else {
         console.warn('[AuthStore] Error fetching profile:', error)
@@ -294,6 +327,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user: null, profile: null, isLoading: false })
       }
     } catch (error) {
+      if (isAbortError(error)) {
+        set({ isLoading: false })
+        return
+      }
       const message = error instanceof Error ? error.message : '刷新会话失败'
       set({ error: message, isLoading: false })
     }

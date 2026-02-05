@@ -26,8 +26,11 @@ interface SortingProps extends SortingQuestionProps {
 // Helpers
 // ============================================
 
-function generateId() {
-  return Math.random().toString(36).substring(2, 9)
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  return Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
 }
 
 // ============================================

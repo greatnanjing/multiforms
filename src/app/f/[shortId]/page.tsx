@@ -17,6 +17,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getFormByShortId, incrementFormViewCount, incrementFormResponseCount } from '@/lib/api/forms'
+import { getPublicQuestions } from '@/lib/api/questions'
 import type { Form, AnswerValue, SubmissionAnswers } from '@/types'
 import {
   FormHeader,
@@ -93,11 +94,14 @@ export default function FormViewPage() {
 
         // Check password protection
         if (formData.access_type === 'password') {
-          const isVerified = sessionStorage.getItem(`form_${shortId}_verified`)
-          if (!isVerified) {
-            // Redirect to password gate
-            router.push(`/f/${shortId}/password-gate`)
-            return
+          // 检查是否在浏览器环境中
+          if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+            const isVerified = sessionStorage.getItem(`form_${shortId}_verified`)
+            if (!isVerified) {
+              // Redirect to password gate
+              router.push(`/f/${shortId}/password-gate`)
+              return
+            }
           }
         }
 
@@ -108,55 +112,12 @@ export default function FormViewPage() {
         if (abortController.signal.aborted) return
 
         // Fetch questions for this form
-        // TODO: Replace with actual API call to form_questions table
-        // For now, use sample questions
-        const sampleQuestions: FormQuestionWithId[] = [
-          {
-            id: 'q1',
-            form_id: formData.id,
-            question_text: '您使用我们的产品多久了？',
-            question_type: 'single_choice',
-            options: {
-              choices: [
-                { id: '1', label: '不到1个月', value: '1m' },
-                { id: '2', label: '1-6个月', value: '6m' },
-                { id: '3', label: '6-12个月', value: '12m' },
-                { id: '4', label: '超过1年', value: '1y' },
-              ],
-            },
-            validation: { required: true },
-            logic_rules: [],
-            order_index: 0,
-          },
-          {
-            id: 'q2',
-            form_id: formData.id,
-            question_text: '请为整体体验打分',
-            question_type: 'rating',
-            options: {
-              rating_type: 'star',
-              rating_max: 5,
-              rating_min: 1,
-            },
-            validation: { required: true },
-            logic_rules: [],
-            order_index: 1,
-          },
-          {
-            id: 'q3',
-            form_id: formData.id,
-            question_text: '您有什么建议或反馈？',
-            question_type: 'textarea',
-            options: {
-              placeholder: '请输入您的反馈...（选填）',
-            },
-            validation: { required: false },
-            logic_rules: [],
-            order_index: 2,
-          },
-        ]
-
-        setQuestions(sampleQuestions)
+        const questionsData = await getPublicQuestions(formData.id)
+        
+        // 检查请求是否已取消
+        if (abortController.signal.aborted) return
+        
+        setQuestions(questionsData as FormQuestionWithId[])
       } catch (err) {
         // 检查是否是取消错误
         if (abortController.signal.aborted) return

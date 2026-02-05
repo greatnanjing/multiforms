@@ -27,6 +27,13 @@ interface FileUploadProps extends FileUploadQuestionProps {
 // Helpers
 // ============================================
 
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  return Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
+}
+
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B'
   const k = 1024
@@ -138,7 +145,7 @@ export function FileUpload({
 
       // 创建文件对象
       const uploadedFile: UploadedFile = {
-        id: Math.random().toString(36).substring(2, 9),
+        id: generateId(),
         name: file.name,
         size: file.size,
         type: file.type,

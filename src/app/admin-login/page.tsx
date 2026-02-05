@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Shield, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -325,12 +326,12 @@ export default function AdminLoginPage() {
 
           {/* 返回首页链接 */}
           <div className="mt-6 pt-6 border-t border-white/5 text-center">
-            <a
+            <Link
               href="/"
               className="text-sm text-[var(--text-secondary)] hover:text-purple-400 transition-colors"
             >
               ← 返回首页
-            </a>
+            </Link>
           </div>
         </div>
       </div>

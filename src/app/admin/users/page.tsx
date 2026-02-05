@@ -30,14 +30,11 @@ import {
   Eye
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Profile } from '@/types'
+import type { Profile, UserRole, UserStatus } from '@/types'
 
 // ============================================
 // Types
 // ============================================
-
-type UserRole = 'admin' | 'creator' | 'guest'
-type UserStatus = 'active' | 'inactive' | 'banned'
 
 interface FilterState {
   search: string
@@ -207,7 +204,7 @@ export default function AdminUsersPage() {
       setLoading(true)
       const supabase = createClient()
 
-      let query = supabase
+      const query = supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })

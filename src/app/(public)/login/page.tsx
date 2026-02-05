@@ -46,7 +46,6 @@ function validatePassword(password: string): string | null {
 // ============================================
 
 export default function LoginPage() {
-  console.log('[Login Page] Component rendering')
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -62,7 +61,6 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[Login] Form submitted, email:', email)
     setAuthError(null)
 
     // Validate
@@ -82,9 +80,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      console.log('[Login] Creating Supabase client...')
       const supabase = createClient()
-      console.log('[Login] Client created, attempting sign in...')
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -96,9 +92,18 @@ export default function LoginPage() {
         return
       }
 
-      // 登录成功，跳转到仪表盘
-      router.push('/dashboard')
-      router.refresh()
+      // 登录成功，等待一小段时间让 auth provider 检测到会话变化
+      // auth provider 会在 SIGNED_IN 事件中处理重定向
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // 检查会话是否已建立
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.replace('/dashboard')
+      } else {
+        // 如果会话还没建立，等待 auth provider 处理
+        router.push('/dashboard')
+      }
     } catch (error) {
       console.error('[Login] Unexpected error:', error)
       // 检测网络错误

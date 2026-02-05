@@ -30,7 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Install dependencies
 pnpm install
 
-# Start dev server
+# Start dev server (port 3000)
 pnpm dev
 
 # Type check
@@ -66,7 +66,7 @@ supabase db reset
 
 ## Current Implementation Status
 
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-02-05 (Auth flow fixes, cookie storage updated, cleaned temp files)
 
 | Phase | Status | Notes |
 |-------|--------|-------|
@@ -115,7 +115,7 @@ src/
 │   │   └── password-gate/        # Password protection
 │   ├── layout.tsx                # Root layout
 │   ├── page.tsx                  # Landing page
-│   ├── middleware.ts             # Route protection middleware
+│   ├── proxy.ts                  # Route protection proxy (Next.js 16)
 │   └── globals.css               # Global styles + design system
 │
 ├── components/
@@ -166,7 +166,6 @@ src/
 // Client components (browser)
 import { createClient } from '@/lib/supabase/client'
 const supabase = createClient()
-// Note: Uses @supabase/supabase-js (NOT @supabase/ssr) due to browser timeout issues
 
 // Server components (RSC)
 import { createClient } from '@/lib/supabase/server'
@@ -177,11 +176,11 @@ import { createClient } from '@/lib/supabase/route-handler'
 const supabase = createClient()
 ```
 
-**Important:** The browser client in `client.ts` uses `@supabase/supabase-js` instead of `@supabase/ssr`'s `createBrowserClient` because the latter was causing query timeouts in the browser environment.
+**Important:** The browser client uses `@supabase/ssr`'s `createBrowserClient` with **default cookie storage** (not custom). This ensures the proxy can correctly read sessions server-side. Auth config includes `flowType: 'pkce'` for enhanced security.
 
-### Route Protection Middleware
+### Route Protection Proxy
 
-Route protection is handled by `src/middleware.ts`:
+Route protection is handled by `src/proxy.ts` (Next.js 16 proxy convention):
 
 ```tsx
 // Protected routes:
@@ -189,16 +188,35 @@ Route protection is handled by `src/middleware.ts`:
 // - /dashboard/*, /forms/* → Requires authentication (redirects to /login)
 // - /, /login, /register, /f/* → Public (no auth required)
 
-// The middleware checks:
+// The proxy checks:
 // 1. Session existence via supabase.auth.getSession()
 // 2. Admin role via profiles.role === 'admin'
 ```
 
-### Route Groups
+### Auth Flow Patterns
+
+To avoid race conditions during login:
+
+1. **Login page** waits 100ms after `signInWithPassword` before redirecting, then verifies session exists
+2. **Dashboard** checks `isInitialized` before fetching data to ensure auth state is ready
+3. **AuthProvider** uses `onAuthStateChange` with `SIGNED_IN` event for automatic redirects
+4. **Profile fetching** is non-blocking (fire-and-forget) to prevent UI delays
+
+```tsx
+// Dashboard pattern - wait for isInitialized
+const { isAuthenticated, isInitialized } = useAuth()
+
+useEffect(() => {
+  if (!isInitialized) return  // Wait for auth init
+  if (isAuthenticated) {
+    fetchForms()
+  }
+}, [isInitialized, isAuthenticated])
+```
 
 - `(public)` - No authentication required
 - `(dashboard)` - Requires authentication (user must be logged in)
-- `admin/` - Requires admin role (protected by middleware)
+- `admin/` - Requires admin role (protected by proxy)
 
 ### State Management with Zustand
 
@@ -408,6 +426,7 @@ Validation is in `src/lib/env.ts`.
 
 | Document | Purpose |
 |----------|---------|
+| [docs/supabase-auth-setup.md](docs/supabase-auth-setup.md) | Email verification setup, redirect URLs |
 | [docs/design/04-静态页面规划.md](docs/design/04-静态页面规划.md) | Page specifications + implementation status |
 | [docs/development/开发步骤.md](docs/development/开发步骤.md) | 20-step development guide |
 | [docs/design/01-UI-UX设计系统.md](docs/design/01-UI-UX设计系统.md) | Complete design system |
@@ -426,18 +445,26 @@ Validation is in `src/lib/env.ts`.
 
 ## Troubleshooting
 
+### Login Rendering Issues (Double Refresh Required)
+
+If login requires a page refresh to reach dashboard:
+1. This is caused by race condition between login redirect and auth provider initialization
+2. Fixed by: login page waits for session before redirecting; dashboard waits for `isInitialized`
+3. Check that `useAuth()` includes `isInitialized` in protected pages
+
+### Email Verification Link Expires
+
+Error: `access_denied&error_code=otp_expired`
+- Add your dev URL to Supabase Dashboard → Authentication → URL Configuration → Redirect URLs
+- Example: `http://localhost:3000/auth/callback`
+- See [docs/supabase-auth-setup.md](docs/supabase-auth-setup.md) for details
+
 ### Browser Cache Issues
 
 If layout appears broken in Chrome but works in Edge:
 1. Clear browser cache (Ctrl+Shift+Delete)
 2. Hard refresh (Ctrl+Shift+R)
 3. Try incognito mode
-
-### Supabase Browser Query Timeouts
-
-If browser queries hang for 5+ seconds:
-- Verify `src/lib/supabase/client.ts` uses `@supabase/supabase-js`, not `@supabase/ssr`
-- The SSR client (`createBrowserClient`) has known timeout issues in browser environments
 
 ### Admin Layout Header Gap
 

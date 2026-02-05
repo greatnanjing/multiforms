@@ -22,6 +22,7 @@
 ============================================ */
 
 import { createClient } from '@/lib/supabase/client'
+import { duplicateQuestions } from './questions'
 import type { Form, FormInput, FormUpdateInput, FormType, FormStatus } from '@/types'
 
 // ============================================
@@ -77,17 +78,6 @@ function generateShortId(): string {
     const array = new Uint8Array(6)
     crypto.getRandomValues(array)
     return Array.from(array, byte => chars[byte % chars.length]).join('')
-  }
-
-  // 服务端降级方案（使用 Node.js crypto）
-  if (typeof require === 'function') {
-    try {
-      const nodeCrypto = require('crypto')
-      const buffer = nodeCrypto.randomBytes(6)
-      return Array.from(buffer, (byte: number) => chars[byte % chars.length]).join('')
-    } catch {
-      // 继续使用 Math.random() 作为最后的降级方案
-    }
   }
 
   // 最终降级方案（仅在 crypto 不可用时使用）
@@ -420,7 +410,13 @@ export async function duplicateForm(formId: string): Promise<Form> {
     throw new Error(`复制表单失败: ${error.message}`)
   }
 
-  // TODO: 复制表单题目（需要额外的逻辑）
+  // 复制表单题目
+  try {
+    await duplicateQuestions(formId, data.id)
+  } catch (error) {
+    console.warn('复制表单题目失败:', error)
+    // 即使题目复制失败，也返回新表单
+  }
 
   return data as Form
 }

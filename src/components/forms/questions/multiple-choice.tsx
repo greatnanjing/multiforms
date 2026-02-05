@@ -29,8 +29,11 @@ interface MultipleChoiceProps extends ChoiceQuestionProps {
 // Helpers
 // ============================================
 
-function generateId() {
-  return Math.random().toString(36).substring(2, 9)
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  return Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
 }
 
 // ============================================
@@ -410,7 +413,7 @@ export function MultipleChoice({
           {allowOther && (
             <div className="mt-3 p-3 rounded-xl border border-white/10 bg-white/5">
               <span className="text-sm text-[var(--text-secondary)]">
-                允许填写"其他"选项
+                允许填写&quot;其他&quot;选项
               </span>
             </div>
           )}

@@ -100,7 +100,6 @@ export default function MyFormsPage() {
       toast.success('链接已复制到剪贴板')
     } catch {
       toast.error('复制失败')
-      console.log('分享链接:', shareUrl)
     }
   }
 

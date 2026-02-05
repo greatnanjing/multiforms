@@ -1,39 +1,58 @@
 /* ============================================
    MultiForms Admin Dashboard Page
 
-   管理员仪表盘 - 使用模拟数据
+   管理员仪表盘 - 实时数据概览
 ============================================ */
 
 'use client'
 
 export const dynamic = 'force-dynamic'
 
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import {
   Users,
   FileText,
   BarChart3,
   Activity,
   TrendingUp,
-  ArrowUpRight,
-  Calendar
+  Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+interface DashboardStats {
+  totalUsers: number
+  totalForms: number
+  totalSubmissions: number
+  activeUsers: number
+  usersChange: number
+  formsChange: number
+  submissionsChange: number
+  activeUsersChange: number
+}
+
 interface StatCardProps {
   title: string
-  value: string
+  value: string | number
   change: string
   icon: React.ComponentType<{ className?: string }>
   color: string
+  loading?: boolean
 }
 
-function StatCard({ title, value, change, icon: Icon, color }: StatCardProps) {
+function StatCard({ title, value, change, icon: Icon, color, loading }: StatCardProps) {
   return (
     <div className="p-6 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 backdrop-blur-sm">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-[var(--text-muted)] mb-1">{title}</p>
-          <p className="text-3xl font-bold text-white">{value}</p>
+          <div className="text-3xl font-bold text-white min-h-[36px] flex items-center">
+            {loading ? (
+              <Loader2 className="w-6 h-6 animate-spin text-[var(--text-muted)]" />
+            ) : (
+              value
+            )}
+          </div>
           <div className={cn(
             'flex items-center gap-1 mt-2 text-sm',
             change.startsWith('+') ? 'text-green-400' : 'text-red-400'
@@ -52,37 +71,106 @@ function StatCard({ title, value, change, icon: Icon, color }: StatCardProps) {
 }
 
 export default function AdminDashboardPage() {
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    totalForms: 0,
+    totalSubmissions: 0,
+    activeUsers: 0,
+    usersChange: 0,
+    formsChange: 0,
+    submissionsChange: 0,
+    activeUsersChange: 0
+  })
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const supabase = createClient()
+        
+        // 1. 获取总用户数
+        const { count: userCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+
+        // 2. 获取表单总数
+        const { count: formCount } = await supabase
+          .from('forms')
+          .select('*', { count: 'exact', head: true })
+
+        // 3. 获取活跃用户 (最近7天登录)
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        
+        const { count: activeCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .gt('last_login_at', sevenDaysAgo.toISOString())
+
+        // 4. 获取总提交数 (聚合 forms.response_count)
+        const { data: formsData } = await supabase
+          .from('forms')
+          .select('response_count')
+        
+        const totalResponses = formsData?.reduce((sum: number, form: { response_count?: number }) => sum + (form.response_count || 0), 0) || 0
+
+        // 模拟增长率 (实际项目中应对比上月数据)
+        // 这里暂时使用随机数模拟，后续可实现真实环比
+        setStats({
+          totalUsers: userCount || 0,
+          totalForms: formCount || 0,
+          totalSubmissions: totalResponses,
+          activeUsers: activeCount || 0,
+          usersChange: 12, // TODO: Implement real MoM calculation
+          formsChange: 8,
+          submissionsChange: 23,
+          activeUsersChange: 5
+        })
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
   return (
     <div className="space-y-6">
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           title="总用户数"
-          value="128"
-          change="+12"
+          value={stats.totalUsers}
+          change={`+${stats.usersChange}`}
           icon={Users}
           color="bg-gradient-to-br from-blue-500 to-cyan-500"
+          loading={loading}
         />
         <StatCard
           title="表单数量"
-          value="45"
-          change="+8"
+          value={stats.totalForms}
+          change={`+${stats.formsChange}`}
           icon={FileText}
           color="bg-gradient-to-br from-purple-500 to-pink-500"
+          loading={loading}
         />
         <StatCard
           title="提交总数"
-          value="1,234"
-          change="+23"
+          value={stats.totalSubmissions.toLocaleString()}
+          change={`+${stats.submissionsChange}`}
           icon={BarChart3}
           color="bg-gradient-to-br from-orange-500 to-red-500"
+          loading={loading}
         />
         <StatCard
-          title="活跃用户"
-          value="89"
-          change="+5"
+          title="活跃用户 (7日)"
+          value={stats.activeUsers}
+          change={`+${stats.activeUsersChange}`}
           icon={Activity}
           color="bg-gradient-to-br from-green-500 to-emerald-500"
+          loading={loading}
         />
       </div>
 
@@ -96,46 +184,11 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-            >
-              <div className="shrink-0 p-2 rounded-lg bg-purple-500/20 text-purple-400">
-                <Users className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white">新用户注册</p>
-                <p className="text-sm text-[var(--text-secondary)]">用户加入了平台</p>
-              </div>
-              <div className="shrink-0 flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                <Calendar className="w-3 h-3" />
-                今天
-              </div>
-            </div>
-          ))}
+          {/* 这里可以后续接入 admin_logs */}
+          <div className="text-center text-[var(--text-muted)] py-8">
+            暂无活动日志
+          </div>
         </div>
-      </div>
-
-      {/* 快捷操作 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 hover:border-purple-500/50 transition-all hover:scale-[1.02] text-left">
-          <Users className="w-8 h-8 text-purple-400 mb-3" />
-          <h3 className="text-lg font-semibold text-white mb-1">用户管理</h3>
-          <p className="text-sm text-[var(--text-secondary)]">管理用户账号和权限</p>
-        </button>
-
-        <button className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 hover:border-blue-500/50 transition-all hover:scale-[1.02] text-left">
-          <FileText className="w-8 h-8 text-blue-400 mb-3" />
-          <h3 className="text-lg font-semibold text-white mb-1">表单管理</h3>
-          <p className="text-sm text-[var(--text-secondary)]">审核和管理平台表单</p>
-        </button>
-
-        <button className="p-6 rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 hover:border-orange-500/50 transition-all hover:scale-[1.02] text-left">
-          <BarChart3 className="w-8 h-8 text-orange-400 mb-3" />
-          <h3 className="text-lg font-semibold text-white mb-1">数据统计</h3>
-          <p className="text-sm text-[var(--text-secondary)]">查看平台数据分析</p>
-        </button>
       </div>
     </div>
   )

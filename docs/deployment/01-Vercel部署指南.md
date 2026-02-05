@@ -44,10 +44,7 @@
 ### 2.2 安装 Vercel CLI
 
 ```bash
-# 使用 npm
-npm install -g vercel
-
-# 使用 pnpm（如使用 pnpm）
+# 使用 pnpm（项目推荐）
 pnpm add -g vercel
 
 # 登录
@@ -79,9 +76,9 @@ vercel login
 # 项目配置
 Framework Preset: Next.js
 Root Directory: ./
-Build Command: npm run build
+Build Command: pnpm build
 Output Directory: (自动检测)
-Install Command: npm install
+Install Command: pnpm install
 ```
 
 #### 步骤 4：设置环境变量
@@ -145,14 +142,8 @@ vercel logs [deployment-url]
 ### 启动开发服务器
 
 ```bash
-# 使用 npm（项目推荐）
-npm run dev
-
-# 或使用 pnpm
+# 使用 pnpm（项目推荐）
 pnpm dev
-
-# 或使用 yarn
-yarn dev
 ```
 
 服务器将在 http://localhost:3000 启动。
@@ -161,24 +152,11 @@ yarn dev
 
 | 命令 | 说明 |
 |------|------|
-| `npm run dev` | 启动开发服务器（端口 3000） |
-| `npm run build` | 构建生产版本 |
-| `npm run start` | 启动生产服务器（需先 build） |
-| `npm run lint` | 检查代码规范 |
-| `npm install` | 安装依赖 |
-
-### 包管理器选择
-
-项目使用 `package-lock.json`（npm），但 npm 和 pnpm 都可以运行脚本：
-
-```bash
-# 以下命令等价
-npm run dev    # pnpm dev
-npm install    # pnpm install
-npm run build  # pnpm build
-```
-
-建议保持一致使用 npm，因为项目已有 `package-lock.json`。
+| `pnpm dev` | 启动开发服务器（端口 3000） |
+| `pnpm build` | 构建生产版本 |
+| `pnpm start` | 启动生产服务器（需先 build） |
+| `pnpm lint` | 检查代码规范 |
+| `pnpm install` | 安装依赖 |
 
 ---
 

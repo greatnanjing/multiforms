@@ -41,6 +41,10 @@
 .DS_Store
 *.pem
 *.log
+*.tmp
+*.bak
+*_output.txt
+*_output.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

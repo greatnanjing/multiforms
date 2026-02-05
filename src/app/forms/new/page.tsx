@@ -30,12 +30,9 @@ export default function NewFormPage() {
 
         if (userError || !user) {
           console.error('Auth error:', userError)
-          setError('请先登录')
-          setIsCreating(false)
+          router.push('/login')
           return
         }
-
-        console.log('[New Form] Creating form for user:', user.id)
 
         // 创建新表单
         const { data: profile, error: profileError } = await supabase
@@ -46,7 +43,6 @@ export default function NewFormPage() {
 
         // 检查用户权限
         const role = profile?.role || user.user_metadata?.role || 'guest'
-        console.log('[New Form] User role:', role)
 
         // 创建表单（type: collection 表示通用收集类型）
         // short_id 由数据库触发器自动生成
@@ -69,8 +65,6 @@ export default function NewFormPage() {
           setIsCreating(false)
           return
         }
-
-        console.log('[New Form] Created form:', newForm)
 
         // 跳转到编辑页面
         router.push(`/forms/${newForm.id}/edit`)

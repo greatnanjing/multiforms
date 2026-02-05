@@ -19,7 +19,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                        客户端层 (Vercel)                        │
 ├─────────────────────────────────────────────────────────────────┤
-│  Next.js 15 App Router  │  React Server Components  │  RSC     │
+│  Next.js 16 App Router  │  React Server Components  │  RSC     │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ↓ HTTPS / WebSocket
@@ -56,7 +56,7 @@
 #### 前端技术栈
 | 类别 | 技术选型 | 说明 |
 |------|----------|------|
-| 框架 | Next.js 15 (App Router) | React 全栈框架，支持 SSR/SSG/ISR |
+| 框架 | Next.js 16 (App Router) | React 全栈框架，支持 SSR/SSG/ISR |
 | 语言 | TypeScript 5+ | 类型安全，提高代码质量 |
 | UI 组件 | shadcn/ui + Tailwind CSS | 现代化组件库 + 设计系统 |
 | 状态管理 | Zustand + React Hooks | 轻量级状态管理 |

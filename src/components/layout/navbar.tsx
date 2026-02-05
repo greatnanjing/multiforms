@@ -53,12 +53,20 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
   const [mode, setMode] = useState<ThemeMode>('dark')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
+  // 应用主题
+  const applyTheme = (newTheme: ThemeId, newMode: ThemeMode) => {
+    document.body.setAttribute('data-theme', newTheme)
+    document.body.setAttribute('data-mode', newMode)
+    localStorage.setItem('theme', newTheme)
+    localStorage.setItem('theme-mode', newMode)
+  }
+
   // 初始化主题
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as ThemeId || 'nebula'
     const savedMode = localStorage.getItem('theme-mode') as ThemeMode || 'dark'
-    setTheme(savedTheme)
-    setMode(savedMode)
+    setTheme(savedTheme) // eslint-disable-line react-hooks/set-state-in-effect
+    setMode(savedMode) // eslint-disable-line react-hooks/set-state-in-effect
     applyTheme(savedTheme, savedMode)
   }, [])
 
@@ -82,14 +90,6 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
         { label: '表单管理', href: '/admin/forms', active: currentPath.startsWith('/admin/forms') },
         { label: '内容审核', href: '/admin/review', active: currentPath.startsWith('/admin/review') },
       ]
-
-  // 应用主题
-  const applyTheme = (newTheme: ThemeId, newMode: ThemeMode) => {
-    document.body.setAttribute('data-theme', newTheme)
-    document.body.setAttribute('data-mode', newMode)
-    localStorage.setItem('theme', newTheme)
-    localStorage.setItem('theme-mode', newMode)
-  }
 
   // 切换主题
   const cycleTheme = () => {

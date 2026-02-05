@@ -1,7 +1,7 @@
 /* ============================================
-   MultiForms Middleware
+   MultiForms Route Protection Proxy (Next.js 16)
 
-   路由保护中间件：
+   路由保护代理：
    - 保护管理后台路由 (/admin/*)
    - 保护需要认证的路由 (/dashboard/*, /forms/*)
    - 公开路由：/, /login, /register, /f/*
@@ -10,6 +10,8 @@
    - 公开: (public) - 无需认证
    - 用户: (dashboard) - 需要认证
    - 管理: admin/* - 需要管理员权限
+
+   注意：Next.js 16 使用 proxy.ts 替代 middleware.ts
 ============================================ */
 
 import { createServerClient } from '@supabase/ssr'
@@ -18,7 +20,7 @@ import type { Database } from '@/lib/database.types'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = new URL(req.url)
 
   // 允许的公开路由
@@ -51,10 +53,10 @@ export async function middleware(req: NextRequest) {
           return req.cookies.get(name)?.value
         },
         set(name: string, value: string, options: any) {
-          // 在 middleware 中不能设置 cookies
+          // 在 proxy 中不能设置 cookies
         },
         remove(name: string, options: any) {
-          // 在 middleware 中不能删除 cookies
+          // 在 proxy 中不能删除 cookies
         },
       },
     }

@@ -5,6 +5,7 @@
    - 紫色渐变主题（区别于普通用户登录）
    - 管理员权限验证
    - 登录后跳转到 /admin/dashboard
+   - 非管理员用户显示清晰错误和倒计时跳转
 
    路径: /admin-login
 ============================================ */
@@ -13,10 +14,10 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Shield, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, Info } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
@@ -47,6 +48,12 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
 
+  // 权限不足状态
+  const [permissionDenied, setPermissionDenied] = useState(false)
+  const [countdown, setCountdown] = useState(5)
+  const countdownRef = useRef<NodeJS.Timeout | null>(null)
+  const hasRedirectedRef = useRef(false)
+
   // Form state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -55,9 +62,38 @@ export default function AdminLoginPage() {
     password?: string
   }>({})
 
+  // 倒计时跳转
+  useEffect(() => {
+    if (permissionDenied && countdown > 0 && !hasRedirectedRef.current) {
+      countdownRef.current = setTimeout(() => {
+        setCountdown(countdown - 1)
+      }, 1000)
+    } else if (countdown === 0 && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true
+      router.push('/login')
+    }
+    return () => {
+      if (countdownRef.current) {
+        clearTimeout(countdownRef.current)
+      }
+    }
+  }, [permissionDenied, countdown, router])
+
+  // 清理状态
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) {
+        clearTimeout(countdownRef.current)
+      }
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setAuthError(null)
+    setPermissionDenied(false)
+    setCountdown(5)
+    hasRedirectedRef.current = false
 
     // Validate
     const emailError = validateEmail(email)
@@ -85,11 +121,14 @@ export default function AdminLoginPage() {
 
       if (error) {
         handleAuthError(error)
+        setIsLoading(false)
         return
       }
 
       // 检查用户角色是否为管理员
       let isAdmin = false
+      let userRole: string | null = null
+
       try {
         const { data: profile } = await supabase
           .from('profiles')
@@ -97,16 +136,31 @@ export default function AdminLoginPage() {
           .eq('id', data.user.id)
           .single()
 
+        userRole = profile?.role || null
         isAdmin = profile?.role === 'admin'
       } catch (err) {
         // 如果 profiles 表不存在，检查用户元数据中的角色
         const userMetadata = data.user.user_metadata
+        userRole = userMetadata?.role || null
         isAdmin = userMetadata?.role === 'admin'
       }
 
       if (!isAdmin) {
+        // 登出当前用户
         await supabase.auth.signOut()
-        setAuthError('此账号没有管理员权限')
+        setIsLoading(false)
+
+        // 显示权限不足提示
+        setPermissionDenied(true)
+
+        // 根据用户角色显示不同的错误信息
+        if (userRole === 'creator') {
+          setAuthError('您的账号是「创作者」，无法访问管理后台。创作者请使用普通登录入口。')
+        } else if (userRole === 'guest') {
+          setAuthError('您的账号是「访客」，无法访问管理后台。访客请使用普通登录入口。')
+        } else {
+          setAuthError('您的账号没有管理员权限，无法访问管理后台。')
+        }
         return
       }
 
@@ -116,7 +170,6 @@ export default function AdminLoginPage() {
     } catch (error) {
       setAuthError('登录失败，请稍后重试')
       console.error('Admin login error:', error)
-    } finally {
       setIsLoading(false)
     }
   }
@@ -197,9 +250,39 @@ export default function AdminLoginPage() {
           </div>
 
           {/* 错误提示 */}
-          {authError && (
+          {authError && !permissionDenied && (
             <div className="mb-5 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
               <p className="text-sm text-red-400 text-center">{authError}</p>
+            </div>
+          )}
+
+          {/* 权限不足提示 */}
+          {permissionDenied && (
+            <div className="mb-5 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-orange-400 font-medium mb-2">权限不足</p>
+                  <p className="text-xs text-orange-300/80 mb-3">{authError}</p>
+                  <div className="flex items-center gap-2 text-xs text-orange-300/60 bg-orange-500/5 rounded-lg p-2">
+                    <Info className="w-3.5 h-3.5" />
+                    <span>
+                      {countdown > 0
+                        ? `将在 ${countdown} 秒后跳转到普通登录页面...`
+                        : '正在跳转...'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      hasRedirectedRef.current = true
+                      router.push('/login')
+                    }}
+                    className="mt-3 text-xs text-orange-400 hover:text-orange-300 underline underline-offset-2"
+                  >
+                    立即跳转 →
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -231,7 +314,7 @@ export default function AdminLoginPage() {
                     'focus:border-purple-500 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)]',
                     fieldErrors.email && 'border-red-500 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.2)]'
                   )}
-                  disabled={isLoading}
+                  disabled={isLoading || permissionDenied}
                 />
               </div>
               {fieldErrors.email && (
@@ -265,7 +348,7 @@ export default function AdminLoginPage() {
                     'focus:border-purple-500 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)]',
                     fieldErrors.password && 'border-red-500 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.2)]'
                   )}
-                  disabled={isLoading}
+                  disabled={isLoading || permissionDenied}
                 />
                 <button
                   type="button"

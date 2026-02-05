@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
 
   // 权限不足状态
   const [permissionDenied, setPermissionDenied] = useState(false)
-  const [countdown, setCountdown] = useState(5)
+  const [countdown, setCountdown] = useState(30)
   const countdownRef = useRef<NodeJS.Timeout | null>(null)
   const hasRedirectedRef = useRef(false)
 
@@ -92,7 +92,7 @@ export default function AdminLoginPage() {
     e.preventDefault()
     setAuthError(null)
     setPermissionDenied(false)
-    setCountdown(5)
+    setCountdown(30)
     hasRedirectedRef.current = false
 
     // Validate
@@ -277,9 +277,9 @@ export default function AdminLoginPage() {
                       hasRedirectedRef.current = true
                       router.push('/login')
                     }}
-                    className="mt-3 text-xs text-orange-400 hover:text-orange-300 underline underline-offset-2"
+                    className="mt-3 w-full py-2.5 px-4 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 text-orange-400 text-sm font-medium transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/10"
                   >
-                    立即跳转 →
+                    前往普通登录页面 →
                   </button>
                 </div>
               </div>

@@ -70,7 +70,8 @@ export default function AdminLoginPage() {
       }, 1000)
     } else if (countdown === 0 && !hasRedirectedRef.current) {
       hasRedirectedRef.current = true
-      router.push('/login')
+      // 跳转到 dashboard（用户已登录）而不是 login
+      router.push('/dashboard')
     }
     return () => {
       if (countdownRef.current) {
@@ -87,6 +88,56 @@ export default function AdminLoginPage() {
       }
     }
   }, [])
+
+  // 检查已登录用户的权限
+  useEffect(() => {
+    const checkExistingUserPermission = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (session?.user) {
+          // 用户已登录，检查角色
+          let isAdmin = false
+          let userRole: string | null = null
+
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single()
+
+            userRole = profile?.role || null
+            isAdmin = profile?.role === 'admin'
+          } catch (err) {
+            const userMetadata = session.user.user_metadata
+            userRole = userMetadata?.role || null
+            isAdmin = userMetadata?.role === 'admin'
+          }
+
+          if (!isAdmin) {
+            // 非管理员已登录，显示权限提示
+            setPermissionDenied(true)
+            if (userRole === 'creator') {
+              setAuthError('您的账号是「创作者」，无法访问管理后台。创作者请前往用户中心。')
+            } else if (userRole === 'guest') {
+              setAuthError('您的账号是「访客」，无法访问管理后台。访客请前往用户中心。')
+            } else {
+              setAuthError('您的账号没有管理员权限，无法访问管理后台。')
+            }
+          } else {
+            // 已是管理员，直接跳转到管理后台
+            router.replace('/admin/dashboard')
+          }
+        }
+      } catch (error) {
+        console.error('Error checking existing user:', error)
+      }
+    }
+
+    checkExistingUserPermission()
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -146,8 +197,8 @@ export default function AdminLoginPage() {
       }
 
       if (!isAdmin) {
-        // 登出当前用户
-        await supabase.auth.signOut()
+        // 不调用 signOut()，因为会触发 auth-provider 的 SIGNED_OUT 事件导致立即跳转
+        // 让用户自己决定去向，保持 session 以便在其他页面使用
         setIsLoading(false)
 
         // 显示权限不足提示
@@ -155,9 +206,9 @@ export default function AdminLoginPage() {
 
         // 根据用户角色显示不同的错误信息
         if (userRole === 'creator') {
-          setAuthError('您的账号是「创作者」，无法访问管理后台。创作者请使用普通登录入口。')
+          setAuthError('您的账号是「创作者」，无法访问管理后台。创作者请前往用户中心。')
         } else if (userRole === 'guest') {
-          setAuthError('您的账号是「访客」，无法访问管理后台。访客请使用普通登录入口。')
+          setAuthError('您的账号是「访客」，无法访问管理后台。访客请前往用户中心。')
         } else {
           setAuthError('您的账号没有管理员权限，无法访问管理后台。')
         }
@@ -268,18 +319,18 @@ export default function AdminLoginPage() {
                     <Info className="w-3.5 h-3.5" />
                     <span>
                       {countdown > 0
-                        ? `将在 ${countdown} 秒后跳转到普通登录页面...`
+                        ? `将在 ${countdown} 秒后跳转到用户中心...`
                         : '正在跳转...'}
                     </span>
                   </div>
                   <button
                     onClick={() => {
                       hasRedirectedRef.current = true
-                      router.push('/login')
+                      router.push('/dashboard')
                     }}
                     className="mt-3 w-full py-2.5 px-4 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 text-orange-400 text-sm font-medium transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/10"
                   >
-                    前往普通登录页面 →
+                    前往用户中心 →
                   </button>
                 </div>
               </div>

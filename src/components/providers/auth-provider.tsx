@@ -47,6 +47,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (error) {
           console.error('Error getting session:', error)
         } else if (session?.user) {
+          // 检查是否为临时会话（用户选择了"不记住我"）
+          const wasTempSession = localStorage.getItem('was_temp_session')
+          const isTempSession = sessionStorage.getItem('temp_session')
+
+          // 如果之前是临时会话，但 sessionStorage 已被清空（浏览器重新打开）
+          // 则需要自动登出
+          if (wasTempSession && !isTempSession) {
+            console.log('[AuthProvider] Temporary session expired (browser closed), signing out...')
+            localStorage.removeItem('was_temp_session')
+            await supabase.auth.signOut()
+            store.setUser(null)
+            store.setProfile(null)
+            store.setInitialized(true)
+            store.setLoading(false)
+            return
+          }
+
           const authUser: AuthUser = {
             id: session.user.id,
             email: session.user.email || '',
@@ -129,6 +146,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             case 'SIGNED_OUT':
               store.setUser(null)
               store.setProfile(null)
+              // 清理临时会话标记
+              sessionStorage.removeItem('temp_session')
+              localStorage.removeItem('was_temp_session')
               router.replace('/login')
               break
 

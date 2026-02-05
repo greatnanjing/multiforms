@@ -54,6 +54,7 @@ export default function LoginPage() {
   // Form state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
   const [fieldErrors, setFieldErrors] = useState<{
     email?: string
     password?: string
@@ -90,6 +91,17 @@ export default function LoginPage() {
       if (error) {
         handleAuthError(error)
         return
+      }
+
+      // 存储记住我偏好
+      if (rememberMe) {
+        // 记住我：移除临时会话标记
+        sessionStorage.removeItem('temp_session')
+        localStorage.removeItem('was_temp_session')
+      } else {
+        // 不记住我：标记为临时会话
+        sessionStorage.setItem('temp_session', 'true')
+        localStorage.setItem('was_temp_session', 'true')
       }
 
       // 登录成功，等待一小段时间让 auth provider 检测到会话变化
@@ -331,8 +343,10 @@ export default function LoginPage() {
                 <input
                   type="checkbox"
                   id="remember"
-                  defaultChecked={true}
-                  className="w-4 h-4 rounded border-white/20 bg-white/5 text-[var(--primary-start)] focus:ring-2 focus:ring-[var(--primary-start)] focus:ring-offset-0 focus:ring-offset-[var(--bg-primary)] transition-all"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={isLoading}
+                  className="w-4 h-4 rounded border-white/20 bg-white/5 text-[var(--primary-start)] focus:ring-2 focus:ring-[var(--primary-start)] focus:ring-offset-0 focus:ring-offset-[var(--bg-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <span className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
                   记住我

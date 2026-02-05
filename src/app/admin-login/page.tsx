@@ -57,6 +57,7 @@ export default function AdminLoginPage() {
   // Form state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
   const [fieldErrors, setFieldErrors] = useState<{
     email?: string
     password?: string
@@ -174,6 +175,17 @@ export default function AdminLoginPage() {
         handleAuthError(error)
         setIsLoading(false)
         return
+      }
+
+      // 存储记住我偏好
+      if (rememberMe) {
+        // 记住我：移除临时会话标记
+        sessionStorage.removeItem('temp_session')
+        localStorage.removeItem('was_temp_session')
+      } else {
+        // 不记住我：标记为临时会话
+        sessionStorage.setItem('temp_session', 'true')
+        localStorage.setItem('was_temp_session', 'true')
       }
 
       // 检查用户角色是否为管理员
@@ -424,8 +436,10 @@ export default function AdminLoginPage() {
               <input
                 type="checkbox"
                 id="admin-remember"
-                defaultChecked={true}
-                className="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0 focus:ring-offset-[var(--bg-primary)] transition-all"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                disabled={isLoading || permissionDenied}
+                className="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0 focus:ring-offset-[var(--bg-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <label htmlFor="admin-remember" className="text-sm text-[var(--text-secondary)] cursor-pointer hover:text-[var(--text-primary)] transition-colors">
                 记住我

@@ -4,8 +4,8 @@
    公开表单填写页：
    - 居中卡片布局（最大宽640px）
    - 表单头部（Logo、标题、描述）
-   - 题目展示（单页/多页模式）
-   - 进度条（多页模式）
+   - 题目展示（单页滚动模式，所有题目一次性展示）
+   - 底部固定提交按钮
    - 提交成功处理
    - 密码保护检查
 ============================================ */
@@ -16,8 +16,9 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getFormByShortId, incrementFormViewCount, incrementFormResponseCount } from '@/lib/api/forms'
+import { getFormByShortId, incrementFormViewCount } from '@/lib/api/forms'
 import { getPublicQuestions } from '@/lib/api/questions'
+import { submitFormAnswer } from '@/lib/api/submissions'
 import type { Form, AnswerValue, SubmissionAnswers } from '@/types'
 import {
   FormHeader,
@@ -62,13 +63,8 @@ export default function FormViewPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // UI state
-  const [currentPage, setCurrentPage] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-
-  // Multi-page mode questions per page
-  const QUESTIONS_PER_PAGE = 1
-  const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE) || 1
 
   // Start time for duration tracking
   const startTimeRef = useRef<number>(Date.now())
@@ -89,6 +85,12 @@ export default function FormViewPage() {
 
         // 检查请求是否已取消
         if (abortController.signal.aborted) return
+
+        // Check if form is published
+        if (formData.status !== 'published') {
+          setError('表单尚未发布，无法访问')
+          return
+        }
 
         setForm(formData)
 
@@ -157,43 +159,6 @@ export default function FormViewPage() {
     })
   }, [])
 
-  const validateCurrentPage = useCallback((): boolean => {
-    const startIndex = currentPage * QUESTIONS_PER_PAGE
-    const endIndex = startIndex + QUESTIONS_PER_PAGE
-    const currentQuestions = questions.slice(startIndex, endIndex)
-
-    const newErrors: Record<string, string> = {}
-
-    for (const question of currentQuestions) {
-      const isRequired = question.validation?.required ?? false
-      const answer = answers[question.id]
-
-      if (isRequired && !answer) {
-        newErrors[question.id] = '此题为必填项'
-      }
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }, [answers, questions, currentPage])
-
-  const handleNext = useCallback(() => {
-    if (!validateCurrentPage()) return
-
-    if (currentPage < totalPages - 1) {
-      setCurrentPage((prev) => prev + 1)
-      // Scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }, [currentPage, totalPages, validateCurrentPage])
-
-  const handlePrevious = useCallback(() => {
-    if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1)
-      // Scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }, [currentPage])
 
   const handleSubmit = useCallback(async () => {
     // Validate all required questions
@@ -210,11 +175,10 @@ export default function FormViewPage() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
-      // Navigate to first page with error
+      // Scroll to first error
       const firstErrorQuestionId = Object.keys(newErrors)[0]
-      const errorQuestionIndex = questions.findIndex((q) => q.id === firstErrorQuestionId)
-      const errorPage = Math.floor(errorQuestionIndex / QUESTIONS_PER_PAGE)
-      setCurrentPage(errorPage)
+      const firstErrorElement = document.querySelector(`[data-question-id="${firstErrorQuestionId}"]`)
+      firstErrorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
 
@@ -225,11 +189,12 @@ export default function FormViewPage() {
       // Calculate duration
       const durationSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000)
 
-      // TODO: Submit to API
-      // await submitFormAnswer(form!.id, answers, durationSeconds)
-
-      // Increment response count
-      await incrementFormResponseCount(form!.id)
+      // Submit to API
+      await submitFormAnswer({
+        formId: form!.id,
+        answers,
+        durationSeconds,
+      })
 
       // Show success modal
       setShowSuccess(true)
@@ -245,13 +210,15 @@ export default function FormViewPage() {
   // Render Helpers
   // ============================================
 
-  // Current page questions
-  const startIndex = currentPage * QUESTIONS_PER_PAGE
-  const endIndex = startIndex + QUESTIONS_PER_PAGE
-  const currentQuestions = questions.slice(startIndex, endIndex)
+  // Count answered required questions for progress
+  // 只统计已填写的必答题数量
+  const answeredCount = questions.filter(q => {
+    const isRequired = q.validation?.required ?? false
+    return isRequired && answers[q.id]  // 必填且已回答
+  }).length
 
-  // Get current question number (1-indexed)
-  const getCurrentQuestionNumber = () => startIndex + 1
+  // 总必填题数量
+  const requiredCount = questions.filter(q => q.validation?.required ?? false).length
 
   // ============================================
   // Loading State
@@ -273,17 +240,21 @@ export default function FormViewPage() {
   // ============================================
 
   if (error || !form) {
+    const isUnpublished = error === '表单尚未发布，无法访问'
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] p-4">
         <div className="max-w-md w-full p-8 rounded-2xl border border-white/[0.08] bg-[var(--bg-secondary)] text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
-            <AlertCircle className="w-8 h-8 text-red-400" />
+          <div className={`w-16 h-16 mx-auto mb-4 rounded-full ${isUnpublished ? 'bg-amber-500/10' : 'bg-red-500/10'} flex items-center justify-center`}>
+            <AlertCircle className={`w-8 h-8 ${isUnpublished ? 'text-amber-400' : 'text-red-400'}`} />
           </div>
           <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-            无法访问表单
+            {isUnpublished ? '表单尚未发布' : '无法访问表单'}
           </h2>
           <p className="text-sm text-[var(--text-secondary)] mb-6">
-            {error || '表单不存在或已关闭'}
+            {isUnpublished
+              ? '此表单尚未发布，暂时无法访问。请联系表单创建者发布后重试。'
+              : (error || '表单不存在或已关闭')
+            }
           </p>
           <button
             onClick={() => router.push('/')}
@@ -320,17 +291,18 @@ export default function FormViewPage() {
 
         {/* Questions */}
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-          <div className="space-y-3">
-            {currentQuestions.map((question, index) => (
-              <QuestionRenderer
-                key={question.id}
-                question={question as any}
-                value={answers[question.id]}
-                onChange={(value) => handleAnswerChange(question.id, value)}
-                error={errors[question.id]}
-                disabled={isSubmitting}
-                questionNumber={getCurrentQuestionNumber() + index}
-              />
+          <div className="space-y-4">
+            {questions.map((question, index) => (
+              <div key={question.id} data-question-id={question.id}>
+                <QuestionRenderer
+                  question={question as any}
+                  value={answers[question.id]}
+                  onChange={(value) => handleAnswerChange(question.id, value)}
+                  error={errors[question.id]}
+                  disabled={isSubmitting}
+                  questionNumber={index + 1}
+                />
+              </div>
             ))}
           </div>
 
@@ -350,15 +322,13 @@ export default function FormViewPage() {
         </div>
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress Bar / Submit Button */}
       {questions.length > 0 && (
         <FormProgress
-          currentQuestion={getCurrentQuestionNumber()}
+          answeredCount={answeredCount}
+          requiredCount={requiredCount}
           totalQuestions={questions.length}
-          isFirstPage={currentPage === 0}
-          isLastPage={currentPage === totalPages - 1}
           isSubmitting={isSubmitting}
-          onPrevious={handlePrevious}
           onSubmit={handleSubmit}
         />
       )}

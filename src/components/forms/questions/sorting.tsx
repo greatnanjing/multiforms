@@ -45,6 +45,7 @@ interface DraggableItemProps {
   onDragEnd: () => void
   disabled?: boolean
   showHandle?: boolean
+  showNumber?: boolean
 }
 
 function DraggableItem({
@@ -54,7 +55,8 @@ function DraggableItem({
   onDragOver,
   onDragEnd,
   disabled = false,
-  showHandle = true
+  showHandle = true,
+  showNumber = true
 }: DraggableItemProps) {
   const [isDragging, setIsDragging] = useState(false)
 
@@ -84,12 +86,14 @@ function DraggableItem({
       )}
     >
       {/* 序号 */}
-      <span className={cn(
-        'w-7 h-7 rounded-lg flex items-center justify-center text-sm font-semibold',
-        'bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)] text-white'
-      )}>
-        {index + 1}
-      </span>
+      {showNumber && (
+        <span className={cn(
+          'w-7 h-7 rounded-lg flex items-center justify-center text-sm font-semibold',
+          'bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)] text-white'
+        )}>
+          {index + 1}
+        </span>
+      )}
 
       {/* 拖拽手柄 */}
       {showHandle && (
@@ -354,6 +358,7 @@ export function Sorting({
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
             disabled={disabled}
+            showNumber={false}
           />
         ))}
       </div>

@@ -136,13 +136,17 @@ export async function createQuestion(
 
   const nextOrderIndex = (existingQuestions?.[0]?.order_index ?? -1) + 1
 
+  // Get default validation and merge with provided validation
+  const defaultValidation = getDefaultValidation(options.question_type)
+  const validation = options.validation ? { ...defaultValidation, ...options.validation } : defaultValidation
+
   const questionData = {
     id: generateId(),
     form_id: formId,
     question_text: options.question_text,
     question_type: options.question_type,
     options: options.options || getDefaultOptions(options.question_type),
-    validation: options.validation || getDefaultValidation(options.question_type),
+    validation,
     logic_rules: options.logic_rules || [],
     order_index: options.order_index ?? nextOrderIndex,
     created_at: new Date().toISOString(),
@@ -186,17 +190,25 @@ export async function createQuestions(
 
   const startOrderIndex = (existingQuestions?.[0]?.order_index ?? -1) + 1
 
-  const questionsData = questions.map((q, index) => ({
-    id: generateId(),
-    form_id: formId,
-    question_text: q.question_text,
-    question_type: q.question_type,
-    options: q.options || getDefaultOptions(q.question_type),
-    validation: q.validation || getDefaultValidation(q.question_type),
-    logic_rules: q.logic_rules || [],
-    order_index: q.order_index ?? startOrderIndex + index,
-    created_at: new Date().toISOString(),
-  }))
+  const questionsData = questions.map((q, index) => {
+    // Get default validation and merge with provided validation
+    const defaultValidation = getDefaultValidation(q.question_type)
+    const validation = q.validation ? { ...defaultValidation, ...q.validation } : defaultValidation
+    // Override required from the top-level if provided (for BuilderQuestion compatibility)
+    const finalValidation = 'required' in q ? { ...validation, required: q.required } : validation
+
+    return {
+      id: generateId(),
+      form_id: formId,
+      question_text: q.question_text,
+      question_type: q.question_type,
+      options: q.options || getDefaultOptions(q.question_type),
+      validation: finalValidation,
+      logic_rules: q.logic_rules || [],
+      order_index: q.order_index ?? startOrderIndex + index,
+      created_at: new Date().toISOString(),
+    }
+  })
 
   const { data, error } = await supabase
     .from('form_questions')
@@ -279,9 +291,13 @@ export async function updateQuestions(
   }
 
   const results: FormQuestion[] = []
-  
+
   for (const q of questions) {
     const { id, ...updates } = q
+    console.log(`[updateQuestions] Question ${id}:`, {
+      updates,
+      validationRequired: updates.validation?.required,
+    })
     const { data, error } = await supabase
       .from('form_questions')
       .update(updates)
@@ -290,9 +306,11 @@ export async function updateQuestions(
       .single()
 
     if (error) {
+      console.error(`[updateQuestions] Error updating ${id}:`, error)
       throw new Error(`更新题目 ${id} 失败: ${error.message}`)
     }
 
+    console.log(`[updateQuestions] Success ${id}:`, data)
     results.push(data as FormQuestion)
   }
 

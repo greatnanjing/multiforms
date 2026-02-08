@@ -60,10 +60,19 @@ export interface GetSubmissionsOptions {
 export async function getFormStats(options: GetStatsOptions): Promise<FormOverviewStats & { form: Form }> {
   const supabase = createClient()
 
+  console.log('[getFormStats] 开始获取统计, formId:', options.formId)
+
+  // 检查会话状态
+  const { data: sessionData } = await supabase.auth.getSession()
+  console.log('[getFormStats] 会话状态:', sessionData.session ? '有会话' : '无会话')
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
+    console.error('[getFormStats] 用户未登录')
     throw new Error('用户未登录')
   }
+
+  console.log('[getFormStats] 当前用户:', user.id)
 
   // 获取表单
   const { data: form, error: formError } = await supabase
@@ -71,6 +80,8 @@ export async function getFormStats(options: GetStatsOptions): Promise<FormOvervi
     .select('*')
     .eq('id', options.formId)
     .single()
+
+  console.log('[getFormStats] 表单数据:', form, '错误:', formError)
 
   if (formError || !form) {
     throw new Error('表单不存在')
@@ -88,11 +99,17 @@ export async function getFormStats(options: GetStatsOptions): Promise<FormOvervi
   const weekStartIso = weekStart.toISOString()
 
   // 获取本周和今日的回复数
-  const { data: submissions } = await supabase
+  const { data: submissions, error: submissionsError } = await supabase
     .from('form_submissions')
     .select('created_at, duration_seconds')
     .eq('form_id', options.formId)
     .eq('status', 'completed')
+
+  // 调试日志
+  if (submissionsError) {
+    console.error('获取提交数据失败:', submissionsError)
+  }
+  console.log('获取到的提交数据:', submissions)
 
   const responsesToday = submissions?.filter((s: any) => s.created_at >= todayStart).length || 0
   const responsesThisWeek = submissions?.filter((s: any) => s.created_at >= weekStartIso).length || 0
@@ -414,6 +431,12 @@ export async function getSubmissions(
 
   const { data, error, count } = await query
 
+  // 调试日志
+  console.log('getSubmissions - formId:', formId, 'user:', user.id)
+  console.log('getSubmissions - error:', error)
+  console.log('getSubmissions - data:', data)
+  console.log('getSubmissions - count:', count)
+
   if (error) {
     throw new Error(`获取提交数据失败: ${error.message}`)
   }
@@ -477,5 +500,8 @@ export async function exportSubmissions(options: GetSubmissionsOptions & {
 
   // 组装 CSV
   const csvRows = [headers, ...rows]
-  return csvRows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+  const csvContent = csvRows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+
+  // 添加 UTF-8 BOM，确保 Excel 正确识别中文
+  return '\uFEFF' + csvContent
 }

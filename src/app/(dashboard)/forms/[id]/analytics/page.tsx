@@ -16,7 +16,7 @@ import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   Download,
-  Share2,
+  RefreshCw,
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react'
@@ -65,6 +65,9 @@ export default function AnalyticsPage() {
   // Export
   const [isExporting, setIsExporting] = useState(false)
   const [exportSuccess, setExportSuccess] = useState(false)
+
+  // Refresh
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Questions (for table columns)
   const [questions, setQuestions] = useState<FormQuestion[]>([])
@@ -188,14 +191,20 @@ export default function AnalyticsPage() {
     }
   }, [formId, form, submissionTotal, questions])
 
-  const handleShare = useCallback(() => {
-    const shareUrl = `${window.location.origin}/f/${form?.short_id}`
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl)
-      // TODO: Show toast notification
-      console.log('Link copied!')
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      // 刷新所有数据
+      await Promise.all([
+        loadStats(),
+        loadTrend(),
+        loadQuestionStats(),
+        loadSubmissions(currentPage),
+      ])
+    } finally {
+      setIsRefreshing(false)
     }
-  }, [form])
+  }, [loadStats, loadTrend, loadQuestionStats, loadSubmissions, currentPage])
 
   // ============================================
   // Loading State
@@ -282,8 +291,8 @@ export default function AnalyticsPage() {
             disabled={isExporting || submissionTotal === 0}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
-              'bg-white/5 text-[var(--text-secondary)] border border-white/10',
-              'hover:bg-white/10 hover:text-[var(--text-primary)]',
+              'bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white',
+              'hover:opacity-90 hover:shadow-lg hover:shadow-indigo-500/20',
               'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
@@ -306,15 +315,19 @@ export default function AnalyticsPage() {
           </button>
 
           <button
-            onClick={handleShare}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
               'bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white',
-              'hover:opacity-90 hover:shadow-lg hover:shadow-indigo-500/20'
+              'hover:opacity-90 hover:shadow-lg hover:shadow-indigo-500/20',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
-            <Share2 className="w-4 h-4" />
-            <span className="hidden sm:inline">分享结果</span>
+            <RefreshCw className={cn('w-4 h-4', isRefreshing && 'animate-spin')} />
+            <span className="hidden sm:inline">
+              {isRefreshing ? '刷新中...' : '刷新数据'}
+            </span>
           </button>
         </div>
       </nav>

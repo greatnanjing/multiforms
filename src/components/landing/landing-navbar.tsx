@@ -1,5 +1,10 @@
 /* ============================================
    MultiForms Landing Page - Navbar
+
+   支持显示用户登录状态：
+   - 使用 useAuth 获取用户状态
+   - 已登录时显示用户头像和菜单
+   - 未登录时显示登录/注册按钮
    ============================================ */
 
 'use client'
@@ -7,12 +12,74 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FileText, Menu, X } from 'lucide-react'
+import { FileText, Menu, X, User, LogOut, LayoutDashboard, Sun, Moon } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { cn } from '@/lib/utils'
+
+// Theme types
+type ThemeId = 'nebula' | 'ocean' | 'sunset' | 'forest' | 'sakura' | 'cyber' | 'minimal' | 'royal'
+type ThemeMode = 'dark' | 'light'
 
 export function LandingNavbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [theme, setTheme] = useState<ThemeId>('nebula')
+  const [mode, setMode] = useState<ThemeMode>('dark')
   const pathname = usePathname()
+
+  // 获取用户状态
+  const { user, profile, isAuthenticated, signOut } = useAuth()
+
+  // 应用主题
+  const applyTheme = (newTheme: ThemeId, newMode: ThemeMode) => {
+    document.body.setAttribute('data-theme', newTheme)
+    document.body.setAttribute('data-mode', newMode)
+    localStorage.setItem('theme', newTheme)
+    localStorage.setItem('theme-mode', newMode)
+  }
+
+  // 初始化主题
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as ThemeId || 'nebula'
+    const savedMode = localStorage.getItem('theme-mode') as ThemeMode || 'dark'
+    setTheme(savedTheme)
+    setMode(savedMode)
+    applyTheme(savedTheme, savedMode)
+  }, [])
+
+  // 切换主题
+  const cycleTheme = () => {
+    const themes: ThemeId[] = ['nebula', 'ocean', 'sunset', 'forest', 'sakura', 'cyber', 'minimal', 'royal']
+    const currentIndex = themes.indexOf(theme)
+    const nextTheme = themes[(currentIndex + 1) % themes.length]
+    setTheme(nextTheme)
+    applyTheme(nextTheme, mode)
+  }
+
+  // 切换深浅模式
+  const toggleMode = () => {
+    const newMode = mode === 'dark' ? 'light' : 'dark'
+    setMode(newMode)
+    applyTheme(theme, newMode)
+  }
+
+  // 退出登录
+  const handleLogout = async () => {
+    await signOut()
+    setUserMenuOpen(false)
+    window.location.href = '/'
+  }
+
+  // 获取用户显示名称
+  const getUserDisplay = () => {
+    if (profile?.nickname) return profile.nickname
+    if (user?.email) {
+      const email = user.email
+      return email.split('@')[0]
+    }
+    return '用户'
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -68,18 +135,97 @@ export function LandingNavbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-[var(--text-primary)] border border-white/10 rounded-xl hover:bg-white/5 hover:border-[#6366F1] hover:text-[#A78BFA] transition-all"
-            >
-              登录
-            </Link>
-            <Link
-              href="/register"
-              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-xl shadow-lg shadow-[#6366F1]/30 hover:shadow-xl hover:shadow-[#6366F1]/40 hover:-translate-y-0.5 transition-all"
-            >
-              注册
-            </Link>
+            {/* Theme Toggle */}
+            <div className="flex items-center">
+              <button
+                onClick={cycleTheme}
+                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all"
+                title="切换主题"
+              >
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)]" />
+              </button>
+              <button
+                onClick={toggleMode}
+                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all"
+                title={mode === 'dark' ? '切换到浅色模式' : '切换到深色模式'}
+              >
+                {mode === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+            </div>
+
+            {/* Auth Buttons / User Menu */}
+            {isAuthenticated && user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)] flex items-center justify-center text-white text-sm font-medium">
+                    {getUserDisplay().charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm text-[var(--text-secondary)]">
+                    {getUserDisplay()}
+                  </span>
+                </button>
+
+                {/* User Dropdown */}
+                {userMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-[rgba(26,26,46,0.95)] backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-20">
+                      <div className="px-4 py-3 border-b border-white/5">
+                        <p className="text-sm font-medium text-white">{getUserDisplay()}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{user.email}</p>
+                      </div>
+                      <div className="py-1">
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <LayoutDashboard className="w-4 h-4" />
+                          控制台
+                        </Link>
+                        <Link
+                          href="/profile"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <User className="w-4 h-4" />
+                          个人资料
+                        </Link>
+                        <hr className="border-white/5 my-1" />
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          退出登录
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-medium text-[var(--text-primary)] border border-white/10 rounded-xl hover:bg-white/5 hover:border-[#6366F1] hover:text-[#A78BFA] transition-all"
+                >
+                  登录
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-xl shadow-lg shadow-[#6366F1]/30 hover:shadow-xl hover:shadow-[#6366F1]/40 hover:-translate-y-0.5 transition-all"
+                >
+                  注册
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -120,18 +266,70 @@ export function LandingNavbar() {
                 </a>
               ))}
               <div className="w-full h-px bg-white/10 my-2" />
-              <Link
-                href="/login"
-                className="px-5 py-3 text-base font-medium text-[var(--text-secondary)] hover:bg-white/5 hover:text-[var(--text-primary)] rounded-xl transition-all"
-              >
-                登录
-              </Link>
-              <Link
-                href="/register"
-                className="px-5 py-3 text-base font-medium text-white bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-xl text-center mt-2"
-              >
-                免费注册
-              </Link>
+
+              {/* Theme Controls */}
+              <p className="px-5 mt-4 mb-2 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
+                主题设置
+              </p>
+              <div className="flex gap-2 px-5 mb-4">
+                <button
+                  onClick={cycleTheme}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-[var(--text-secondary)] hover:text-white hover:bg-white/10 transition-all text-sm"
+                >
+                  <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)]" />
+                  主题
+                </button>
+                <button
+                  onClick={toggleMode}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-[var(--text-secondary)] hover:text-white hover:bg-white/10 transition-all text-sm"
+                >
+                  {mode === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  模式
+                </button>
+              </div>
+
+              {/* Auth Section */}
+              {isAuthenticated && user ? (
+                <>
+                  <div className="w-full h-px bg-white/10 my-2" />
+                  <div className="px-5 py-3">
+                    <p className="text-sm font-medium text-white">{getUserDisplay()}</p>
+                    <p className="text-xs text-[var(--text-muted)]">{user.email}</p>
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="px-5 py-3 text-base font-medium text-[var(--text-secondary)] hover:bg-white/5 hover:text-[var(--text-primary)] rounded-xl transition-all"
+                  >
+                    控制台
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className="w-full px-5 py-3 text-left text-base font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-xl transition-all"
+                  >
+                    退出登录
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="w-full h-px bg-white/10 my-2" />
+                  <Link
+                    href="/login"
+                    className="px-5 py-3 text-base font-medium text-[var(--text-secondary)] hover:bg-white/5 hover:text-[var(--text-primary)] rounded-xl transition-all"
+                  >
+                    登录
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="px-5 py-3 text-base font-medium text-white bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-xl text-center mt-2"
+                  >
+                    免费注册
+                  </Link>
+                </>
+              )}
             </nav>
           </div>
         </div>

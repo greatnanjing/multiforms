@@ -246,16 +246,6 @@ export default function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      {/* 欢迎语 */}
-      <div className="mb-2">
-        <h1 className="text-2xl font-semibold text-white mb-1">
-          欢迎回来，{profile?.nickname || user?.email?.split('@')[0] || '用户'}
-        </h1>
-        <p className="text-[var(--text-secondary)]">
-          这是您的仪表盘概览
-        </p>
-      </div>
-
       {/* 统计卡片 Bento Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <StatCard

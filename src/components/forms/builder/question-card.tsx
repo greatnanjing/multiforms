@@ -30,6 +30,7 @@ export interface BuilderQuestion {
   order: number
   // Question-specific options would go here
   options?: any
+  validation?: any
 }
 
 interface QuestionCardProps {
@@ -57,9 +58,10 @@ interface QuestionPreviewProps {
   type: QuestionType
   questionText: string
   required: boolean
+  options?: any
 }
 
-function QuestionPreview({ type, questionText, required }: QuestionPreviewProps) {
+function QuestionPreview({ type, questionText, required, options }: QuestionPreviewProps) {
   // Map question type to component
   const ComponentMap: Record<QuestionType, React.ComponentType<any>> = {
     single_choice: QuestionComponents.SingleChoice,
@@ -99,49 +101,49 @@ function QuestionPreview({ type, questionText, required }: QuestionPreviewProps)
   // Type-specific default props
   const typeDefaults: Partial<Record<QuestionType, any>> = {
     single_choice: {
-      options: [
+      options: options?.choices || [
         { id: '1', label: '选项 1', value: '1' },
         { id: '2', label: '选项 2', value: '2' },
       ],
       optionStyle: 'text',
     },
     multiple_choice: {
-      options: [
+      options: options?.choices || [
         { id: '1', label: '选项 1', value: '1' },
         { id: '2', label: '选项 2', value: '2' },
       ],
       maxSelections: 2,
     },
     dropdown: {
-      options: [
+      options: options?.choices || [
         { id: '1', label: '选项 1', value: '1' },
         { id: '2', label: '选项 2', value: '2' },
       ],
     },
     rating: {
-      ratingType: 'star',
-      maxRating: 5,
+      ratingType: options?.rating_type || 'star',
+      maxRating: options?.rating_max || 5,
     },
     text: {
       inputType: 'text',
-      placeholder: '请输入文本',
+      placeholder: options?.placeholder || '请输入文本',
     },
     number: {
-      placeholder: '请输入数字',
+      placeholder: options?.placeholder || '请输入数字',
     },
     date: {
-      format: 'YYYY-MM-DD',
+      format: options?.date_format || 'YYYY-MM-DD',
     },
     file_upload: {
-      maxFileSize: 10 * 1024 * 1024,
-      maxFiles: 1,
+      maxFileSize: options?.max_file_size || 10 * 1024 * 1024,
+      maxFiles: options?.max_file_count || 1,
     },
     matrix: {
-      rows: ['项目 1', '项目 2'],
-      columns: ['选项 1', '选项 2', '选项 3'],
+      rows: options?.matrix_rows || ['项目 1', '项目 2'],
+      columns: options?.matrix_columns || ['选项 1', '选项 2', '选项 3'],
     },
     sorting: {
-      items: [
+      items: options?.sortable_items || [
         { id: '1', label: '选项 1', order: 0 },
         { id: '2', label: '选项 2', order: 1 },
       ],
@@ -282,6 +284,10 @@ export const SortableQuestionCard = memo(function SortableQuestionCard({
     transition,
   }
 
+  const handleCardClick = () => {
+    onEdit?.(question.id)
+  }
+
   return (
     <div
       ref={setNodeRef}
@@ -289,11 +295,12 @@ export const SortableQuestionCard = memo(function SortableQuestionCard({
       className={cn('group relative', className)}
     >
       <div
+        onClick={handleCardClick}
         className={cn(
-          'relative p-5 rounded-2xl border transition-all duration-200',
+          'relative p-5 rounded-2xl border transition-all duration-200 cursor-pointer',
           'glass-card border-white/[0.08]',
           'hover:border-indigo-500/20',
-          isDragging && 'opacity-50 scale-[0.98]'
+          isDragging && 'opacity-50 scale-[0.98] pointer-events-none'
         )}
       >
         {/* Question Number */}
@@ -308,14 +315,21 @@ export const SortableQuestionCard = memo(function SortableQuestionCard({
           {index + 1}
         </div>
 
-        {/* Drag Handle */}
+        {/* Drag Handle - stop propagation to prevent card click */}
         <div
           {...attributes}
           {...listeners}
+          onDragStart={(e) => {
+            e.stopPropagation()
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
           className={cn(
-            'absolute top-4 left-14 cursor-grab active:cursor-grabbing',
+            'absolute top-4 left-14 cursor-grab active:cursor-grabbing z-10',
             'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
-            'opacity-0 group-hover:opacity-100 transition-opacity'
+            'opacity-0 group-hover:opacity-100 transition-opacity',
+            'p-1 -ml-1'
           )}
         >
           <GripVertical className="w-4 h-4" />
@@ -331,11 +345,12 @@ export const SortableQuestionCard = memo(function SortableQuestionCard({
         />
 
         {/* Question Content */}
-        <div className="pl-9">
+        <div className="pl-9 pointer-events-none">
           <QuestionPreview
             type={question.type}
             questionText={question.question_text}
             required={question.required}
+            options={question.options}
           />
         </div>
       </div>
@@ -356,11 +371,16 @@ export const QuestionCard = memo(function QuestionCard({
   onToggleRequired,
   className,
 }: QuestionCardProps) {
+  const handleCardClick = () => {
+    onEdit?.(question.id)
+  }
+
   return (
     <div className={cn('group relative', className)}>
       <div
+        onClick={handleCardClick}
         className={cn(
-          'relative p-5 rounded-2xl border transition-all duration-200',
+          'relative p-5 rounded-2xl border transition-all duration-200 cursor-pointer',
           'glass-card border-white/[0.08]',
           'hover:border-indigo-500/20'
         )}
@@ -387,11 +407,12 @@ export const QuestionCard = memo(function QuestionCard({
         />
 
         {/* Question Content */}
-        <div className="pl-9">
+        <div className="pl-9 pointer-events-none">
           <QuestionPreview
             type={question.type}
             questionText={question.question_text}
             required={question.required}
+            options={question.options}
           />
         </div>
       </div>

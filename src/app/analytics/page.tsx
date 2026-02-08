@@ -18,14 +18,6 @@ export default function AnalyticsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* 页面头部 */}
-        <div>
-          <h1 className="text-2xl font-semibold text-white mb-2">数据分析</h1>
-          <p className="text-[var(--text-secondary)]">
-            查看所有表单的统计数据和趋势分析
-          </p>
-        </div>
-
         {/* 统计概览 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="glass-card p-5">

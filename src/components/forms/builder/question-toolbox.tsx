@@ -3,13 +3,12 @@
 
    题型工具箱组件：
    - 9种题型卡片
-   - 拖拽功能
-   - 点击添加功能
+   - 点击添加题目
 ============================================ */
 
 'use client'
 
-import { memo, useEffect, useRef } from 'react'
+import { memo } from 'react'
 import {
   Circle,
   Square,
@@ -20,13 +19,11 @@ import {
   Calendar,
   Upload,
   Grid3x3,
-  GripVertical,
+  Plus,
   ArrowRight,
   Palette,
-  Lock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useDraggable } from '@dnd-kit/core'
 import type { QuestionType } from '@/types'
 
 // ============================================
@@ -123,11 +120,6 @@ export const ADVANCED_FEATURES = [
     name: '主题样式',
     icon: <Palette className="w-5 h-5" />,
   },
-  {
-    id: 'privacy',
-    name: '隐私设置',
-    icon: <Lock className="w-5 h-5" />,
-  },
 ]
 
 // ============================================
@@ -135,60 +127,32 @@ export const ADVANCED_FEATURES = [
 // ============================================
 
 interface QuestionToolboxProps {
-  /** 拖拽开始回调 */
-  onDragStart?: (type: QuestionType) => void
   /** 点击添加题型 */
   onAddQuestion?: (type: QuestionType) => void
   /** 点击高级功能 */
   onAdvancedFeature?: (featureId: string) => void
-  /** 是否为移动端 */
-  isMobile?: boolean
   /** 额外的类名 */
   className?: string
 }
 
 // ============================================
-// Draggable Question Type Card
+// Question Type Card
 // ============================================
 
-interface DraggableTypeCardProps {
+interface TypeCardProps {
   config: QuestionTypeConfig
-  onDragStart?: (type: QuestionType) => void
-  onClick?: () => void
+  onClick: () => void
 }
 
-function DraggableTypeCard({ config, onDragStart, onClick }: DraggableTypeCardProps) {
-  const hasCalledDragStart = useRef(false)
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `toolbox-${config.type}`,
-    data: {
-      type: config.type,
-      source: 'toolbox',
-    },
-  })
-
-  // Trigger onDragStart callback when dragging begins
-  useEffect(() => {
-    if (isDragging && !hasCalledDragStart.current) {
-      hasCalledDragStart.current = true
-      onDragStart?.(config.type)
-    } else if (!isDragging) {
-      hasCalledDragStart.current = false
-    }
-  }, [isDragging, config.type, onDragStart])
-
+function TypeCard({ config, onClick }: TypeCardProps) {
   return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
+    <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-200 cursor-grab',
+        'flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-200 w-full text-left group',
         'bg-white/[0.03] border-white/[0.08]',
         'hover:bg-white/[0.06] hover:border-indigo-500/30 hover:translate-x-1',
-        'active:cursor-grabbing',
-        isDragging && 'opacity-50 scale-95'
+        'active:scale-95'
       )}
     >
       {/* Icon */}
@@ -211,50 +175,8 @@ function DraggableTypeCard({ config, onDragStart, onClick }: DraggableTypeCardPr
         </div>
       </div>
 
-      {/* Drag Handle (visible on hover) */}
-      <div className="text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity">
-        <GripVertical className="w-4 h-4" />
-      </div>
-    </div>
-  )
-}
-
-// ============================================
-// Mobile Question Type Card (Clickable only)
-// ============================================
-
-interface MobileTypeCardProps {
-  config: QuestionTypeConfig
-  onClick: () => void
-}
-
-function MobileTypeCard({ config, onClick }: MobileTypeCardProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-200 w-full text-left',
-        'bg-white/[0.03] border-white/[0.08]',
-        'hover:bg-white/[0.06] hover:border-indigo-500/30',
-        'active:scale-95'
-      )}
-    >
-      {/* Icon */}
-      <div
-        className={cn(
-          'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
-          config.color
-        )}
-      >
-        {config.icon}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-[var(--text-primary)]">
-          {config.name}
-        </div>
-      </div>
+      {/* Plus Icon on hover */}
+      <Plus className="w-4 h-4 text-[var(--text-muted)] group-hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" />
     </button>
   )
 }
@@ -264,10 +186,8 @@ function MobileTypeCard({ config, onClick }: MobileTypeCardProps) {
 // ============================================
 
 export const QuestionToolbox = memo(function QuestionToolbox({
-  onDragStart,
   onAddQuestion,
   onAdvancedFeature,
-  isMobile = false,
   className,
 }: QuestionToolboxProps) {
   const handleAddQuestion = (type: QuestionType) => {
@@ -278,21 +198,6 @@ export const QuestionToolbox = memo(function QuestionToolbox({
     onAdvancedFeature?.(featureId)
   }
 
-  if (isMobile) {
-    // Mobile simplified version
-    return (
-      <div className={cn('space-y-2', className)}>
-        {QUESTION_TYPES.map((config) => (
-          <MobileTypeCard
-            key={config.type}
-            config={config}
-            onClick={() => handleAddQuestion(config.type)}
-          />
-        ))}
-      </div>
-    )
-  }
-
   return (
     <div className={cn('flex flex-col h-full', className)}>
       {/* Header */}
@@ -300,15 +205,15 @@ export const QuestionToolbox = memo(function QuestionToolbox({
         <h2 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
           题型工具箱
         </h2>
+        <p className="text-xs text-[var(--text-muted)] mt-1">点击添加题目</p>
       </div>
 
       {/* Question Types */}
       <div className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
         {QUESTION_TYPES.map((config) => (
-          <DraggableTypeCard
+          <TypeCard
             key={config.type}
             config={config}
-            onDragStart={onDragStart}
             onClick={() => handleAddQuestion(config.type)}
           />
         ))}

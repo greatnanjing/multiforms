@@ -11,9 +11,9 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, FileText, ArrowLeft, SlidersHorizontal } from 'lucide-react'
+import { Plus, Search, FileText, SlidersHorizontal, Filter, X } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { getForms } from '@/lib/api/forms'
 import { FormCard, FormCardSkeleton } from '@/components/forms/form-card'
@@ -22,11 +22,13 @@ import { useConfirm } from '@/components/shared/confirm-dialog'
 import type { Form } from '@/types'
 
 // ============================================
-// Sort Options
+// Filter & Sort Types
 // ============================================
 
 type SortOption = 'updated_at' | 'created_at' | 'title' | 'response_count'
 type SortOrder = 'asc' | 'desc'
+type StatusFilter = 'all' | 'draft' | 'published' | 'closed' | 'archived'
+type DateFilterType = 'created' | 'updated'
 
 const sortOptions: { value: SortOption; label: string }[] = [
   { value: 'updated_at', label: '最近更新' },
@@ -35,13 +37,34 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: 'response_count', label: '回复数量' },
 ]
 
+const statusFilterOptions: { value: StatusFilter; label: string; color: string }[] = [
+  { value: 'all', label: '全部状态', color: 'text-[var(--text-secondary)]' },
+  { value: 'draft', label: '待发布', color: 'text-yellow-400' },
+  { value: 'published', label: '已发布', color: 'text-green-400' },
+  { value: 'closed', label: '已关闭', color: 'text-red-400' },
+  { value: 'archived', label: '已归档', color: 'text-gray-400' },
+]
+
+const dateFilterOptions: { value: DateFilterType; label: string }[] = [
+  { value: 'created', label: '创建日期' },
+  { value: 'updated', label: '更新日期' },
+]
+
+const quickDateOptions: { label: string; value: number | null }[] = [
+  { label: '全部', value: null },
+  { label: '今天', value: 1 },
+  { label: '最近7天', value: 7 },
+  { label: '最近30天', value: 30 },
+  { label: '最近90天', value: 90 },
+]
+
 // ============================================
 // My Forms Page Component
 // ============================================
 
 export default function MyFormsPage() {
   const router = useRouter()
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const toast = useToast()
   const { confirm } = useConfirm()
 
@@ -49,24 +72,58 @@ export default function MyFormsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('updated_at')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const sortOrder: SortOrder = 'desc' // 固定降序，UI上暂不支持切换
+
+  // 筛选状态
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [dateFilterType, setDateFilterType] = useState<DateFilterType>('updated')
+  const [dateDays, setDateDays] = useState<number | null>(null)
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
+
+  // UI 状态
   const [showSortMenu, setShowSortMenu] = useState(false)
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
 
   // 获取表单数据
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchForms()
-    }
-  }, [isAuthenticated, sortBy, sortOrder])
-
-  const fetchForms = async () => {
+  const fetchForms = useCallback(async () => {
     setIsLoading(true)
     try {
+      // 计算日期范围
+      let dateAfter: string | undefined
+      let dateBefore: string | undefined
+
+      if (dateDays !== null) {
+        const today = new Date()
+        const startDate = new Date(today)
+        startDate.setDate(today.getDate() - dateDays)
+        startDate.setHours(0, 0, 0, 0)
+        dateAfter = startDate.toISOString()
+      } else if (customStartDate) {
+        dateAfter = new Date(customStartDate).toISOString()
+      }
+
+      if (customEndDate) {
+        const endDate = new Date(customEndDate)
+        endDate.setHours(23, 59, 59, 999)
+        dateBefore = endDate.toISOString()
+      }
+
       const result = await getForms({
         sortBy,
         sortOrder,
-        pageSize: 100, // 获取全部表单
+        status: statusFilter,
+        pageSize: 100,
+        // 根据日期筛选类型传递对应的参数
+        ...(dateFilterType === 'created' && {
+          createdAfter: dateAfter,
+          createdBefore: dateBefore,
+        }),
+        ...(dateFilterType === 'updated' && {
+          updatedAfter: dateAfter,
+          updatedBefore: dateBefore,
+        }),
       })
 
       setForms(result.data)
@@ -77,13 +134,31 @@ export default function MyFormsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [sortBy, sortOrder, statusFilter, dateFilterType, dateDays, customStartDate, customEndDate, toast])
 
-  // 搜索过滤
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchForms()
+    }
+  }, [isAuthenticated, fetchForms])
+
+  // 搜索过滤（客户端）
   const filteredForms = forms.filter(form =>
     form.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     form.description?.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  // 清除所有筛选
+  const clearFilters = () => {
+    setStatusFilter('all')
+    setDateDays(null)
+    setCustomStartDate('')
+    setCustomEndDate('')
+    setDateFilterType('updated')
+  }
+
+  // 检查是否有活动筛选
+  const hasActiveFilters = statusFilter !== 'all' || dateDays !== null || customStartDate || customEndDate
 
   const handleCreateForm = () => {
     router.push('/forms/new')
@@ -155,33 +230,10 @@ export default function MyFormsPage() {
 
   return (
     <div className="space-y-6">
-      {/* 页面头部 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-white transition-colors mb-3"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            返回仪表盘
-          </button>
-          <h1 className="text-2xl font-semibold text-white mb-1">我的表单</h1>
-          <p className="text-[var(--text-secondary)]">
-            共 {totalCount} 个表单
-          </p>
-        </div>
-        <button
-          onClick={handleCreateForm}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white font-medium shadow-lg shadow-indigo-500/25 transition-all duration-250 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-indigo-500/30"
-        >
-          <Plus className="w-5 h-5" />
-          创建新表单
-        </button>
-      </div>
-
-      {/* 搜索和筛选栏 */}
-      <div className="glass-card p-4 flex items-center gap-4">
-        <div className="flex-1 relative">
+      {/* 顶部操作栏 */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        {/* 搜索框 */}
+        <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
           <input
             type="text"
@@ -191,6 +243,22 @@ export default function MyFormsPage() {
             className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-indigo-500/50 transition-colors"
           />
         </div>
+
+        {/* 筛选按钮 */}
+        <button
+          onClick={() => setShowFilterPanel(!showFilterPanel)}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition-colors relative ${
+            hasActiveFilters
+              ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300'
+              : 'bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20'
+          }`}
+        >
+          <Filter className="w-5 h-5" />
+          <span className="hidden sm:inline">筛选</span>
+          {hasActiveFilters && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-500 rounded-full" />
+          )}
+        </button>
 
         {/* 排序按钮 */}
         <div className="relative">
@@ -233,6 +301,147 @@ export default function MyFormsPage() {
             </>
           )}
         </div>
+
+        {/* 创建按钮 */}
+        <button
+          onClick={handleCreateForm}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white font-medium shadow-lg shadow-indigo-500/25 transition-all duration-250 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-indigo-500/30]"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="hidden sm:inline">创建表单</span>
+        </button>
+      </div>
+
+      {/* 筛选面板 */}
+      {showFilterPanel && (
+        <div className="glass-card p-5 space-y-5">
+          {/* 面板头部 */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-white font-medium">筛选条件</h3>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+                清除筛选
+              </button>
+            )}
+          </div>
+
+          {/* 状态筛选 */}
+          <div>
+            <label className="block text-sm text-[var(--text-secondary)] mb-2">表单状态</label>
+            <div className="flex flex-wrap gap-2">
+              {statusFilterOptions.map(option => (
+                <button
+                  key={option.value}
+                  onClick={() => setStatusFilter(option.value)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    statusFilter === option.value
+                      ? 'bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white'
+                      : 'bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 日期筛选 */}
+          <div>
+            <label className="block text-sm text-[var(--text-secondary)] mb-2">日期筛选</label>
+            <div className="space-y-3">
+              {/* 日期类型选择 */}
+              <div className="flex gap-2">
+                {dateFilterOptions.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setDateFilterType(option.value)
+                      // 切换日期类型时重置日期筛选
+                      setDateDays(null)
+                      setCustomStartDate('')
+                      setCustomEndDate('')
+                    }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      dateFilterType === option.value
+                        ? 'bg-white/10 border border-white/20 text-white'
+                        : 'bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 快速日期选择 */}
+              <div className="flex flex-wrap gap-2">
+                {quickDateOptions.map(option => (
+                  <button
+                    key={option.label}
+                    onClick={() => {
+                      setDateDays(option.value)
+                      if (option.value !== null) {
+                        setCustomStartDate('')
+                        setCustomEndDate('')
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      dateDays === option.value && !customStartDate
+                        ? 'bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white'
+                        : 'bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 自定义日期范围 */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => {
+                    setCustomStartDate(e.target.value)
+                    setDateDays(null)
+                  }}
+                  className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
+                />
+                <span className="text-[var(--text-muted)]">至</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => {
+                    setCustomEndDate(e.target.value)
+                    setDateDays(null)
+                  }}
+                  className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 结果统计 */}
+      <div className="flex items-center justify-between text-sm">
+        <p className="text-[var(--text-secondary)]">
+          共 <span className="text-white font-medium">{filteredForms.length}</span> 个表单
+          {totalCount > filteredForms.length && (
+            <span className="text-[var(--text-muted)]"> (共 {totalCount} 个)</span>
+          )}
+        </p>
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="text-[var(--primary-glow)] hover:underline"
+          >
+            清除筛选
+          </button>
+        )}
       </div>
 
       {/* 表单列表 */}
@@ -242,15 +451,18 @@ export default function MyFormsPage() {
             <FileText className="w-10 h-10 text-[var(--text-muted)]" />
           </div>
           <h3 className="text-xl font-semibold text-white mb-2">
-            {searchQuery ? '没有找到匹配的表单' : '还没有表单'}
+            {searchQuery || hasActiveFilters ? '没有找到匹配的表单' : '还没有表单'}
           </h3>
           <p className="text-[var(--text-secondary)] mb-6">
-            {searchQuery ? '试试其他搜索关键词' : '创建您的第一个表单，开始收集数据'}
+            {searchQuery || hasActiveFilters
+              ? '试试调整搜索关键词或筛选条件'
+              : '创建您的第一个表单，开始收集数据'
+            }
           </p>
-          {!searchQuery && (
+          {!searchQuery && !hasActiveFilters && (
             <button
               onClick={handleCreateForm}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white font-medium shadow-lg shadow-indigo-500/25 transition-all duration-250 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-indigo-500/30"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white font-medium shadow-lg shadow-indigo-500/25 transition-all duration-250 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-indigo-500/30]"
             >
               <Plus className="w-5 h-5" />
               创建第一个表单

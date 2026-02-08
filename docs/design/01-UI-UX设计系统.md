@@ -86,10 +86,37 @@ MultiForms 的设计理念是 **"现代、年轻、时髦"**，融合当前最�
 | 正文 | **DM Sans** | 400-500 | `font-family: 'DM Sans', sans-serif;` |
 | 代码/数据 | **JetBrains Mono** | 400-500 | `font-family: 'JetBrains Mono', monospace;` |
 
+### 中文字体 Fallback
+
+考虑到 Google Fonts 在中国大陆可能被屏蔽，中文字体使用系统字体作为 fallback：
+
+```css
+/* 英文字体优先，中文字体 fallback */
+--font-heading: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                'Space Grotesk', 'Microsoft YaHei', 'SimHei', 'PingFang SC',
+                'Hiragino Sans GB', sans-serif;
+--font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+              'DM Sans', 'Microsoft YaHei', 'SimHei', 'PingFang SC',
+              'Hiragino Sans GB', sans-serif;
+--font-mono: ui-monospace, SFMono-Regular, 'JetBrains Mono',
+              'Consolas', 'Liberation Mono', monospace;
+```
+
+### 字体栈说明
+
+| 平台 | 中文字体 | 用途 |
+|------|----------|------|
+| Windows | Microsoft YaHei (微软雅黑) | 主要中文字体 |
+| Windows | SimHei (黑体) | 备选中文字体 |
+| macOS | PingFang SC (苹方) | 主要中文字体 |
+| macOS | Hiragino Sans GB | 备选中文字体 |
+| iOS | PingFang SC | 主要中文字体 |
+
 ### Google Fonts 引入
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- 仅引入英文字体，中文字体使用系统 fallback -->
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 ```
 
@@ -387,6 +414,35 @@ MultiForms 的设计理念是 **"现代、年轻、时髦"**，融合当前最�
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* 跑马灯进度条 */
+@keyframes marquee {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+```
+
+### 跑马灯动画规格
+
+用于用户评价自动轮播的进度条动画：
+
+| 属性 | 值 |
+|------|-----|
+| 动画名称 | marquee |
+| 时长 | 5000ms (5秒) |
+| 缓动函数 | linear |
+| 暂停状态 | animation-play-state: paused |
+
+**使用示例**:
+```css
+.progress-bar {
+  animation: marquee 5000ms linear;
+  animation-play-state: running;
+}
+
+.progress-bar.paused {
+  animation-play-state: paused;
 }
 ```
 
@@ -716,6 +772,80 @@ module.exports = {
 - [ ] 768px 平板适配
 - [ ] 1024px+ 桌面适配
 - [ ] 无横向滚动
+
+---
+
+## 17. 交互模式规范
+
+### 17.1 条件导航模式
+
+基于用户状态的导航行为：
+
+| 场景 | 已登录 | 未登录 |
+|------|--------|--------|
+| 模板卡片点击 | 跳转至 Dashboard | 跳转至登录页 |
+
+**实现方式**:
+```typescript
+// 使用 Zustand store 检测登录状态
+const isAuthenticated = useAuthStore((state) => state.user !== null)
+const router = useRouter()
+
+// 条件导航
+const handleClick = (e: React.MouseEvent) => {
+  if (!isAuthenticated) {
+    e.preventDefault()
+    router.push('/login')
+  }
+}
+```
+
+### 17.2 自动轮播模式
+
+用于内容循环展示的交互模式：
+
+| 配置项 | 值 |
+|--------|-----|
+| 切换间隔 | 5000ms (5秒) |
+| 暂停触发 | 鼠标悬停 |
+| 导航方式 | 左右箭头 + 圆点导航 |
+| 视觉反馈 | 顶部进度条 |
+
+**状态管理**:
+```typescript
+const [activeIndex, setActiveIndex] = useState(0)
+const [isPaused, setIsPaused] = useState(false)
+
+// 自动轮播逻辑
+useEffect(() => {
+  if (isPaused) return
+  const interval = setInterval(() => {
+    setActiveIndex((prev) => (prev + 1) % items.length)
+  }, 5000)
+  return () => clearInterval(interval)
+}, [isPaused])
+```
+
+---
+
+## 18. 版本更新记录
+
+### v1.2 (2026-02-08)
+- **更新**: 字体系统
+  - 移除 Google Fonts 的 Noto Sans SC（中国大陆可能被屏蔽）
+  - 添加中文字体系统 fallback（微软雅黑、黑体、苹方等）
+  - 英文字体继续使用 Google Fonts
+- **新增**: 数据分析按钮样式统一
+  - 导出数据按钮使用渐变样式
+  - 刷新数据按钮使用渐变样式（替代分享结果按钮）
+
+### v1.1 (2026-02-08)
+- **新增**: 条件导航交互模式
+  - 模板卡片基于登录状态的条件导航
+- **新增**: 跑马灯进度条动画
+  - `@keyframes marquee` 动画定义
+- **新增**: 自动轮播交互模式规范
+  - 5秒间隔、鼠标悬停暂停、导航控制
 
 ---
 

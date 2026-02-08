@@ -161,25 +161,23 @@ export function DashboardLayout({
       />
 
       {/* Main Content Area */}
-      <div className="lg:ml-56">
-        {/* Top Bar (Optional - for user info, notifications, etc.) */}
-        <header className="sticky top-16 z-30 bg-[rgba(15,15,35,0.8)] backdrop-blur-xl border-b border-white/5 px-6 py-3 lg:py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-white">{getPageTitle(pathname)}</h1>
-              <p className="text-sm text-[var(--text-muted)] hidden sm:block">
-                欢迎回来，{user?.nickname || user?.email?.split('@')[0] || '用户'}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              {/* Quick actions could go here */}
-            </div>
+      <div className="lg:ml-56 flex flex-col h-screen overflow-hidden">
+        {/* Fixed Header - Combined Welcome and Page Title */}
+        <header className="flex-shrink-0 bg-[var(--bg-primary)]/95 backdrop-blur-xl border-b border-white/5">
+          <div className="px-6 py-2">
+            <p className="text-sm text-[var(--text-secondary)]">
+              欢迎回来，{user?.nickname || user?.email?.split('@')[0] || '用户'}
+            </p>
+          </div>
+          <div className="px-6 py-3 lg:py-4 border-t border-white/5">
+            <h1 className="text-lg font-semibold text-white">{getPageTitle(pathname)}</h1>
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Scrollable Page Content */}
         <main
           className={cn(
+            'flex-1 overflow-y-auto',
             'p-4 sm:p-6 lg:p-8',
             'pb-24 lg:pb-8', // Extra padding for mobile TabBar
             contentClassName

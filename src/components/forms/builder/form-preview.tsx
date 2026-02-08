@@ -5,13 +5,12 @@
    - 表单标题/描述编辑
    - 题目卡片列表
    - 添加题目区域
-   - 放置拖拽区域
 ============================================ */
 
 'use client'
 
-import { useState, useCallback } from 'react'
-import { Plus, Edit2 } from 'lucide-react'
+import { useState, useCallback, useEffect } from 'react'
+import { Lock, Eye, Clock, Shield, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -58,6 +57,10 @@ interface FormPreviewProps {
   onReorder?: (questions: BuilderQuestion[]) => void
   /** 额外的类名 */
   className?: string
+  /** 隐私设置 */
+  privacySettings?: PrivacySettingsData
+  /** 更新隐私设置 */
+  onPrivacySettingsChange?: (settings: PrivacySettingsData) => void
 }
 
 // ============================================
@@ -72,134 +75,266 @@ interface FormHeaderProps {
 }
 
 function FormHeader({ title, description, onTitleChange, onDescriptionChange }: FormHeaderProps) {
-  const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(title)
   const [editDesc, setEditDesc] = useState(description)
 
-  const handleSave = () => {
+  // Sync local state when props change
+  useEffect(() => {
+    setEditTitle(title)
+    setEditDesc(description)
+  }, [title, description])
+
+  const handleTitleBlur = () => {
     onTitleChange?.(editTitle)
-    onDescriptionChange?.(editDesc)
-    setIsEditing(false)
   }
 
-  if (isEditing) {
-    return (
-      <div className="space-y-4">
-        <input
-          type="text"
-          value={editTitle}
-          onChange={(e) => setEditTitle(e.target.value)}
-          placeholder="表单标题"
-          className={cn(
-            'w-full bg-transparent text-2xl font-semibold text-[var(--text-primary)]',
-            'placeholder:text-[var(--text-muted)]',
-            'focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded-lg px-3 py-2 -mx-3'
-          )}
-          autoFocus
-        />
-        <textarea
-          value={editDesc}
-          onChange={(e) => setEditDesc(e.target.value)}
-          placeholder="表单描述（可选）"
-          rows={2}
-          className={cn(
-            'w-full bg-transparent text-sm text-[var(--text-secondary)]',
-            'placeholder:text-[var(--text-muted)] resize-none',
-            'focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded-lg px-3 py-2 -mx-3'
-          )}
-        />
-        <div className="flex gap-2">
-          <button
-            onClick={handleSave}
-            className={cn(
-              'px-4 py-2 rounded-lg text-sm font-medium',
-              'bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white',
-              'hover:opacity-90 transition-opacity'
-            )}
-          >
-            保存
-          </button>
-          <button
-            onClick={() => {
-              setEditTitle(title)
-              setEditDesc(description)
-              setIsEditing(false)
-            }}
-            className={cn(
-              'px-4 py-2 rounded-lg text-sm font-medium',
-              'bg-white/5 text-[var(--text-secondary)] hover:bg-white/10',
-              'transition-colors'
-            )}
-          >
-            取消
-          </button>
-        </div>
-      </div>
-    )
+  const handleDescBlur = () => {
+    onDescriptionChange?.(editDesc)
+  }
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur()
+    }
   }
 
   return (
-    <div className="group relative">
-      {/* Edit Button */}
-      <button
-        onClick={() => setIsEditing(true)}
+    <div className="space-y-4">
+      <input
+        type="text"
+        value={editTitle}
+        onChange={(e) => setEditTitle(e.target.value)}
+        onBlur={handleTitleBlur}
+        onKeyDown={handleTitleKeyDown}
+        placeholder="未命名表单"
         className={cn(
-          'absolute top-0 right-0 w-8 h-8 rounded-lg',
-          'flex items-center justify-center',
-          'bg-white/5 border border-white/[0.08]',
-          'opacity-0 group-hover:opacity-100 transition-opacity',
-          'hover:bg-white/10 text-[var(--text-secondary)]'
+          'w-full bg-transparent text-2xl font-bold',
+          'placeholder:text-white/40',
+          'focus:outline-none text-white'
         )}
-      >
-        <Edit2 className="w-3.5 h-3.5" />
-      </button>
-
-      <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-3">
-        {title || '未命名表单'}
-      </h1>
-      {description && (
-        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-          {description}
-        </p>
-      )}
+      />
+      <textarea
+        value={editDesc}
+        onChange={(e) => setEditDesc(e.target.value)}
+        onBlur={handleDescBlur}
+        placeholder="表单描述（可选）"
+        rows={2}
+        className={cn(
+          'w-full bg-transparent text-sm',
+          'placeholder:text-white/40 resize-none',
+          'focus:outline-none text-white/80'
+        )}
+      />
     </div>
   )
 }
 
 // ============================================
-// Add Question Zone Component
+// Privacy Settings Types
 // ============================================
 
-interface AddQuestionZoneProps {
-  isDragOver?: boolean
-  onClick?: () => void
+export interface PrivacySettingsData {
+  requirePassword: boolean
+  password?: string
+  limitResponses: boolean
+  maxResponses?: number
+  allowAnonymous: boolean
 }
 
-function AddQuestionZone({ isDragOver, onClick }: AddQuestionZoneProps) {
+const DEFAULT_PRIVACY_SETTINGS: PrivacySettingsData = {
+  requirePassword: false,
+  password: '',
+  limitResponses: false,
+  maxResponses: 100,
+  allowAnonymous: true,
+}
+
+// ============================================
+// Privacy Settings Component
+// ============================================
+
+interface PrivacySettingsProps {
+  requirePassword: boolean
+  password?: string
+  limitResponses: boolean
+  maxResponses?: number
+  allowAnonymous: boolean
+  onSettingsChange: (settings: PrivacySettingsData) => void
+}
+
+function PrivacySettings({
+  requirePassword,
+  password,
+  limitResponses,
+  maxResponses,
+  allowAnonymous,
+  onSettingsChange,
+}: PrivacySettingsProps) {
+  // Merge with defaults for safe handling
+  const settings: PrivacySettingsData = {
+    ...DEFAULT_PRIVACY_SETTINGS,
+    requirePassword,
+    password,
+    limitResponses,
+    maxResponses,
+    allowAnonymous,
+  }
+
   return (
-    <div
-      onClick={onClick}
-      className={cn(
-        'border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200',
-        isDragOver
-          ? 'border-indigo-500 bg-indigo-500/5'
-          : 'border-white/[0.1] hover:border-indigo-500/30 hover:bg-white/[0.02]'
-      )}
-    >
-      <div
-        className={cn(
-          'w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4',
-          'bg-indigo-500/15'
-        )}
-      >
-        <Plus className="w-6 h-6 text-indigo-400" />
+    <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 border border-indigo-500/30">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-500/20">
+          <Lock className="w-5 h-5 text-indigo-400" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-white">隐私设置</h3>
+          <p className="text-xs text-[var(--text-muted)]">控制表单的访问和提交权限</p>
+        </div>
       </div>
-      <p className="text-base font-medium text-[var(--text-primary)] mb-1">
-        添加新题目
-      </p>
-      <p className="text-sm text-[var(--text-muted)]">
-        拖拽左侧题型到此处，或点击添加
-      </p>
+
+      <div className="space-y-3">
+        {/* 密码保护 */}
+        <div className="flex items-center justify-between p-4 rounded-xl bg-black/20 border border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-500/15">
+              <Lock className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-[var(--text-primary)]">密码保护</div>
+              <div className="text-xs text-[var(--text-muted)]">需要密码才能访问表单</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={requirePassword}
+            aria-label="切换密码保护"
+            onClick={() => onSettingsChange({ ...settings, requirePassword: !requirePassword })}
+            className={cn(
+              'relative w-12 h-6 rounded-full transition-colors duration-200',
+              requirePassword ? 'bg-indigo-500' : 'bg-white/10'
+            )}
+          >
+            <span
+              className={cn(
+                'absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+                requirePassword ? 'left-7' : 'left-1'
+              )}
+            />
+          </button>
+        </div>
+
+        {requirePassword && (
+          <div className="pl-4">
+            <input
+              type="text"
+              value={password || ''}
+              onChange={(e) => onSettingsChange({ ...settings, password: e.target.value })}
+              placeholder="设置访问密码"
+              aria-label="访问密码"
+              className={cn(
+                'w-full px-4 py-2.5 rounded-lg',
+                'bg-black/30 border border-white/10',
+                'text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
+                'focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/30'
+              )}
+            />
+          </div>
+        )}
+
+        {/* 提交限制 */}
+        <div className="flex items-center justify-between p-4 rounded-xl bg-black/20 border border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-green-500/15">
+              <Shield className="w-4 h-4 text-green-400" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-[var(--text-primary)]">限制提交次数</div>
+              <div className="text-xs text-[var(--text-muted)]">设置表单最大接收数量</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={limitResponses}
+            aria-label="切换提交限制"
+            onClick={() => onSettingsChange({ ...settings, limitResponses: !limitResponses })}
+            className={cn(
+              'relative w-12 h-6 rounded-full transition-colors duration-200',
+              limitResponses ? 'bg-indigo-500' : 'bg-white/10'
+            )}
+          >
+            <span
+              className={cn(
+                'absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+                limitResponses ? 'left-7' : 'left-1'
+              )}
+            />
+          </button>
+        </div>
+
+        {limitResponses && (
+          <div className="pl-4 flex items-center gap-3">
+            <input
+              type="number"
+              min={1}
+              max={100000}
+              value={maxResponses ?? 100}
+              onChange={(e) => {
+                const value = Math.max(1, Math.min(100000, parseInt(e.target.value) || 1))
+                onSettingsChange({ ...settings, maxResponses: value })
+              }}
+              aria-label="最大提交次数"
+              className={cn(
+                'w-24 px-3 py-2 rounded-lg',
+                'bg-black/30 border border-white/10',
+                'text-sm text-[var(--text-primary)]',
+                'focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/30'
+              )}
+            />
+            <span className="text-sm text-[var(--text-muted)]">次提交后关闭表单</span>
+          </div>
+        )}
+
+        {/* 匿名提交 */}
+        <div className="flex items-center justify-between p-4 rounded-xl bg-black/20 border border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-500/15">
+              <Eye className="w-4 h-4 text-purple-400" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-[var(--text-primary)]">允许匿名提交</div>
+              <div className="text-xs text-[var(--text-muted)]">不收集用户身份信息</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={allowAnonymous}
+            aria-label="切换匿名提交"
+            onClick={() => onSettingsChange({ ...settings, allowAnonymous: !allowAnonymous })}
+            className={cn(
+              'relative w-12 h-6 rounded-full transition-colors duration-200',
+              allowAnonymous ? 'bg-indigo-500' : 'bg-white/10'
+            )}
+          >
+            <span
+              className={cn(
+                'absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+                allowAnonymous ? 'left-7' : 'left-1'
+              )}
+            />
+          </button>
+        </div>
+
+        {/* 提示信息 */}
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-black/20 border border-indigo-500/20">
+          <Clock className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-indigo-300">
+            更改隐私设置将立即生效。已提交的数据不受影响。
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
@@ -227,7 +362,7 @@ function EmptyState({ onAddQuestion }: EmptyStateProps) {
         开始创建你的表单
       </h3>
       <p className="text-sm text-[var(--text-muted)] mb-6 max-w-xs">
-        从左侧工具箱拖拽题型到此处，或点击下方按钮开始添加题目
+        点击左侧题型工具添加题目
       </p>
       <button
         onClick={onAddQuestion}
@@ -263,19 +398,13 @@ export function FormPreview({
   onToggleRequired,
   onReorder,
   className,
+  privacySettings,
+  onPrivacySettingsChange,
 }: FormPreviewProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
 
-  // Drop zone for adding questions
-  const { setNodeRef: setDropZoneRef, isOver: isDropZoneOver } = useDroppable({
-    id: 'add-question-zone',
-    data: {
-      accepts: ['question-type'],
-    },
-  })
-
   // Drop zone for reordering (entire form preview)
-  const { setNodeRef: setFormRef, isOver: isFormOver } = useDroppable({
+  const { setNodeRef: setFormRef } = useDroppable({
     id: 'form-preview',
     data: {
       accepts: ['question-card'],
@@ -286,25 +415,17 @@ export function FormPreview({
     onAddQuestion?.('single_choice')
   }, [onAddQuestion])
 
-  // Combine refs for form preview area
-  const formPreviewRef = useCallback((node: HTMLElement | null) => {
-    setFormRef(node)
-    if (questions.length === 0) {
-      setDropZoneRef(node)
-    }
-  }, [setFormRef, setDropZoneRef, questions.length])
-
   const questionIds = questions.map((q) => q.id)
 
   return (
-    <div ref={formPreviewRef} className={cn('flex-1 overflow-y-auto', className)}>
-      <div className="max-w-2xl mx-auto px-4 py-6">
+    <div ref={setFormRef} className={cn('flex-1 overflow-y-auto custom-scrollbar', className)}>
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
         {/* Form Header */}
         <div
           className={cn(
-            'p-8 rounded-2xl border mb-4 transition-all duration-200',
-            'glass-card border-white/[0.08]',
-            'hover:border-indigo-500/20'
+            'p-6 rounded-2xl border mb-6 transition-all duration-200',
+            'bg-gradient-to-br from-indigo-500/10 to-violet-500/10',
+            'border-indigo-500/30'
           )}
         >
           <FormHeader
@@ -339,10 +460,17 @@ export function FormPreview({
           <EmptyState onAddQuestion={handleAddQuestion} />
         )}
 
-        {/* Add Question Zone */}
+        {/* Privacy Settings */}
         {questions.length > 0 && (
-          <div ref={setDropZoneRef}>
-            <AddQuestionZone isDragOver={isDropZoneOver} onClick={handleAddQuestion} />
+          <div className="mt-8">
+            <PrivacySettings
+              requirePassword={privacySettings?.requirePassword ?? false}
+              password={privacySettings?.password}
+              limitResponses={privacySettings?.limitResponses ?? false}
+              maxResponses={privacySettings?.maxResponses}
+              allowAnonymous={privacySettings?.allowAnonymous ?? true}
+              onSettingsChange={(settings) => onPrivacySettingsChange?.(settings)}
+            />
           </div>
         )}
       </div>

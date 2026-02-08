@@ -1,11 +1,11 @@
 # 技术需求文档 (TRD)
 # MultiForms - 智能表单云平台
 
-| 文档版本 | 1.0 |
+| 文档版本 | 1.1 |
 |----------|-----|
 | 创建日期 | 2026-01-29 |
 | 项目名称 | MultiForms |
-| 文档状态 | 初稿 |
+| 文档状态 | 已更新 |
 
 ---
 
@@ -486,7 +486,9 @@ CREATE TABLE public.forms (
     status VARCHAR(20) DEFAULT 'draft', -- draft, published, closed, archived
 
     -- 短链接（用于公开分享）
-    short_id VARCHAR(20) UNIQUE NOT NULL,
+    -- 首次发布时生成，6-10位随机字符（大小写字母+数字）
+    -- 使用加密安全随机数生成器确保唯一性
+    short_id VARCHAR(20) UNIQUE,      -- 草稿状态可为 NULL，发布时生成
 
     -- 主题配置
     theme_config JSONB DEFAULT '{}',  -- 颜色、字体、背景等配置
@@ -513,7 +515,7 @@ CREATE TABLE public.forms (
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    published_at TIMESTAMP WITH TIME ZONE
+    published_at TIMESTAMP WITH TIME ZONE  -- 首次发布时设置
 );
 
 -- RLS 策略
@@ -596,33 +598,21 @@ CREATE TRIGGER update_forms_updated_at
     BEFORE UPDATE ON public.forms
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
--- 自动生成 short_id
-CREATE OR REPLACE FUNCTION public.generate_short_id()
-RETURNS TRIGGER AS $$
-DECLARE
-    new_short_id VARCHAR(20);
-    attempts INTEGER := 0;
-BEGIN
-    WHILE attempts < 10 LOOP
-        new_short_id := encode(gen_random_bytes(8), 'base64');
-        -- 移除可能存在的特殊字符
-        new_short_id := regexp_replace(new_short_id, '[+/=]', '', 'g');
-        -- 截取前10位
-        new_short_id := substring(new_short_id, 1, 10);
+-- short_id 生成说明
+-- short_id 在表单创建时可以为 NULL，仅在发布时生成
+-- 使用应用层生成（TypeScript/JavaScript）以确保更好的随机性和唯一性检查
+-- 生成方式：使用 crypto.getRandomValues() 生成 6 个随机字节，转换为 base62 字符集
+-- 字符集：a-z, A-Z, 0-9（共 62 个字符）
+-- 长度：6-10 位，通常为 6 位即可满足需求（62^6 ≈ 568 亿种组合）
+-- 唯一性检查：生成后查询数据库确保唯一性，最多重试 10 次
 
-        IF NOT EXISTS (SELECT 1 FROM public.forms WHERE short_id = new_short_id) THEN
-            NEW.short_id := new_short_id;
-            RETURN NEW;
-        END IF;
-        attempts := attempts + 1;
-    END LOOP;
-    RAISE EXCEPTION 'Failed to generate unique short_id';
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER generate_forms_short_id
-    BEFORE INSERT ON public.forms
-    FOR EACH ROW EXECUTE FUNCTION public.generate_short_id();
+-- 发布表单时设置 short_id 和 published_at
+-- 示例应用层代码：
+-- const shortId = generateShortId() // 生成 6 位随机字符串
+-- const { data } = await supabase.from('forms').select('short_id').eq('short_id', shortId).single()
+-- if (!data) {
+--   await supabase.from('forms').update({ short_id: shortId, published_at: new Date().toISOString() })
+-- }
 ```
 
 #### 表单题目表 (public.form_questions)
@@ -816,7 +806,86 @@ CREATE INDEX idx_notifications_read ON public.notifications(read);
 
 ## 3. API 设计
 
-### 3.1 API 架构
+### 3.1 前台交互与访问控制
+
+#### 3.1.1 模板访问登录检测
+
+**技术实现**:
+- 使用 `useAuthStore` 获取用户登录状态
+- 通过 `useRouter` 实现条件导航
+- 客户端组件通过 `'use client'` 指令启用交互功能
+
+**组件**: `src/components/landing/templates-section.tsx`
+
+```typescript
+'use client'
+
+import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'next/navigation'
+
+// 模板点击处理函数
+const handleTemplateClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  if (!isAuthenticated) {
+    e.preventDefault()
+    router.push('/login')
+  }
+}
+
+// 条件渲染链接
+<Link
+  href={isAuthenticated ? '/dashboard' : '/login'}
+  onClick={handleTemplateClick}
+>
+  {/* 模板内容 */}
+</Link>
+```
+
+#### 3.1.2 用户评价轮播跑马灯
+
+**技术实现**:
+- 使用 `useState` 管理当前激活的评价索引
+- 使用 `useEffect` 实现自动轮播（5秒间隔）
+- `setInterval` 控制自动切换，`clearInterval` 清理定时器
+- CSS 动画实现进度条效果
+
+**组件**: `src/components/landing/testimonials-section.tsx`
+
+```typescript
+const AUTO_ROTATE_INTERVAL = 5000 // 5秒自动切换
+
+const [activeIndex, setActiveIndex] = useState(0)
+const [isPaused, setIsPaused] = useState(false)
+
+// 自动轮播
+useEffect(() => {
+  if (isPaused) return
+
+  const interval = setInterval(() => {
+    setActiveIndex((prev) => (prev + 1) % testimonials.length)
+  }, AUTO_ROTATE_INTERVAL)
+
+  return () => clearInterval(interval)
+}, [isPaused])
+
+// 鼠标悬停暂停
+onMouseEnter={() => setIsPaused(true)}
+onMouseLeave={() => setIsPaused(false)}
+```
+
+**进度条动画**:
+```css
+@keyframes marquee {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.progress-bar {
+  animation: marquee 5000ms linear;
+  animation-play-state: paused; /* 鼠标悬停时暂停 */
+}
+```
+
+### 3.2 API 架构
 
 **混合 API 架构：**
 
@@ -928,6 +997,34 @@ GET    /api/storage/[path]          # 代理存储文件
 ```
 POST   /api/guest/forms             # 访客创建表单
 GET    /api/guest/forms/[token]     # 访客获取表单
+```
+
+#### 公开表单访问
+
+**表单状态验证**:
+- 公开表单访问路径：`/f/{shortId}`
+- 访问时必须验证表单状态为 `published`
+- 未发布的表单返回友好错误提示："表单尚未发布，无法访问"
+- 表单状态检查在 RLS 策略和应用层双重验证
+
+**RLS 策略示例**:
+```sql
+-- 公开表单可被所有人查看（用于表单填写）
+CREATE POLICY "Public forms are viewable by everyone"
+    ON public.forms FOR SELECT
+    USING (status = 'published' AND access_type = 'public');
+```
+
+**应用层验证**:
+```typescript
+// 在 Server Component 或 API Route 中验证
+const formData = await getFormByShortId(shortId)
+if (formData.status !== 'published') {
+  return {
+    error: '表单尚未发布，无法访问',
+    isUnpublished: true
+  }
+}
 ```
 
 ### 3.4 Supabase Edge Functions
@@ -1392,3 +1489,18 @@ supabase start  # 启动本地 Supabase
 - Week 1-3: 协作功能
 - Week 4-5: API 开放平台
 - Week 6-8: 第三方集成 + AI 分析
+
+---
+
+## 10. 版本更新记录
+
+### v1.1 (2026-02-08)
+- **新增**: 首页模板登录检测功能
+  - 文件: `src/components/landing/templates-section.tsx`
+  - 使用 Zustand authStore 检测登录状态
+  - 条件导航至 Dashboard 或登录页
+- **新增**: 用户评价自动轮播跑马灯
+  - 文件: `src/components/landing/testimonials-section.tsx`
+  - 5秒自动切换间隔
+  - 进度条、导航箭头、圆点导航
+  - 鼠标悬停暂停功能

@@ -116,7 +116,6 @@ export function MobileDrawer({
         {/* Content */}
         <div className="px-4 py-4 overflow-y-auto max-h-[calc(70vh-60px)]">
           <QuestionToolbox
-            isMobile
             onAddQuestion={(type) => {
               onAddQuestion?.(type)
               onClose()

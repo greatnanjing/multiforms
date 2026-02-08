@@ -38,7 +38,7 @@ export interface CreateFormOptions extends Omit<FormInput, 'theme_config'> {
 /** 获取表单列表选项 */
 export interface GetFormsOptions {
   /** 表单状态筛选 */
-  status?: FormStatus
+  status?: FormStatus | 'all'
   /** 表单类型筛选 */
   type?: FormType
   /** 搜索关键词 */
@@ -51,6 +51,14 @@ export interface GetFormsOptions {
   page?: number
   /** 每页数量 */
   pageSize?: number
+  /** 创建日期范围开始 (ISO 8601) */
+  createdAfter?: string
+  /** 创建日期范围结束 (ISO 8601) */
+  createdBefore?: string
+  /** 更新日期范围开始 (ISO 8601) */
+  updatedAfter?: string
+  /** 更新日期范围结束 (ISO 8601) */
+  updatedBefore?: string
 }
 
 /** 获取表单列表响应 */
@@ -70,7 +78,7 @@ export interface GetFormsResponse {
  * 生成短链接 ID
  * 使用加密安全的随机数生成器
  */
-function generateShortId(): string {
+export function generateShortId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
   // 使用 crypto API 生成安全随机数
@@ -182,6 +190,10 @@ export async function getForms(options: GetFormsOptions = {}): Promise<GetFormsR
     sortOrder = 'desc',
     page = 1,
     pageSize = 20,
+    createdAfter,
+    createdBefore,
+    updatedAfter,
+    updatedBefore,
   } = options
 
   // 构建查询
@@ -191,7 +203,7 @@ export async function getForms(options: GetFormsOptions = {}): Promise<GetFormsR
     .eq('user_id', user.id)
 
   // 状态筛选
-  if (status) {
+  if (status && status !== 'all') {
     query = query.eq('status', status)
   }
 
@@ -203,6 +215,22 @@ export async function getForms(options: GetFormsOptions = {}): Promise<GetFormsR
   // 搜索
   if (search) {
     query = query.ilike('title', `%${search}%`)
+  }
+
+  // 创建日期范围筛选
+  if (createdAfter) {
+    query = query.gte('created_at', createdAfter)
+  }
+  if (createdBefore) {
+    query = query.lte('created_at', createdBefore)
+  }
+
+  // 更新日期范围筛选
+  if (updatedAfter) {
+    query = query.gte('updated_at', updatedAfter)
+  }
+  if (updatedBefore) {
+    query = query.lte('updated_at', updatedBefore)
   }
 
   // 排序
@@ -455,20 +483,19 @@ export async function archiveForm(formId: string): Promise<Form> {
 export async function incrementFormViewCount(formId: string): Promise<void> {
   const supabase = createClient()
 
-  // 使用 RPC 调用或直接更新
-  const { error } = await supabase.rpc('increment_view_count', {
-    form_id: formId,
-  })
+  // 先获取当前值，再更新
+  const { data: currentData } = await supabase
+    .from('forms')
+    .select('view_count')
+    .eq('id', formId)
+    .single()
 
-  // 如果 RPC 不存在，使用直接更新
-  if (error && error.message.includes('function')) {
-    await supabase
-      .from('forms')
-      .update({
-        view_count: (await getFormByShortId(formId)).view_count + 1,
-      })
-      .eq('id', formId)
-  }
+  const currentCount = currentData?.view_count || 0
+
+  await supabase
+    .from('forms')
+    .update({ view_count: currentCount + 1 })
+    .eq('id', formId)
 }
 
 /**
@@ -477,17 +504,17 @@ export async function incrementFormViewCount(formId: string): Promise<void> {
 export async function incrementFormResponseCount(formId: string): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase.rpc('increment_response_count', {
-    form_id: formId,
-  })
+  // 先获取当前值，再更新
+  const { data: currentData } = await supabase
+    .from('forms')
+    .select('response_count')
+    .eq('id', formId)
+    .single()
 
-  // 如果 RPC 不存在，使用直接更新
-  if (error && error.message.includes('function')) {
-    await supabase
-      .from('forms')
-      .update({
-        response_count: (await getFormByShortId(formId)).response_count + 1,
-      })
-      .eq('id', formId)
-  }
+  const currentCount = currentData?.response_count || 0
+
+  await supabase
+    .from('forms')
+    .update({ response_count: currentCount + 1 })
+    .eq('id', formId)
 }

@@ -28,10 +28,16 @@ import {
   Users,
   Shield,
   FolderOpen,
-  Clock,
+  Palette,
+  Sun,
+  Moon,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
+import { useThemeStore, useCurrentTheme, useCurrentMode } from '@/stores/themeStore'
+import { getAllThemes, getThemeGradient } from '@/lib/themes'
+import type { ThemeId } from '@/types'
 
 export interface SidebarNavItem {
   id: string
@@ -57,7 +63,6 @@ const dashboardNavItems: SidebarNavItem[] = [
   { id: 'forms', label: '我的表单', href: '/forms', icon: FileText },
   { id: 'templates', label: '模板库', href: '/templates', icon: Layers },
   { id: 'analytics', label: '数据分析', href: '/analytics', icon: BarChart3 },
-  { id: 'recent', label: '最近编辑', href: '/forms?filter=recent', icon: Clock },
 ]
 
 const adminNavItems: SidebarNavItem[] = [
@@ -65,7 +70,6 @@ const adminNavItems: SidebarNavItem[] = [
   { id: 'users', label: '用户管理', href: '/admin/users', icon: Users },
   { id: 'forms', label: '表单管理', href: '/admin/forms', icon: FileText },
   { id: 'templates', label: '模板管理', href: '/admin/templates', icon: FolderOpen },
-  { id: 'review', label: '内容审核', href: '/admin/review', icon: Shield },
   { id: 'settings', label: '系统设置', href: '/admin/settings', icon: Settings },
 ]
 
@@ -84,6 +88,14 @@ export function Sidebar({
   const [navItems, setNavItems] = useState<SidebarNavItem[]>(
     variant === 'admin' ? adminNavItems : dashboardNavItems
   )
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false)
+
+  // Theme
+  const currentTheme = useCurrentTheme()
+  const currentMode = useCurrentMode()
+  const setTheme = useThemeStore((state) => state.setTheme)
+  const toggleMode = useThemeStore((state) => state.toggleMode)
+  const themes = getAllThemes()
 
   // 根据路径判断激活状态
   const getActiveState = (href: string) => {
@@ -239,6 +251,7 @@ export function Sidebar({
           {/* More menu button */}
           <li>
             <button
+              onClick={() => setMoreMenuOpen(true)}
               className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 min-w-[64px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             >
               <Settings className="w-5 h-5" />
@@ -247,6 +260,97 @@ export function Sidebar({
           </li>
         </ul>
       </nav>
+
+      {/* Mobile More Menu */}
+      {moreMenuOpen && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+            onClick={() => setMoreMenuOpen(false)}
+          >
+          </div>
+
+          {/* Menu Panel */}
+          <div className="fixed bottom-16 left-0 right-0 bg-[rgba(15,15,35,0.98)] backdrop-blur-xl border-t border-white/10 rounded-t-2xl z-50 lg:hidden p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-medium">设置</h3>
+              <button
+                onClick={() => setMoreMenuOpen(false)}
+                className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[var(--text-secondary)] hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Theme Section */}
+            <div className="mb-4">
+              <p className="text-xs text-[var(--text-muted)] mb-2 px-2">主题</p>
+              <div className="grid grid-cols-4 gap-2">
+                {themes.map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => setTheme(theme.id as ThemeId)}
+                    className={cn(
+                      'flex flex-col items-center gap-1 p-2 rounded-lg transition-all',
+                      currentTheme === theme.id ? 'bg-white/10' : 'bg-white/5'
+                    )}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full border border-white/10"
+                      style={{ background: getThemeGradient(theme.id as ThemeId) }}
+                    />
+                    <span className="text-[10px] text-[var(--text-secondary)]">{theme.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Mode Toggle */}
+            <div className="mb-4">
+              <p className="text-xs text-[var(--text-muted)] mb-2 px-2">显示模式</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    if (currentMode !== 'dark') toggleMode()
+                  }}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-all',
+                    currentMode === 'dark' ? 'bg-white/10 text-white' : 'bg-white/5 text-[var(--text-secondary)]'
+                  )}
+                >
+                  <Moon className="w-4 h-4" />
+                  深色
+                </button>
+                <button
+                  onClick={() => {
+                    if (currentMode !== 'light') toggleMode()
+                  }}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-all',
+                    currentMode === 'light' ? 'bg-white/10 text-white' : 'bg-white/5 text-[var(--text-secondary)]'
+                  )}
+                >
+                  <Sun className="w-4 h-4" />
+                  浅色
+                </button>
+              </div>
+            </div>
+
+            {/* Logout */}
+            <button
+              onClick={() => {
+                handleLogout()
+                setMoreMenuOpen(false)
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              退出登录
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Spacer for collapsed sidebar */}
       <div className={cn('hidden lg:block', collapsed ? 'w-16' : 'w-56', 'flex-shrink-0')} />

@@ -16,13 +16,16 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { getBrowserClient } from '@/lib/supabase/client'
 import { Sidebar } from './sidebar'
 import { TabBarSpacer } from './tabbar'
+import { ThemeSwitcher } from './theme-switcher'
 import { cn } from '@/lib/utils'
-import { Loader2 } from 'lucide-react'
+import { Loader2, LogOut, Home } from 'lucide-react'
 import type { Profile } from '@/types'
+import { useAuthStore } from '@/stores/authStore'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -44,6 +47,7 @@ export function DashboardLayout({
   const router = useRouter()
   const [user, setUser] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const mountedRef = useRef(true)
   const supabaseRef = useRef<ReturnType<typeof getBrowserClient> | null>(null)
 
@@ -150,6 +154,23 @@ export function DashboardLayout({
     )
   }
 
+  // 退出登录
+  const handleLogout = async () => {
+    const signOut = useAuthStore.getState().signOut
+    await signOut()
+    router.push('/login')
+  }
+
+  // 获取用户显示名称
+  const getUserDisplay = () => {
+    if (user?.nickname) return user.nickname
+    if (user?.email) {
+      const email = user.email
+      return email.split('@')[0]
+    }
+    return '用户'
+  }
+
   return (
     <div className={cn('min-h-screen bg-[var(--bg-primary)]', className)}>
       {/* Sidebar (Desktop) */}
@@ -164,12 +185,67 @@ export function DashboardLayout({
       <div className="lg:ml-56 flex flex-col h-screen overflow-hidden">
         {/* Fixed Header - Combined Welcome and Page Title */}
         <header className="flex-shrink-0 bg-[var(--bg-primary)]/95 backdrop-blur-xl border-b border-white/5">
-          <div className="px-6 py-2">
-            <p className="text-sm text-[var(--text-secondary)]">
-              欢迎回来，{user?.nickname || user?.email?.split('@')[0] || '用户'}
-            </p>
+          {/* Top Bar - Welcome, Theme Switcher, User Menu */}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-2 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              {/* Return Home Button */}
+              <Link
+                href="/"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all text-sm"
+                title="返回首页"
+              >
+                <Home className="w-4 h-4" />
+                <span className="hidden sm:inline">首页</span>
+              </Link>
+              <p className="text-sm text-[var(--text-secondary)]">
+                欢迎回来，{user?.nickname || user?.email?.split('@')[0] || '用户'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Theme Switcher */}
+              <ThemeSwitcher variant="compact" showModeToggle={false} className="hidden sm:block" />
+
+              {/* User Avatar */}
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all"
+                >
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)] flex items-center justify-center text-white text-xs font-medium">
+                    {getUserDisplay().charAt(0).toUpperCase()}
+                  </div>
+                </button>
+
+                {/* User Dropdown */}
+                {userMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-[rgba(26,26,46,0.95)] backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-20">
+                      <div className="px-4 py-3 border-b border-white/5">
+                        <p className="text-sm font-medium text-white">{getUserDisplay()}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{user?.email}</p>
+                      </div>
+                      <div className="py-1">
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          退出登录
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="px-6 py-3 lg:py-4 border-t border-white/5">
+
+          {/* Page Title */}
+          <div className="px-6 py-3 lg:py-4">
             <h1 className="text-lg font-semibold text-white">{getPageTitle(pathname)}</h1>
           </div>
         </header>

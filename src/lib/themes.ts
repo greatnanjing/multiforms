@@ -194,20 +194,12 @@ export function applyTheme(
   id: ThemeId,
   target: HTMLElement = document.documentElement
 ): void {
-  const theme = getTheme(id)
-
-  // 设置 data-theme 属性
+  // 设置 data-theme 属性到 html 元素
   target.setAttribute('data-theme', id)
-
-  // 设置 CSS 变量
-  const { colors } = theme
-  target.style.setProperty('--primary-start', colors.primary_start)
-  target.style.setProperty('--primary-end', colors.primary_end)
-  target.style.setProperty('--primary-glow', colors.primary_glow)
-  target.style.setProperty('--accent-color', colors.accent_color)
-  target.style.setProperty('--bg-primary', colors.bg_primary)
-  target.style.setProperty('--bg-secondary', colors.bg_secondary)
-  target.style.setProperty('--bg-tertiary', colors.bg_tertiary)
+  // 同时设置到 body 元素以确保兼容性
+  if (target === document.documentElement && document.body) {
+    document.body.setAttribute('data-theme', id)
+  }
 }
 
 /**

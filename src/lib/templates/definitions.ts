@@ -1246,9 +1246,9 @@ const templates: Record<TemplateId, FormTemplate> = {
 // ============================================
 
 /**
- * 获取所有模板列表
+ * 获取所有模板列表（原始 FormTemplate 格式）
  */
-export function getAllTemplates(): FormTemplate[] {
+export function getAllFormTemplates(): FormTemplate[] {
   return Object.values(templates)
 }
 
@@ -1282,6 +1282,7 @@ export interface TemplateShowcase {
 
 /**
  * 获取模板列表（用于首页和模板库展示）
+ * @returns 预置模板列表
  */
 export function getTemplatesForShowcase(): TemplateShowcase[] {
   return [
@@ -1447,4 +1448,105 @@ export function getTemplatesForShowcase(): TemplateShowcase[] {
       useCount: 35800,
     },
   ]
+}
+
+/**
+ * 获取数据库中的模板（管理员创建的）
+ * @returns 数据库模板列表
+ */
+export async function getDatabaseTemplates(): Promise<TemplateShowcase[]> {
+  try {
+    // 动态导入以避免服务端导入问题
+    const { createClient } = await import('@/lib/supabase/client')
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('templates')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+
+    if (error || !data) {
+      console.warn('Failed to fetch database templates:', error)
+      return []
+    }
+
+    // 将数据库模板转换为 TemplateShowcase 格式
+    return data.map((t: any) => ({
+      id: t.id,
+      name: t.title,
+      description: t.description || '',
+      type: t.category,
+      category: t.category,
+      iconName: 'FileText',
+      questionsCount: 0, // TODO: 可以从 demo_form_id 关联获取
+      useCount: t.use_count || 0,
+      // 添加数据库标识
+      ...(t as any),
+    }))
+  } catch (error) {
+    console.warn('Error fetching database templates:', error)
+    return []
+  }
+}
+
+/**
+ * 获取所有模板（预置 + 数据库）
+ * @returns 所有模板列表
+ */
+export async function getAllTemplates(): Promise<TemplateShowcase[]> {
+  const presetTemplates = getTemplatesForShowcase()
+  const dbTemplates = await getDatabaseTemplates()
+  return [...presetTemplates, ...dbTemplates]
+}
+
+/**
+ * 订阅数据库模板的实时更新
+ * @param callback 模板更新时的回调函数
+ * @returns 取消订阅的函数
+ */
+export function subscribeToDatabaseTemplates(
+  callback: (templates: TemplateShowcase[]) => void
+): () => void {
+  let channel: any = null
+
+  // 使用动态导入避免在服务端执行
+  const setupSubscription = async () => {
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+
+      // 订阅 templates 表的变更
+      channel = supabase
+        .channel('templates-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // 监听所有变更：INSERT, UPDATE, DELETE
+            schema: 'public',
+            table: 'templates',
+          },
+          async () => {
+            // 当模板发生变化时，重新获取并回调
+            const updatedTemplates = await getDatabaseTemplates()
+            callback(updatedTemplates)
+          }
+        )
+        .subscribe()
+
+      console.log('[Templates] Realtime subscription established')
+    } catch (error) {
+      console.warn('[Templates] Failed to setup realtime subscription:', error)
+    }
+  }
+
+  setupSubscription()
+
+  // 返回取消订阅的函数
+  return () => {
+    if (channel) {
+      channel.unsubscribe()
+      console.log('[Templates] Realtime subscription cancelled')
+    }
+  }
 }

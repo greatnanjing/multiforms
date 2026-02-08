@@ -828,7 +828,117 @@ useEffect(() => {
 
 ---
 
-## 18. 版本更新记录
+## 18. 主题切换系统 (Theme Switcher)
+
+### 18.1 8套主题定义
+
+MultiForms 支持 8 套可切换主题，每套主题包含独特的色彩方案：
+
+| 主题ID | 名称 | 主色调 | 适用场景 |
+|--------|------|--------|----------|
+| `nebula` | 星云紫 | `#6366F1 → #8B5CF6` | 通用场景，神秘优雅 |
+| `ocean` | 海洋蓝 | `#0EA5E9 → #06B6D4` | 商务专业，清新风格 |
+| `sunset` | 日落橙 | `#F97316 → #EC4899` | 年轻活力，热情风格 |
+| `forest` | 森林绿 | `#10B981 → #06B6D4` | 健康环保，自然清新 |
+| `sakura` | 樱花粉 | `#EC4899 → #F472B6` | 女性用户，柔美浪漫 |
+| `cyber` | 赛博霓虹 | `#22D3EE → #A855F7` | 游戏科技，炫酷风格 |
+| `minimal` | 极简灰 | `#64748B → #94A3B8` | 正式场合，简约低调 |
+| `royal` | 皇家金 | `#F59E0B → #EAB308` | 高端品牌，尊贵奢华 |
+
+### 18.2 主题切换交互模式
+
+**核心特性**: Hover 展开预览 + 点击确认切换
+
+#### 交互流程
+```
+┌─────────────────────────────────────────────────────────────┐
+│  初始状态                          展开状态                    │
+│  ┌──────────────┐                ┌──────────────────────┐   │
+│  │ 星云紫 ▼     │    Hover →    │ 星云紫              │   │
+│  └──────────────┘                │ 海洋蓝              │   │
+│                                  │ 日落橙              │   │
+│                                  │ ... (8个主题)       │   │
+│                                  │ 皇家金 [当前]       │   │
+│                                  └──────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+        ↓                              ↓
+   Hover 某个主题                    页面颜色实时预览
+        ↓                              ↓
+   点击确认                          保存到 localStorage
+```
+
+#### 交互规格
+| 交互类型 | 触发条件 | 响应 | 时长 |
+|----------|----------|------|------|
+| 展开主题列表 | Hover 主题按钮 | 显示8个主题（每行一个） | 150ms |
+| 主题预览 | Hover 某个主题行 | 整页颜色实时变化 | 即时 |
+| 确认选择 | 点击主题行 | 保存主题，关闭列表 | - |
+| 恢复原主题 | 鼠标移出列表 | 未点击时恢复原主题 | 150ms 延迟 |
+
+#### 实现要点
+```typescript
+// 主题预览状态管理
+const [isExpanded, setIsExpanded] = useState(false)
+const [hoveredTheme, setHoveredTheme] = useState<ThemeId | null>(null)
+const currentTheme = useCurrentTheme() // 来自 store 的永久主题
+
+// Hover 预览 - 临时应用，不保存到 store
+const handleThemeHover = (themeId: ThemeId) => {
+  setHoveredTheme(themeId)
+  applyTheme(themeId) // 仅修改 DOM，不修改 store
+}
+
+// 移出恢复 - 恢复到 store 中的主题
+const handleContainerLeave = () => {
+  setHoveredTheme(null)
+  applyTheme(currentTheme) // 恢复原主题
+}
+
+// 点击确认 - 永久保存到 store
+const handleSelectTheme = (themeId: ThemeId) => {
+  setTheme(themeId) // 保存到 store 和 localStorage
+}
+```
+
+### 18.3 主题系统 CSS 架构
+
+主题通过 `data-theme` 属性应用到 `<html>` 元素：
+
+```html
+<!-- 应用星云紫主题 -->
+<html data-theme="nebula" data-mode="dark">
+
+<!-- 应用海洋蓝主题 -->
+<html data-theme="ocean" data-mode="dark">
+```
+
+CSS 选择器自动应用对应主题变量：
+
+```css
+[data-theme="ocean"] {
+  --primary-start: #0EA5E9;
+  --primary-end: #06B6D4;
+  --primary-glow: #22D3EE;
+  --bg-primary: #0A1628;
+  --bg-secondary: #0F2744;
+  --bg-tertiary: #1E3A5F;
+  /* ... 更多变量 */
+}
+```
+
+---
+
+## 19. 版本更新记录
+
+### v1.3 (2026-02-09)
+- **新增**: 主题 Hover 预览切换系统
+  - Hover 展开所有主题（每行一个，横向列表）
+  - Hover 临时预览主题效果（页面颜色实时变化）
+  - 点击确认选择主题
+  - 移出不点击恢复原主题
+- **新增**: 实时模板同步
+  - 管理员创建模板后，创建者模板库实时更新
+  - 使用 Supabase Realtime 实现
 
 ### v1.2 (2026-02-08)
 - **更新**: 字体系统

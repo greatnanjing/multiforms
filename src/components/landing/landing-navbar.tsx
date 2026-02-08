@@ -12,57 +12,19 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FileText, Menu, X, User, LogOut, LayoutDashboard, Sun, Moon } from 'lucide-react'
+import { FileText, Menu, X, LogOut, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { ThemeSwitcher } from '@/components/layout/theme-switcher'
 import { cn } from '@/lib/utils'
-
-// Theme types
-type ThemeId = 'nebula' | 'ocean' | 'sunset' | 'forest' | 'sakura' | 'cyber' | 'minimal' | 'royal'
-type ThemeMode = 'dark' | 'light'
 
 export function LandingNavbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<ThemeId>('nebula')
-  const [mode, setMode] = useState<ThemeMode>('dark')
   const pathname = usePathname()
 
   // 获取用户状态
   const { user, profile, isAuthenticated, signOut } = useAuth()
-
-  // 应用主题
-  const applyTheme = (newTheme: ThemeId, newMode: ThemeMode) => {
-    document.body.setAttribute('data-theme', newTheme)
-    document.body.setAttribute('data-mode', newMode)
-    localStorage.setItem('theme', newTheme)
-    localStorage.setItem('theme-mode', newMode)
-  }
-
-  // 初始化主题
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as ThemeId || 'nebula'
-    const savedMode = localStorage.getItem('theme-mode') as ThemeMode || 'dark'
-    setTheme(savedTheme)
-    setMode(savedMode)
-    applyTheme(savedTheme, savedMode)
-  }, [])
-
-  // 切换主题
-  const cycleTheme = () => {
-    const themes: ThemeId[] = ['nebula', 'ocean', 'sunset', 'forest', 'sakura', 'cyber', 'minimal', 'royal']
-    const currentIndex = themes.indexOf(theme)
-    const nextTheme = themes[(currentIndex + 1) % themes.length]
-    setTheme(nextTheme)
-    applyTheme(nextTheme, mode)
-  }
-
-  // 切换深浅模式
-  const toggleMode = () => {
-    const newMode = mode === 'dark' ? 'light' : 'dark'
-    setMode(newMode)
-    applyTheme(theme, newMode)
-  }
 
   // 退出登录
   const handleLogout = async () => {
@@ -135,23 +97,8 @@ export function LandingNavbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Theme Toggle */}
-            <div className="flex items-center">
-              <button
-                onClick={cycleTheme}
-                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all"
-                title="切换主题"
-              >
-                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)]" />
-              </button>
-              <button
-                onClick={toggleMode}
-                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all"
-                title={mode === 'dark' ? '切换到浅色模式' : '切换到深色模式'}
-              >
-                {mode === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-            </div>
+            {/* Theme Switcher with Hover Preview */}
+            <ThemeSwitcher variant="compact" showModeToggle={true} />
 
             {/* Auth Buttons / User Menu */}
             {isAuthenticated && user ? (
@@ -188,14 +135,6 @@ export function LandingNavbar() {
                         >
                           <LayoutDashboard className="w-4 h-4" />
                           控制台
-                        </Link>
-                        <Link
-                          href="/profile"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          <User className="w-4 h-4" />
-                          个人资料
                         </Link>
                         <hr className="border-white/5 my-1" />
                         <button
@@ -268,24 +207,8 @@ export function LandingNavbar() {
               <div className="w-full h-px bg-white/10 my-2" />
 
               {/* Theme Controls */}
-              <p className="px-5 mt-4 mb-2 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
-                主题设置
-              </p>
-              <div className="flex gap-2 px-5 mb-4">
-                <button
-                  onClick={cycleTheme}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-[var(--text-secondary)] hover:text-white hover:bg-white/10 transition-all text-sm"
-                >
-                  <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)]" />
-                  主题
-                </button>
-                <button
-                  onClick={toggleMode}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-[var(--text-secondary)] hover:text-white hover:bg-white/10 transition-all text-sm"
-                >
-                  {mode === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  模式
-                </button>
+              <div className="px-5 mb-4">
+                <ThemeSwitcher variant="default" showModeToggle={true} />
               </div>
 
               {/* Auth Section */}

@@ -5,18 +5,19 @@
    - 显示预置表单模板（与首页共享）
    - 支持预览和使用模板
    - 点击模板创建表单并跳转到编辑页
+   - 从数据库获取管理员创建的模板
 
    路径: /templates
 ============================================ */
 
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { FileText, Star, TrendingUp, Loader2, AlertCircle, ThumbsUp, MessageSquare, ClipboardList, HelpCircle, Calendar, Users, Tag } from 'lucide-react'
 import { createFormFromTemplate } from '@/lib/api/templates'
-import { getTemplatesForShowcase } from '@/lib/templates/definitions'
+import { getTemplatesForShowcase, getDatabaseTemplates, subscribeToDatabaseTemplates, type TemplateShowcase } from '@/lib/templates/definitions'
 
 // 图标映射
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -46,16 +47,50 @@ export default function TemplatesPage() {
   const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState('全部模板')
+  const [allTemplates, setAllTemplates] = useState<TemplateShowcase[]>([])
+  const [isTemplatesLoading, setIsLoading] = useState(true)
+  const unsubscribeRef = useRef<(() => void) | null>(null)
 
-  // 使用 useMemo 缓存模板列表
-  const templates = useMemo(() => getTemplatesForShowcase(), [])
+  // 获取所有模板（预置 + 数据库）
+  useEffect(() => {
+    async function loadTemplates() {
+      try {
+        setIsLoading(true)
+        const presetTemplates = getTemplatesForShowcase()
+        const dbTemplates = await getDatabaseTemplates()
+        setAllTemplates([...presetTemplates, ...dbTemplates])
+      } catch (err) {
+        console.error('Failed to load templates:', err)
+        // 出错时至少显示预置模板
+        setAllTemplates(getTemplatesForShowcase())
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadTemplates()
+
+    // 设置实时订阅监听数据库模板变化
+    unsubscribeRef.current = subscribeToDatabaseTemplates((updatedDbTemplates) => {
+      console.log('[Templates] Database templates updated, refreshing...')
+      const presetTemplates = getTemplatesForShowcase()
+      setAllTemplates([...presetTemplates, ...updatedDbTemplates])
+    })
+
+    // 清理函数：取消订阅
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current()
+        unsubscribeRef.current = null
+      }
+    }
+  }, [])
 
   // 根据分类筛选模板
   const filteredTemplates = useMemo(() => {
-    if (activeCategory === '全部模板') return templates
+    if (activeCategory === '全部模板') return allTemplates
     const categories = categoryMap[activeCategory] || []
-    return templates.filter(t => categories.includes(t.category))
-  }, [templates, activeCategory])
+    return allTemplates.filter(t => categories.includes(t.category))
+  }, [allTemplates, activeCategory])
 
   // 使用 useCallback 缓存处理函数
   const handleTemplateClick = useCallback(async (templateId: string) => {
@@ -83,14 +118,14 @@ export default function TemplatesPage() {
     }
   }, [router, creatingTemplateId])
 
-  const isLoading = creatingTemplateId !== null
+  const isCreatingTemplate = creatingTemplateId !== null
 
   // 获取当前加载中的模板名称
   const loadingTemplateName = useMemo(() => {
     if (!creatingTemplateId) return null
-    const template = templates.find(t => t.id === creatingTemplateId)
+    const template = allTemplates.find(t => t.id === creatingTemplateId)
     return template?.name || null
-  }, [creatingTemplateId, templates])
+  }, [creatingTemplateId, allTemplates])
 
   return (
     <DashboardLayout>
@@ -132,7 +167,7 @@ export default function TemplatesPage() {
         )}
 
         {/* Loading Overlay */}
-        {isLoading && (
+        {(isTemplatesLoading || creatingTemplateId) && (
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
             role="dialog"
@@ -142,26 +177,27 @@ export default function TemplatesPage() {
             <div className="glass-card rounded-2xl p-8 flex flex-col items-center gap-4 min-w-[280px]">
               <Loader2 className="w-8 h-8 text-[#6366F1] animate-spin" role="status" aria-label="加载中" />
               <p id="loading-title" className="text-[var(--text-primary)]">
-                {loadingTemplateName ? `正在创建"${loadingTemplateName}"表单...` : '正在创建表单...'}
+                {loadingTemplateName ? `正在创建"${loadingTemplateName}"表单...` : isTemplatesLoading ? '加载模板...' : '正在创建表单...'}
               </p>
             </div>
           </div>
         )}
 
         {/* 模板网格 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredTemplates.map((template) => {
-            const IconComponent = iconMap[template.iconName]
-            const isCurrentLoading = creatingTemplateId === template.id
+        {!isTemplatesLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredTemplates.map((template) => {
+              const IconComponent = iconMap[template.iconName]
+              const isCurrentLoading = creatingTemplateId === template.id
 
-            return (
-              <div
-                key={template.id}
-                className={`glass-card p-4 hover:border-indigo-500/30 transition-all duration-300 group relative ${
-                  isCurrentLoading ? 'opacity-50 pointer-events-none' : ''
-                } ${isLoading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                onClick={() => !isLoading && handleTemplateClick(template.id)}
-              >
+              return (
+                <div
+                  key={template.id}
+                  className={`glass-card p-4 hover:border-indigo-500/30 transition-all duration-300 group relative ${
+                    isCurrentLoading ? 'opacity-50 pointer-events-none' : ''
+                  } ${creatingTemplateId ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  onClick={() => !creatingTemplateId && handleTemplateClick(template.id)}
+                >
                 {isCurrentLoading && (
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10 rounded-xl">
                     <Loader2 className="w-5 h-5 text-white animate-spin" />
@@ -207,7 +243,8 @@ export default function TemplatesPage() {
               </div>
             )
           })}
-        </div>
+          </div>
+        )}
 
         {/* 提示信息 */}
         <div className="glass-card p-6 border border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 to-violet-500/5">

@@ -166,12 +166,17 @@ export default function AdminLoginPage() {
     try {
       const supabase = createClient()
 
+      console.log('[AdminLogin] Attempting login for:', email)
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
+      console.log('[AdminLogin] Login response:', { error, hasUser: !!data?.user })
+
       if (error) {
+        console.error('[AdminLogin] Login error:', error)
         handleAuthError(error)
         setIsLoading(false)
         return
@@ -227,9 +232,11 @@ export default function AdminLoginPage() {
         return
       }
 
-      // 登录成功，跳转到管理仪表盘
-      router.push('/admin/dashboard')
-      router.refresh()
+      // 登录成功，先设置 loading 为 false
+      setIsLoading(false)
+
+      // 使用 window.location.href 确保强制跳转
+      window.location.href = '/admin/dashboard'
     } catch (error) {
       setAuthError('登录失败，请稍后重试')
       console.error('Admin login error:', error)

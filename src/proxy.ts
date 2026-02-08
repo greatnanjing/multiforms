@@ -73,13 +73,27 @@ export async function proxy(req: NextRequest) {
     }
 
     // 检查用户是否是管理员
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
+    let isAdmin = false
 
-    if (profile?.role !== 'admin') {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single()
+
+      isAdmin = profile?.role === 'admin'
+    } catch (err) {
+      // 如果 profiles 表不存在，回退到检查 user_metadata
+      console.warn('Profiles table not found, checking user_metadata')
+    }
+
+    // 如果 profiles 查询失败或没有 admin 角色，检查 user_metadata
+    if (!isAdmin) {
+      isAdmin = session.user.user_metadata?.role === 'admin'
+    }
+
+    if (!isAdmin) {
       // 不是管理员，重定向到管理登录页并登出
       await supabase.auth.signOut()
       return NextResponse.redirect(new URL('/admin-login?error=no_permission', req.url))

@@ -253,6 +253,38 @@
       font-weight: 600;
     }
 
+    .page-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-to-home {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s var(--ease-out);
+      text-decoration: none;
+    }
+
+    .back-to-home:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--primary-start);
+      color: var(--primary-glow);
+    }
+
+    .back-to-home svg {
+      width: 16px;
+      height: 16px;
+    }
+
     .header-actions {
       display: flex;
       align-items: center;
@@ -333,6 +365,168 @@
     .user-dropdown {
       width: 16px;
       height: 16px;
+      color: var(--text-muted);
+    }
+
+    /* ============================================
+       Theme Switcher with Hover Preview
+       ============================================ */
+    .theme-switcher {
+      position: relative;
+    }
+
+    .theme-switcher-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .theme-switcher-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--primary-start);
+    }
+
+    .theme-current-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      transition: transform 0.2s ease;
+    }
+
+    .theme-switcher-btn:hover .theme-current-dot {
+      transform: scale(1.1);
+    }
+
+    .theme-current-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .theme-switcher-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    .theme-switcher-btn:hover .theme-switcher-icon {
+      transform: rotate(90deg);
+    }
+
+    /* Theme Dropdown */
+    .theme-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 280px;
+      background: rgba(26, 26, 46, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 10px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+    }
+
+    .theme-dropdown.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    /* Theme Row */
+    .theme-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: scale(1.02);
+    }
+
+    .theme-row.active {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .theme-row-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .theme-row:hover .theme-row-dot {
+      transform: scale(1.15);
+    }
+
+    .theme-row-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .theme-row-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .theme-row-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .theme-row-current-badge {
+      padding: 3px 8px;
+      background: var(--primary-glow);
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--bg-primary);
+    }
+
+    .theme-row-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary-glow);
+      box-shadow: 0 0 8px var(--primary-glow);
+    }
+
+    /* Dropdown Hint */
+    .theme-dropdown-hint {
+      text-align: center;
+      padding: 10px 12px;
+      margin-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 10px;
       color: var(--text-muted);
     }
 
@@ -971,8 +1165,34 @@
 
       <!-- Top Header (Desktop) -->
       <header class="top-header">
-        <h1 class="page-title">仪表盘</h1>
+        <div class="page-title-wrapper">
+          <a href="../public/landing.html" class="back-to-home">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5"/>
+              <path d="M12 19l-7-7 7-7"/>
+            </svg>
+            <span>首页</span>
+          </a>
+          <h1 class="page-title">仪表盘</h1>
+        </div>
         <div class="header-actions">
+          <!-- Theme Switcher with Hover Preview -->
+          <div class="theme-switcher" id="themeSwitcher">
+            <button class="theme-switcher-btn" id="themeSwitcherBtn">
+              <div class="theme-current-dot" id="themeCurrentDot"></div>
+              <span class="theme-current-name" id="themeCurrentName">星云紫</span>
+              <svg class="theme-switcher-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                <path d="M2 12h20"/>
+              </svg>
+            </button>
+            <div class="theme-dropdown" id="themeDropdown">
+              <!-- Theme rows will be inserted by JavaScript -->
+              <div class="theme-dropdown-hint">Hover 预览，点击选中</div>
+            </div>
+          </div>
+
           <button class="notification-btn">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -1437,6 +1657,136 @@
     document.querySelector('.quick-start-btn')?.addEventListener('click', function() {
       window.location.href = 'form-builder.html?new=true';
     });
+
+    // ============================================
+    // Theme Switcher with Hover Preview
+    // ============================================
+    const themeData = [
+      { id: 'nebula', name: '星云紫', nameEn: 'Nebula Purple', desc: '神秘优雅，适合通用场景', gradient: 'linear-gradient(135deg, #6366F1, #8B5CF6)' },
+      { id: 'ocean', name: '海洋蓝', nameEn: 'Ocean Blue', desc: '清新专业，适合商务场景', gradient: 'linear-gradient(135deg, #0EA5E9, #06B6D4)' },
+      { id: 'sunset', name: '日落橙', nameEn: 'Sunset Orange', desc: '热情活力，适合年轻人', gradient: 'linear-gradient(135deg, #F97316, #EC4899)' },
+      { id: 'forest', name: '森林绿', nameEn: 'Forest Green', desc: '自然清新，适合健康环保', gradient: 'linear-gradient(135deg, #10B981, #06B6D4)' },
+      { id: 'sakura', name: '樱花粉', nameEn: 'Sakura Pink', desc: '柔美浪漫，适合女性用户', gradient: 'linear-gradient(135deg, #EC4899, #F472B6)' },
+      { id: 'cyber', name: '赛博霓虹', nameEn: 'Cyber Neon', desc: '科技炫酷，适合游戏科技', gradient: 'linear-gradient(135deg, #22D3EE, #A855F7)' },
+      { id: 'minimal', name: '极简灰', nameEn: 'Minimal Gray', desc: '简约低调，适合正式场合', gradient: 'linear-gradient(135deg, #64748B, #94A3B8)' },
+      { id: 'royal', name: '皇家金', nameEn: 'Royal Gold', desc: '尊贵奢华，适合高端品牌', gradient: 'linear-gradient(135deg, #F59E0B, #EAB308)' }
+    ];
+
+    let currentTheme = localStorage.getItem('multiforms-theme') || 'nebula';
+    let previewTheme = null;
+    let themeCloseTimeout = null;
+
+    const themeSwitcher = document.getElementById('themeSwitcher');
+    const themeSwitcherBtn = document.getElementById('themeSwitcherBtn');
+    const themeDropdown = document.getElementById('themeDropdown');
+    const themeCurrentDot = document.getElementById('themeCurrentDot');
+    const themeCurrentName = document.getElementById('themeCurrentName');
+
+    // Build theme rows
+    function buildThemeRows() {
+      const hint = themeDropdown.querySelector('.theme-dropdown-hint');
+      themeDropdown.innerHTML = '';
+
+      themeData.forEach(theme => {
+        const row = document.createElement('div');
+        row.className = 'theme-row' + (theme.id === currentTheme ? ' active' : '');
+        row.dataset.themeId = theme.id;
+
+        row.innerHTML = `
+          <div class="theme-row-dot" style="background: ${theme.gradient};"></div>
+          <div class="theme-row-info">
+            <div class="theme-row-name">
+              ${theme.name}
+              ${theme.id === currentTheme ? '<span class="theme-row-current-badge">当前</span>' : ''}
+            </div>
+            <div class="theme-row-desc">${theme.nameEn} · ${theme.desc}</div>
+          </div>
+          ${theme.id === currentTheme ? '<div class="theme-row-indicator"></div>' : ''}
+        `;
+
+        // Hover to preview theme
+        row.addEventListener('mouseenter', () => {
+          if (themeCloseTimeout) {
+            clearTimeout(themeCloseTimeout);
+            themeCloseTimeout = null;
+          }
+
+          if (previewTheme !== theme.id) {
+            previewTheme = theme.id;
+            document.body.dataset.theme = theme.id;
+            console.log('[ThemeSwitcher] Hover preview:', theme.id);
+          }
+        });
+
+        // Click to confirm theme selection
+        row.addEventListener('click', () => {
+          currentTheme = theme.id;
+          previewTheme = null;
+          document.body.dataset.theme = theme.id;
+          localStorage.setItem('multiforms-theme', theme.id);
+
+          updateCurrentThemeDisplay();
+          buildThemeRows();
+          themeDropdown.classList.remove('show');
+
+          console.log('[ThemeSwitcher] Theme selected:', theme.id);
+        });
+
+        themeDropdown.appendChild(row);
+      });
+
+      themeDropdown.appendChild(hint);
+    }
+
+    // Update current theme display
+    function updateCurrentThemeDisplay() {
+      const theme = themeData.find(t => t.id === currentTheme);
+      if (theme) {
+        themeCurrentDot.style.background = theme.gradient;
+        themeCurrentName.textContent = theme.name;
+      }
+    }
+
+    // Show dropdown
+    function showThemeDropdown() {
+      if (themeCloseTimeout) {
+        clearTimeout(themeCloseTimeout);
+        themeCloseTimeout = null;
+      }
+      themeDropdown.classList.add('show');
+    }
+
+    // Hide dropdown (with delay)
+    function hideThemeDropdown() {
+      themeCloseTimeout = setTimeout(() => {
+        themeDropdown.classList.remove('show');
+        // Restore original theme if previewing
+        if (previewTheme && previewTheme !== currentTheme) {
+          document.body.dataset.theme = currentTheme;
+          previewTheme = null;
+          console.log('[ThemeSwitcher] Restored to:', currentTheme);
+        }
+      }, 150);
+    }
+
+    // Initialize theme switcher
+    if (themeSwitcher && themeSwitcherBtn) {
+      // Apply saved theme on page load
+      document.body.dataset.theme = currentTheme;
+      updateCurrentThemeDisplay();
+      buildThemeRows();
+
+      // Event listeners
+      themeSwitcherBtn.addEventListener('mouseenter', showThemeDropdown);
+      themeSwitcher.addEventListener('mouseleave', hideThemeDropdown);
+      themeDropdown.addEventListener('mouseenter', () => {
+        if (themeCloseTimeout) {
+          clearTimeout(themeCloseTimeout);
+          themeCloseTimeout = null;
+        }
+      });
+      themeDropdown.addEventListener('mouseleave', hideThemeDropdown);
+    }
   </script>
 </body>
 </html>

@@ -268,7 +268,59 @@ const { user, signIn, signOut } = useAuthStore()
 | `minimal` | 极简灰 | `#64748B → #94A3B8` |
 | `royal` | 皇家金 | `#F59E0B → #EAB308` |
 
-Themes are applied via `data-theme` attribute on `<html>` element.
+Themes are applied via `data-theme` attribute on both `<html>` and `<body>` elements.
+
+### Theme Switcher Component
+
+The `ThemeSwitcher` component provides theme switching with hover preview:
+
+```tsx
+import { ThemeSwitcher } from '@/components/layout/theme-switcher'
+
+// Compact variant with mode toggle (for navbar)
+<ThemeSwitcher variant="compact" showModeToggle={true} />
+
+// Default variant (for settings pages)
+<ThemeSwitcher variant="default" />
+
+// Minimal variant (for tight spaces)
+<ThemeSwitcher variant="minimal" />
+```
+
+**Hover Preview Behavior:**
+- Hover over theme button → expands to show all 8 themes
+- Hover over a theme row → page colors change in real-time (temporary preview)
+- Click a theme row → permanently selects the theme (saves to store + localStorage)
+- Mouse leave without clicking → restores original theme
+
+**Timing:**
+- Expand delay: None (instant)
+- Theme preview: Instant (no delay)
+- Close delay: 150ms (prevents accidental close)
+- Transition animation: 200ms
+
+### Theme Utility Functions
+
+```tsx
+import { getTheme, getAllThemes, applyTheme, getPreferredTheme, saveThemePreference } from '@/lib/themes'
+
+// Get a specific theme configuration
+const theme = getTheme('ocean')
+
+// Get all available themes
+const allThemes = getAllThemes()
+
+// Apply theme to DOM (sets data-theme on both html and body)
+applyTheme('sunset')
+
+// Get user's preferred theme (from localStorage or default)
+const preferredTheme = getPreferredTheme()
+
+// Save theme preference to localStorage
+saveThemePreference('forest')
+```
+
+**Important:** The `applyTheme()` function sets the `data-theme` attribute on BOTH `document.documentElement` and `document.body` to ensure CSS selectors `[data-theme="xxx"]` work correctly regardless of which element they target.
 
 ### Typography
 
@@ -322,6 +374,22 @@ className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"
 ```
 
 **Note:** The `lg:` breakpoint (1024px) was found to produce cards that are too narrow. Use `xl:` (1280px) for 4-column layouts.
+
+### Dashboard Layout
+
+The dashboard layout includes:
+- Sidebar navigation (collapsible on mobile)
+- Header with return-to-home button and user greeting
+- Tab bar for mobile navigation
+
+**Return Home Button:**
+```tsx
+// The dashboard header includes a return-to-home button
+<Link href="/" className="flex items-center gap-1.5...">
+  <Home className="w-4 h-4" />
+  <span className="hidden sm:inline">首页</span>
+</Link>
+```
 
 ---
 

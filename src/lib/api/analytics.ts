@@ -505,3 +505,129 @@ export async function exportSubmissions(options: GetSubmissionsOptions & {
   // 添加 UTF-8 BOM，确保 Excel 正确识别中文
   return '\uFEFF' + csvContent
 }
+
+// ============================================
+// Global Analytics (Across All Forms)
+// ============================================
+
+/** 全局统计数据 */
+export interface GlobalAnalyticsStats {
+  total_forms: number
+  total_responses: number
+  total_views: number
+  avg_completion_rate: number
+  responses_today: number
+  responses_this_week: number
+  responses_this_month: number
+  forms_by_type: Record<string, number>
+  forms_by_status: Record<string, number>
+  top_forms: Array<{
+    id: string
+    title: string
+    response_count: number
+    view_count: number
+    completion_rate: number
+  }>
+}
+
+/** 获取全局统计数据 */
+export async function getGlobalAnalytics(): Promise<GlobalAnalyticsStats> {
+  const supabase = createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    throw new Error('用户未登录')
+  }
+
+  // 计算时间范围
+  const now = new Date()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+  const weekStart = new Date(now)
+  weekStart.setDate(now.getDate() - 7)
+  const weekStartIso = weekStart.toISOString()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+  // 获取所有表单
+  const { data: forms, error: formsError } = await supabase
+    .from('forms')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('response_count', { ascending: false })
+
+  if (formsError) {
+    throw new Error(`获取表单列表失败: ${formsError.message}`)
+  }
+
+  const allForms = forms || []
+
+  // 获取所有提交数据用于计算今日/本周/本月回复数
+  const formIds = allForms.map((f: any) => f.id)
+  let responsesToday = 0
+  let responsesThisWeek = 0
+  let responsesThisMonth = 0
+
+  if (formIds.length > 0) {
+    const { data: submissions, error: submissionsError } = await supabase
+      .from('form_submissions')
+      .select('form_id, created_at')
+      .in('form_id', formIds)
+      .eq('status', 'completed')
+
+    if (!submissionsError && submissions) {
+      responsesToday = submissions.filter((s: any) => s.created_at >= todayStart).length
+      responsesThisWeek = submissions.filter((s: any) => s.created_at >= weekStartIso).length
+      responsesThisMonth = submissions.filter((s: any) => s.created_at >= monthStart).length
+    }
+  }
+
+  // 计算总览数据
+  const totalForms = allForms.length
+  const totalResponses = allForms.reduce((sum: number, f: any) => sum + (f.response_count || 0), 0)
+  const totalViews = allForms.reduce((sum: number, f: any) => sum + (f.view_count || 0), 0)
+
+  // 计算平均完成率
+  const completionRates = allForms
+    .map((f: any) => f.view_count > 0 ? (f.response_count / f.view_count) * 100 : (f.response_count > 0 ? 100 : 0))
+    .filter((r: number) => r > 0)
+  const avgCompletionRate = completionRates.length > 0
+    ? Math.round(completionRates.reduce((a: number, b: number) => a + b, 0) / completionRates.length)
+    : 0
+
+  // 按类型分组
+  const formsByType: Record<string, number> = {}
+  allForms.forEach((f: any) => {
+    const type = f.type || 'other'
+    formsByType[type] = (formsByType[type] || 0) + 1
+  })
+
+  // 按状态分组
+  const formsByStatus: Record<string, number> = {}
+  allForms.forEach((f: any) => {
+    const status = f.status || 'unknown'
+    formsByStatus[status] = (formsByStatus[status] || 0) + 1
+  })
+
+  // Top 表单（按回复数排序）
+  const topForms = allForms.slice(0, 10).map((f: any) => ({
+    id: f.id,
+    title: f.title,
+    response_count: f.response_count || 0,
+    view_count: f.view_count || 0,
+    completion_rate: f.view_count > 0
+      ? Math.round((f.response_count / f.view_count) * 100)
+      : (f.response_count > 0 ? 100 : 0),
+  }))
+
+  return {
+    total_forms: totalForms,
+    total_responses: totalResponses,
+    total_views: totalViews,
+    avg_completion_rate: avgCompletionRate,
+    responses_today: responsesToday,
+    responses_this_week: responsesThisWeek,
+    responses_this_month: responsesThisMonth,
+    forms_by_type: formsByType,
+    forms_by_status: formsByStatus,
+    top_forms: topForms,
+  }
+}

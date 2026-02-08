@@ -1494,6 +1494,23 @@ supabase start  # 启动本地 Supabase
 
 ## 10. 版本更新记录
 
+### v1.2 (2026-02-09)
+- **新增**: 主题 Hover 预览切换系统
+  - 文件: `src/components/layout/theme-switcher.tsx`, `src/lib/themes.ts`
+  - Hover 展开显示所有主题（每行一个）
+  - Hover 临时预览主题效果（页面颜色实时变化）
+  - 点击确认选择主题
+  - 移出不点击恢复原主题
+- **新增**: 实时模板同步
+  - 文件: `src/lib/templates/definitions.ts`, `src/app/templates/page.tsx`
+  - 使用 Supabase Realtime 订阅 templates 表变更
+  - 管理员创建模板后，创建者模板库实时更新
+  - 迁移: `supabase/migrations/009_enable_templates_realtime.sql`
+- **更新**: 数据分析页面
+  - 文件: `src/app/analytics/page.tsx`
+  - 移除重复的"数据分析"标题
+  - "热门表单排行" → "热门TOP10表单排行"
+
 ### v1.1 (2026-02-08)
 - **新增**: 首页模板登录检测功能
   - 文件: `src/components/landing/templates-section.tsx`

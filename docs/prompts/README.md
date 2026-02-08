@@ -136,9 +136,83 @@ A: 可以，但建议分阶段使用。例如先用设计提示词生成结构�
 
 | 日期 | 版本 | 说明 |
 |------|------|------|
+| 2026-02-09 | 1.3.0 | 新增主题切换器 Hover 预览提示词、实时模板同步功能提示词 |
 | 2026-02-08 | 1.2.0 | 新增 PublishModal、ConfirmDialog 等组件提示词支持 |
 | 2026-01-29 | 1.1.0 | 为组件设计和功能开发模板添加自动验证功能 |
 | 2026-01-29 | 1.0.0 | 初始版本，包含基础提示词模板 |
+
+---
+
+## 新增提示词 (2026-02-09)
+
+### 主题切换器 Hover 预览提示词
+
+```
+请帮我实现主题切换器的 Hover 预览功能：
+
+1. 修改 src/components/layout/theme-switcher.tsx：
+   - Hover 主题按钮时，展开显示所有8个主题（每行一个，横向列表）
+   - Hover 某个主题行时，整页颜色实时变化（临时应用主题）
+   - 点击某个主题行时，永久切换到该主题（保存到 store）
+   - 鼠标移出列表区域且未点击时，恢复到原来的主题
+
+2. 交互规格：
+   - 展开延迟：无（即时展开）
+   - 主题预览：即时（无延迟）
+   - 关闭延迟：150ms（避免鼠标移动时误触发）
+   - 过渡动画：200ms
+
+3. 每个主题行显示：
+   - 彩色渐变圆点（24x24）
+   - 主题中文名称
+   - 英文名称 + 描述
+   - "当前"标签（如果是当前主题）
+
+4. 底部提示："Hover 预览，点击选中"
+
+5. 使用 src/lib/themes.ts 的 applyTheme() 函数应用主题
+
+【自动验证】
+完成后请自动执行以下验证：
+1. 检查 theme-switcher.tsx 文件是否存在
+2. 验证 Hover 展开功能是否正确实现
+3. 验证主题预览功能是否正确实现
+4. 运行 npx tsc --noEmit 检查类型错误
+5. 报告验证结果，如有问题请修复
+```
+
+### 实时模板同步提示词
+
+```
+请帮我实现模板实时同步功能：
+
+1. 修改 src/lib/templates/definitions.ts：
+   - 添加 subscribeToDatabaseTemplates() 函数
+   - 使用 Supabase Realtime 订阅 templates 表的变更
+   - 监听 INSERT、UPDATE、DELETE 事件
+   - 变更时重新获取模板数据并调用回调
+
+2. 修改 src/app/templates/page.tsx：
+   - 在 useEffect 中调用 subscribeToDatabaseTemplates
+   - 收到更新时刷新模板列表
+   - 组件卸载时取消订阅
+
+3. 创建数据库迁移 supabase/migrations/009_enable_templates_realtime.sql：
+   ALTER PUBLICATION supabase_realtime ADD TABLE public.templates;
+
+4. 验证功能：
+   - 管理员在数据库中创建新模板
+   - 创建者模板库自动刷新显示新模板
+   - 无需手动刷新页面
+
+【自动验证】
+完成后请自动执行以下验证：
+1. 检查 subscribeToDatabaseTemplates 函数是否正确实现
+2. 检查模板页面是否正确使用订阅功能
+3. 验证迁移文件是否创建
+4. 运行 npx tsc --noEmit 检查类型错误
+5. 报告验证结果
+```
 
 ## 贡献
 

@@ -30,51 +30,183 @@
       color: var(--text-secondary);
     }
 
-    /* Theme Selector */
-    .theme-selector {
+    /* ============================================
+       Theme Switcher with Hover Preview
+       ============================================ */
+    .theme-switcher-container {
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
       justify-content: center;
       margin-bottom: 48px;
     }
 
-    .theme-btn {
-      padding: 12px 20px;
-      border-radius: 50px;
-      border: 2px solid var(--border);
+    .theme-switcher {
+      position: relative;
+      display: inline-block;
+    }
+
+    .theme-switcher-button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
       background: var(--bg-secondary);
-      color: var(--text-primary);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: 16px;
       cursor: pointer;
-      transition: all 0.3s var(--ease-out);
+      transition: all 0.2s ease;
+    }
+
+    .theme-switcher-button:hover {
+      border-color: var(--primary-start);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .theme-current-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      transition: transform 0.2s ease;
+    }
+
+    .theme-switcher-button:hover .theme-current-dot {
+      transform: scale(1.1);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .theme-current-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .theme-switcher-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    .theme-switcher-button:hover .theme-switcher-icon {
+      transform: rotate(90deg);
+      color: var(--primary-glow);
+    }
+
+    /* Theme Dropdown */
+    .theme-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      width: 320px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 12px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+    }
+
+    .theme-dropdown.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Theme Row */
+    .theme-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .theme-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: scale(1.02);
+    }
+
+    .theme-row.active {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .theme-row-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .theme-row:hover .theme-row-dot {
+      transform: scale(1.15);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .theme-row.active .theme-row-dot {
+      border-color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .theme-row-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .theme-row-name {
       display: flex;
       align-items: center;
       gap: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 2px;
     }
 
-    .theme-btn:hover {
-      transform: translateY(-2px);
-      border-color: var(--primary-start);
+    .theme-row-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .theme-btn.active {
-      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-      border-color: transparent;
-      color: white;
+    .theme-row-current-badge {
+      padding: 4px 10px;
+      background: var(--primary-glow);
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--bg-primary);
     }
 
-    .theme-dot {
-      width: 16px;
-      height: 16px;
+    .theme-row-indicator {
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.3);
+      background: var(--primary-glow);
+      box-shadow: 0 0 8px var(--primary-glow);
     }
 
-    .theme-btn.active .theme-dot {
-      border-color: white;
+    /* Dropdown Hint */
+    .theme-dropdown-hint {
+      text-align: center;
+      padding: 12px 16px;
+      margin-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 11px;
+      color: var(--text-muted);
     }
 
     /* Demo Components Grid */
@@ -424,13 +556,16 @@
     }
 
     .demo-checkbox-input:checked::after {
-      content: '✓';
+      content: '';
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: white;
-      font-size: 12px;
+      width: 8px;
+      height: 4px;
+      border-left: 2px solid white;
+      border-bottom: 2px solid white;
+      transform-origin: center;
     }
 
     .demo-checkbox-label {
@@ -474,8 +609,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
       border-radius: 50%;
     }
@@ -528,6 +663,9 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       margin-bottom: 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .theme-info h3 {
@@ -547,12 +685,8 @@
       .demo-grid {
         grid-template-columns: 1fr;
       }
-      .theme-selector {
-        gap: 8px;
-      }
-      .theme-btn {
-        padding: 10px 16px;
-        font-size: 13px;
+      .theme-dropdown {
+        width: 280px;
       }
     }
   </style>
@@ -574,43 +708,27 @@
     <!-- Header -->
     <div class="theme-header">
       <h1 class="gradient-text">主题换肤系统</h1>
-      <p>选择下方主题，预览不同风格的表单界面</p>
+      <p>Hover 主题按钮预览效果，点击确认选择</p>
     </div>
 
-    <!-- Theme Selector -->
-    <div class="theme-selector">
-      <button class="theme-btn active" data-theme="nebula">
-        <span class="theme-dot" style="background: linear-gradient(135deg, #6366F1, #8B5CF6);"></span>
-        星云紫
-      </button>
-      <button class="theme-btn" data-theme="ocean">
-        <span class="theme-dot" style="background: linear-gradient(135deg, #0EA5E9, #06B6D4);"></span>
-        海洋蓝
-      </button>
-      <button class="theme-btn" data-theme="sunset">
-        <span class="theme-dot" style="background: linear-gradient(135deg, #F97316, #EC4899);"></span>
-        日落橙
-      </button>
-      <button class="theme-btn" data-theme="forest">
-        <span class="theme-dot" style="background: linear-gradient(135deg, #10B981, #06B6D4);"></span>
-        森林绿
-      </button>
-      <button class="theme-btn" data-theme="sakura">
-        <span class="theme-dot" style="background: linear-gradient(135deg, #EC4899, #F472B6);"></span>
-        樱花粉
-      </button>
-      <button class="theme-btn" data-theme="cyber">
-        <span class="theme-dot" style="background: linear-gradient(135deg, #22D3EE, #A855F7);"></span>
-        赛博霓虹
-      </button>
-      <button class="theme-btn" data-theme="minimal">
-        <span class="theme-dot" style="background: linear-gradient(135deg, #64748B, #94A3B8);"></span>
-        极简灰
-      </button>
-      <button class="theme-btn" data-theme="royal">
-        <span class="theme-dot" style="background: linear-gradient(135deg, #F59E0B, #EAB308);"></span>
-        皇家金
-      </button>
+    <!-- Theme Switcher with Hover Preview -->
+    <div class="theme-switcher-container">
+      <div class="theme-switcher" id="themeSwitcher">
+        <button class="theme-switcher-button" id="themeSwitcherBtn">
+          <div class="theme-current-dot" id="themeCurrentDot"></div>
+          <span class="theme-current-name" id="themeCurrentName">星云紫</span>
+          <svg class="theme-switcher-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+            <path d="M2 12h20"/>
+          </svg>
+        </button>
+
+        <div class="theme-dropdown" id="themeDropdown">
+          <!-- Theme rows will be inserted by JavaScript -->
+          <div class="theme-dropdown-hint">Hover 预览，点击选中</div>
+        </div>
+      </div>
     </div>
 
     <!-- Theme Info -->
@@ -786,42 +904,211 @@
   </div>
 
   <script>
+    // ============================================
     // Theme Data
-    const themes = {
-      nebula: { name: '星云紫 Nebula Purple', desc: '神秘优雅的紫色调，营造专业现代的视觉体验' },
-      ocean: { name: '海洋蓝 Ocean Blue', desc: '清新自然的海洋蓝色，带来宁静舒适的视觉感受' },
-      sunset: { name: '日落橙 Sunset Orange', desc: '温暖活力的橙红色，传递热情积极的产品气质' },
-      forest: { name: '森林绿 Forest Green', desc: '自然清新的绿色调，营造健康环保的使用氛围' },
-      sakura: { name: '樱花粉 Sakura Pink', desc: '浪漫柔和的粉色调，创造温馨友好的用户体验' },
-      cyber: { name: '赛博霓虹 Cyber Neon', desc: '未来科技感的霓虹色，展现前卫创新的产品形象' },
-      minimal: { name: '极简灰 Minimal Gray', desc: '简约专业的灰色调，突出内容本身的设计理念' },
-      royal: { name: '皇家金 Royal Gold', desc: '奢华质感的金色调，彰显高端尊贵的品牌定位' }
-    };
+    // ============================================
+    const themes = [
+      {
+        id: 'nebula',
+        name: '星云紫',
+        nameEn: 'Nebula Purple',
+        desc: '神秘优雅，适合通用场景',
+        gradient: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+        fullDesc: '神秘优雅的紫色调，营造专业现代的视觉体验'
+      },
+      {
+        id: 'ocean',
+        name: '海洋蓝',
+        nameEn: 'Ocean Blue',
+        desc: '清新专业，适合商务场景',
+        gradient: 'linear-gradient(135deg, #0EA5E9, #06B6D4)',
+        fullDesc: '清新自然的海洋蓝色，带来宁静舒适的视觉感受'
+      },
+      {
+        id: 'sunset',
+        name: '日落橙',
+        nameEn: 'Sunset Orange',
+        desc: '热情活力，适合年轻人',
+        gradient: 'linear-gradient(135deg, #F97316, #EC4899)',
+        fullDesc: '温暖活力的橙红色，传递热情积极的产品气质'
+      },
+      {
+        id: 'forest',
+        name: '森林绿',
+        nameEn: 'Forest Green',
+        desc: '自然清新，适合健康环保',
+        gradient: 'linear-gradient(135deg, #10B981, #06B6D4)',
+        fullDesc: '自然清新的绿色调，营造健康环保的使用氛围'
+      },
+      {
+        id: 'sakura',
+        name: '樱花粉',
+        nameEn: 'Sakura Pink',
+        desc: '柔美浪漫，适合女性用户',
+        gradient: 'linear-gradient(135deg, #EC4899, #F472B6)',
+        fullDesc: '浪漫柔和的粉色调，创造温馨友好的用户体验'
+      },
+      {
+        id: 'cyber',
+        name: '赛博霓虹',
+        nameEn: 'Cyber Neon',
+        desc: '科技炫酷，适合游戏科技',
+        gradient: 'linear-gradient(135deg, #22D3EE, #A855F7)',
+        fullDesc: '未来科技感的霓虹色，展现前卫创新的产品形象'
+      },
+      {
+        id: 'minimal',
+        name: '极简灰',
+        nameEn: 'Minimal Gray',
+        desc: '简约低调，适合正式场合',
+        gradient: 'linear-gradient(135deg, #64748B, #94A3B8)',
+        fullDesc: '简约专业的灰色调，突出内容本身的设计理念'
+      },
+      {
+        id: 'royal',
+        name: '皇家金',
+        nameEn: 'Royal Gold',
+        desc: '尊贵奢华，适合高端品牌',
+        gradient: 'linear-gradient(135deg, #F59E0B, #EAB308)',
+        fullDesc: '奢华质感的金色调，彰显高端尊贵的品牌定位'
+      }
+    ];
 
-    // Theme Switching
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const theme = btn.dataset.theme;
+    // ============================================
+    // Theme Switcher with Hover Preview
+    // ============================================
+    let currentTheme = 'nebula';
+    let previewTheme = null;
+    let closeTimeout = null;
 
-        // Update active state
-        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    const themeSwitcher = document.getElementById('themeSwitcher');
+    const themeSwitcherBtn = document.getElementById('themeSwitcherBtn');
+    const themeDropdown = document.getElementById('themeDropdown');
+    const themeCurrentDot = document.getElementById('themeCurrentDot');
+    const themeCurrentName = document.getElementById('themeCurrentName');
+    const themeNameEl = document.getElementById('themeName');
+    const themeDescEl = document.getElementById('themeDesc');
 
-        // Update body theme
-        document.body.dataset.theme = theme;
+    // Build theme rows
+    function buildThemeRows() {
+      const hint = themeDropdown.querySelector('.theme-dropdown-hint');
+      themeDropdown.innerHTML = '';
 
-        // Update info
-        document.getElementById('themeName').textContent = themes[theme].name;
-        document.getElementById('themeDesc').textContent = themes[theme].desc;
+      themes.forEach(theme => {
+        const row = document.createElement('div');
+        row.className = 'theme-row';
+        row.dataset.themeId = theme.id;
 
-        // Update active states for interactive demos
-        document.querySelectorAll('.demo-toggle-switch').forEach((toggle, i) => {
-          toggle.classList.toggle('active', i === 0);
+        row.innerHTML = `
+          <div class="theme-row-dot" style="background: ${theme.gradient};"></div>
+          <div class="theme-row-info">
+            <div class="theme-row-name">
+              ${theme.name}
+              ${theme.id === currentTheme ? '<span class="theme-row-current-badge">当前</span>' : ''}
+            </div>
+            <div class="theme-row-desc">${theme.nameEn} · ${theme.desc}</div>
+          </div>
+          ${theme.id === currentTheme ? '<div class="theme-row-indicator"></div>' : ''}
+        `;
+
+        // Hover to preview theme
+        row.addEventListener('mouseenter', () => {
+          // Clear any pending close timeout
+          if (closeTimeout) {
+            clearTimeout(closeTimeout);
+            closeTimeout = null;
+          }
+
+          if (previewTheme !== theme.id) {
+            previewTheme = theme.id;
+            // Temporarily apply theme (visual only, don't update currentTheme)
+            document.body.dataset.theme = theme.id;
+            console.log('[ThemeSwitcher] Hover preview:', theme.id);
+          }
         });
+
+        // Click to confirm theme selection
+        row.addEventListener('click', () => {
+          currentTheme = theme.id;
+          previewTheme = null;
+          document.body.dataset.theme = theme.id;
+
+          // Update current theme display
+          updateCurrentThemeDisplay();
+
+          // Rebuild rows to update active states
+          buildThemeRows();
+
+          // Update theme info
+          themeNameEl.textContent = `${theme.name} ${theme.nameEn}`;
+          themeDescEl.textContent = theme.fullDesc;
+
+          // Close dropdown
+          themeDropdown.classList.remove('show');
+
+          console.log('[ThemeSwitcher] Theme selected:', theme.id);
+        });
+
+        themeDropdown.appendChild(row);
       });
+
+      themeDropdown.appendChild(hint);
+    }
+
+    // Update current theme display
+    function updateCurrentThemeDisplay() {
+      const theme = themes.find(t => t.id === currentTheme);
+      if (theme) {
+        themeCurrentDot.style.background = theme.gradient;
+        themeCurrentName.textContent = theme.name;
+      }
+    }
+
+    // Show dropdown
+    function showDropdown() {
+      if (closeTimeout) {
+        clearTimeout(closeTimeout);
+        closeTimeout = null;
+      }
+      themeDropdown.classList.add('show');
+    }
+
+    // Hide dropdown (with delay)
+    function hideDropdown() {
+      closeTimeout = setTimeout(() => {
+        themeDropdown.classList.remove('show');
+        // Restore original theme if previewing
+        if (previewTheme && previewTheme !== currentTheme) {
+          document.body.dataset.theme = currentTheme;
+          previewTheme = null;
+          console.log('[ThemeSwitcher] Restored to:', currentTheme);
+        }
+      }, 150);
+    }
+
+    // Button hover to show dropdown
+    themeSwitcherBtn.addEventListener('mouseenter', showDropdown);
+
+    // Mouse leave to hide dropdown
+    themeSwitcher.addEventListener('mouseleave', hideDropdown);
+
+    // Prevent dropdown close when hovering over dropdown content
+    themeDropdown.addEventListener('mouseenter', () => {
+      if (closeTimeout) {
+        clearTimeout(closeTimeout);
+        closeTimeout = null;
+      }
     });
 
+    themeDropdown.addEventListener('mouseleave', hideDropdown);
+
+    // Initialize
+    buildThemeRows();
+    updateCurrentThemeDisplay();
+
+    // ============================================
     // Interactive demos
+    // ============================================
     document.querySelectorAll('.demo-toggle-switch').forEach(toggle => {
       toggle.addEventListener('click', () => {
         toggle.classList.toggle('active');
@@ -829,22 +1116,16 @@
     });
 
     document.querySelectorAll('.demo-checkbox-input').forEach(checkbox => {
-      checkbox.addEventListener('click', (e) => {
-        e.target.checked = !e.target.checked;
-        if (e.target.checked) {
-          e.target.style.background = `linear-gradient(135deg, var(--primary-start), var(--primary-end))`;
-          e.target.style.borderColor = `var(--primary-start)`;
-        } else {
-          e.target.style.background = `var(--input-bg)`;
-          e.target.style.borderColor = `var(--border)`;
-        }
+      checkbox.addEventListener('click', function() {
+        this.checked = !this.checked;
       });
     });
 
     document.querySelectorAll('.demo-radio-input').forEach(radio => {
-      radio.addEventListener('click', () => {
-        document.querySelectorAll('.demo-radio-input').forEach(r => r.classList.remove('checked'));
-        radio.classList.add('checked');
+      radio.addEventListener('click', function() {
+        const group = this.closest('.demo-radio-group');
+        group.querySelectorAll('.demo-radio-input').forEach(r => r.classList.remove('checked'));
+        this.classList.add('checked');
       });
     });
 

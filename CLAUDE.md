@@ -4,6 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## 🚨 IMPORTANT: Read Project Context First
+
+**Before implementing any code, read `docs/project-context.md`**
+
+The project context file contains critical rules and patterns that AI agents must follow:
+- 85+ critical implementation rules
+- Technology stack with exact versions
+- Framework-specific patterns and conventions
+- Anti-patterns to avoid
+- Edge cases and security requirements
+
+This ensures consistent, high-quality implementation across all development work.
+
+---
+
 ## Project Overview
 
 **MultiForms** is a cloud-based form builder platform targeting C-end users (individuals, small businesses, community operators). Users can create forms for voting, rating, surveys, information collection, and feedback - all through a drag-and-drop interface with no coding required.
@@ -66,7 +81,7 @@ supabase db reset
 
 ## Current Implementation Status
 
-**Last Updated:** 2026-02-05 (Auth flow fixes, cookie storage updated, cleaned temp files)
+**Last Updated:** 2026-02-09 (Template system, remember me, hover preview)
 
 | Phase | Status | Notes |
 |-------|--------|-------|
@@ -78,8 +93,10 @@ supabase db reset
 | Public Form View | ✅ Complete | Form filling with password gate |
 | Dashboard | ✅ Complete | Bento grid layout, form cards |
 | Analytics | ✅ Complete | Charts with Recharts |
-| Theme System | ✅ Complete | 8 themes with switcher |
-| Admin Backend | ✅ Complete | Dashboard, Users, Forms, Review, Settings, Logs pages |
+| Theme System | ✅ Complete | 8 themes with hover preview |
+| Template System | ✅ Complete | Database-stored templates with admin management |
+| Admin Backend | ✅ Complete | Dashboard, Users, Forms, Review, Settings, Logs, Templates |
+| Auth Features | ✅ Complete | Remember me, anonymous submission |
 | Supabase Integration | ✅ Complete | Auth, middleware, type generation |
 
 See [docs/design/04-静态页面规划.md](docs/design/04-静态页面规划.md#17-实现状态追踪) for detailed component status.
@@ -109,8 +126,11 @@ src/
 │   │   ├── forms/                # Form moderation
 │   │   ├── review/               # Content review queue
 │   │   ├── settings/             # System settings
-│   │   └── logs/                 # Admin operation logs
+│   │   ├── logs/                 # Admin operation logs
+│   │   └── templates/            # Template management (CRUD)
 │   ├── admin-login/              # Admin login page (purple theme)
+│   ├── templates/                # Template showcase for users
+│   ├── settings/                 # User preferences
 │   ├── f/[shortId]/              # Public form view
 │   │   └── password-gate/        # Password protection
 │   ├── layout.tsx                # Root layout
@@ -126,6 +146,7 @@ src/
 │   │   ├── builder/              # Form builder (drag-drop)
 │   │   └── view/                 # Public form view components
 │   ├── analytics/                # Charts and statistics
+│   ├── admin/                    # Admin-specific components
 │   ├── providers/                # React context providers
 │   └── shared/                   # Shared components (toast, modal)
 │
@@ -201,6 +222,7 @@ To avoid race conditions during login:
 2. **Dashboard** checks `isInitialized` before fetching data to ensure auth state is ready
 3. **AuthProvider** uses `onAuthStateChange` with `SIGNED_IN` event for automatic redirects
 4. **Profile fetching** is non-blocking (fire-and-forget) to prevent UI delays
+5. **"Remember me" functionality** stores session preference, clears form fields on logout if unchecked
 
 ```tsx
 // Dashboard pattern - wait for isInitialized
@@ -406,6 +428,7 @@ The admin backend (`/admin/*`) provides comprehensive administrative capabilitie
 | Content Review | `/admin/review` | Process user reports and content moderation |
 | System Settings | `/admin/settings` | Configure site parameters and feature toggles |
 | Operation Logs | `/admin/logs` | View admin actions and audit trail |
+| Template Management | `/admin/templates` | CRUD operations for form templates |
 
 ### Admin Layout
 
@@ -494,6 +517,8 @@ Validation is in `src/lib/env.ts`.
 
 | Document | Purpose |
 |----------|---------|
+| **[docs/project-context.md](docs/project-context.md)** | **CRITICAL: AI Agent implementation rules (85+ rules)** |
+| [docs/README.md](docs/README.md) | Main documentation index and roadmap |
 | [docs/supabase-auth-setup.md](docs/supabase-auth-setup.md) | Email verification setup, redirect URLs |
 | [docs/design/04-静态页面规划.md](docs/design/04-静态页面规划.md) | Page specifications + implementation status |
 | [docs/development/开发步骤.md](docs/development/开发步骤.md) | 20-step development guide |

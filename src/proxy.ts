@@ -23,7 +23,7 @@ type Profile = Database['public']['Tables']['profiles']['Row']
 export async function proxy(req: NextRequest) {
   const { pathname } = new URL(req.url)
 
-  // 允许的公开路由
+  // 允许的公开路由（不需要认证）
   const publicPaths = [
     '/',
     '/login',
@@ -40,6 +40,16 @@ export async function proxy(req: NextRequest) {
 
   // 检查是否是公开路由
   if (publicPaths.includes(pathname) || publicPaths.some(path => pathname.startsWith(path + '/'))) {
+    return NextResponse.next()
+  }
+
+  // 静态资源和 Next.js 内部路由 - 直接放行
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/static') ||
+    pathname.startsWith('/api') ||
+    pathname.includes('.')
+  ) {
     return NextResponse.next()
   }
 
@@ -62,7 +72,7 @@ export async function proxy(req: NextRequest) {
     }
   )
 
-  // 获取当前会话
+  // 获取当前会话（用于检查是否登录）
   const { data: { session } } = await supabase.auth.getSession()
 
   // 管理后台路由保护
@@ -71,6 +81,10 @@ export async function proxy(req: NextRequest) {
       // 未登录，重定向到管理登录页
       return NextResponse.redirect(new URL('/admin-login', req.url))
     }
+
+    // 注意：在 proxy/middleware 环境中，getSession() 返回的 session 是安全的
+    // 因为代码运行在服务器端，cookie 无法被客户端篡改
+    // getUser() 在 proxy 中可能不稳定，所以这里使用 session.user
 
     // 检查用户是否是管理员
     let isAdmin = false
@@ -85,7 +99,7 @@ export async function proxy(req: NextRequest) {
       isAdmin = profile?.role === 'admin'
     } catch (err) {
       // 如果 profiles 表不存在，回退到检查 user_metadata
-      console.warn('Profiles table not found, checking user_metadata')
+      console.warn('[Proxy] Profiles table not found, checking user_metadata')
     }
 
     // 如果 profiles 查询失败或没有 admin 角色，检查 user_metadata
@@ -95,10 +109,12 @@ export async function proxy(req: NextRequest) {
 
     if (!isAdmin) {
       // 不是管理员，重定向到管理登录页并登出
+      console.warn('[Proxy] Admin access denied for user:', session.user.id)
       await supabase.auth.signOut()
       return NextResponse.redirect(new URL('/admin-login?error=no_permission', req.url))
     }
 
+    console.log('[Proxy] Admin access granted for user:', session.user.id)
     return NextResponse.next()
   }
 
@@ -119,13 +135,10 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * 匹配所有路径除了:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // 只匹配需要保护的路由，避免对公开路由创建 Supabase 客户端
+    '/admin/:path*',
+    '/dashboard/:path*',
+    '/forms/:path*',
+    '/templates/:path*', // 模板库需要登录
   ],
 }

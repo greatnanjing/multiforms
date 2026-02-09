@@ -1456,15 +1456,22 @@ export function getTemplatesForShowcase(): TemplateShowcase[] {
  */
 export async function getDatabaseTemplates(): Promise<TemplateShowcase[]> {
   try {
+    // 添加超时保护，防止数据库查询阻塞渲染
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Database templates query timeout')), 5000)
+    )
+
     // 动态导入以避免服务端导入问题
     const { createClient } = await import('@/lib/supabase/client')
     const supabase = createClient()
 
-    const { data, error } = await supabase
+    const queryPromise = supabase
       .from('templates')
       .select('*')
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
+
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise])
 
     if (error || !data) {
       console.warn('Failed to fetch database templates:', error)
@@ -1485,7 +1492,12 @@ export async function getDatabaseTemplates(): Promise<TemplateShowcase[]> {
       ...(t as any),
     }))
   } catch (error) {
-    console.warn('Error fetching database templates:', error)
+    // 超时或其他错误时，静默返回空数组
+    if (error instanceof Error && error.message.includes('timeout')) {
+      console.warn('[Templates] Database templates query timed out, using presets only')
+    } else {
+      console.warn('[Templates] Error fetching database templates:', error)
+    }
     return []
   }
 }

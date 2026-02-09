@@ -18,6 +18,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { Menu, X, Sun, Moon, User, LogOut, Settings, LayoutDashboard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
@@ -48,10 +49,15 @@ interface NavLink {
 }
 
 export function Navbar({ variant = 'public', currentPath = '/', user = null }: NavbarProps) {
+  const router = useRouter()
+  const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeId>('nebula')
   const [mode, setMode] = useState<ThemeMode>('dark')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  // 从 authStore 获取用户认证状态
+  const isAuthenticated = useAuthStore((state) => state.isInitialized && !!state.user)
 
   // 应用主题
   const applyTheme = (newTheme: ThemeId, newMode: ThemeMode) => {
@@ -114,6 +120,17 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
     window.location.href = '/login'
   }
 
+  // 处理模板库链接点击 - 需要登录
+  const handleTemplatesClick = (e: React.MouseEvent) => {
+    if (!isAuthenticated) {
+      e.preventDefault()
+      // 保存目标路径，登录后可以跳转
+      const returnUrl = encodeURIComponent('/templates')
+      router.push(`/login?returnTo=${returnUrl}`)
+    }
+    // 如果已登录，允许默认导航到 /templates
+  }
+
   // 获取用户显示名称
   const getUserDisplay = () => {
     if (user?.nickname) return user.nickname
@@ -152,17 +169,32 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
             <ul className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className={cn(
-                      'relative text-sm font-medium transition-colors duration-200',
-                      link.active
-                        ? 'text-white after:absolute after:-bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-[var(--primary-start)] after:to-[var(--primary-end)]'
-                        : 'text-[var(--text-secondary)] hover:text-white after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-[var(--primary-start)] after:to-[var(--primary-end)] after:transition-all after:duration-200 hover:after:w-full'
-                    )}
-                  >
-                    {link.label}
-                  </Link>
+                  {link.href === '/templates' && variant === 'public' ? (
+                    <Link
+                      href={link.href}
+                      onClick={handleTemplatesClick}
+                      className={cn(
+                        'relative text-sm font-medium transition-colors duration-200',
+                        link.active
+                          ? 'text-white after:absolute after:-bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-[var(--primary-start)] after:to-[var(--primary-end)]'
+                          : 'text-[var(--text-secondary)] hover:text-white after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-[var(--primary-start)] after:to-[var(--primary-end)] after:transition-all after:duration-200 hover:after:w-full'
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className={cn(
+                        'relative text-sm font-medium transition-colors duration-200',
+                        link.active
+                          ? 'text-white after:absolute after:-bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-[var(--primary-start)] after:to-[var(--primary-end)]'
+                          : 'text-[var(--text-secondary)] hover:text-white after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-[var(--primary-start)] after:to-[var(--primary-end)] after:transition-all after:duration-200 hover:after:w-full'
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -307,19 +339,38 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
               {/* Navigation */}
               <nav className="mt-16 flex flex-col gap-2">
                 {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'px-4 py-3 rounded-lg text-base font-medium transition-all',
-                      link.active
-                        ? 'bg-gradient-to-r from-[var(--primary-start)]/20 to-[var(--primary-end)]/20 text-white border border-[var(--primary-start)]/30'
-                        : 'text-[var(--text-secondary)] hover:text-white hover:bg-white/5'
+                  <div key={link.href}>
+                    {link.href === '/templates' && variant === 'public' ? (
+                      <Link
+                        href={link.href}
+                        onClick={(e) => {
+                          handleTemplatesClick(e)
+                          setMobileMenuOpen(false)
+                        }}
+                        className={cn(
+                          'block px-4 py-3 rounded-lg text-base font-medium transition-all',
+                          link.active
+                            ? 'bg-gradient-to-r from-[var(--primary-start)]/20 to-[var(--primary-end)]/20 text-white border border-[var(--primary-start)]/30'
+                            : 'text-[var(--text-secondary)] hover:text-white hover:bg-white/5'
+                        )}
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          'block px-4 py-3 rounded-lg text-base font-medium transition-all',
+                          link.active
+                            ? 'bg-gradient-to-r from-[var(--primary-start)]/20 to-[var(--primary-end)]/20 text-white border border-[var(--primary-start)]/30'
+                            : 'text-[var(--text-secondary)] hover:text-white hover:bg-white/5'
+                        )}
+                      >
+                        {link.label}
+                      </Link>
                     )}
-                  >
-                    {link.label}
-                  </Link>
+                  </div>
                 ))}
               </nav>
 

@@ -113,8 +113,10 @@ function UserRow({
       {/* 角色标签 */}
     <button
       onClick={() => setShowRoleMenu(!showRoleMenu)}
-      className="relative px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors"
-      style={roleColors[user.role as UserRole].split(' ').reduce((acc, curr) => ({ ...acc, [curr.split(':')[0]]: curr }), {})}
+      className={cn(
+        'relative px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors',
+        roleColors[user.role as UserRole]
+      )}
     >
       {roleLabels[user.role as UserRole]}
       <ChevronDown className="w-3 h-3 ml-1" />
@@ -276,10 +278,9 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      {/* 页面标题和操作 */}
+      {/* 页面描述 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">用户管理</h1>
           <p className="text-[var(--text-secondary)]">
             管理平台用户、角色和权限
           </p>

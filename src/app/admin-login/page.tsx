@@ -17,9 +17,11 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, Info } from 'lucide-react'
+import { Shield, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, Info, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { ThemeSwitcher } from '@/components/layout/theme-switcher'
+import { useAuthStore } from '@/stores/authStore'
 
 // ============================================
 // Validation Functions
@@ -90,8 +92,11 @@ export default function AdminLoginPage() {
     }
   }, [])
 
-  // 检查已登录用户的权限
+  // 检查已登录用户的权限（仅在客户端执行）
   useEffect(() => {
+    // 防止服务器端渲染时执行
+    if (typeof window === 'undefined') return
+
     const checkExistingUserPermission = async () => {
       try {
         const supabase = createClient()
@@ -99,22 +104,32 @@ export default function AdminLoginPage() {
 
         if (session?.user) {
           // 用户已登录，检查角色
+          // 首先尝试从 store 获取 profile（避免重复请求）
+          const storeProfile = useAuthStore.getState().profile
+
           let isAdmin = false
           let userRole: string | null = null
 
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single()
+          // 如果 store 中已有 profile，直接使用
+          if (storeProfile?.role) {
+            userRole = storeProfile.role
+            isAdmin = storeProfile.role === 'admin'
+          } else {
+            // store 中没有 profile，需要获取
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', session.user.id)
+                .single()
 
-            userRole = profile?.role || null
-            isAdmin = profile?.role === 'admin'
-          } catch (err) {
-            const userMetadata = session.user.user_metadata
-            userRole = userMetadata?.role || null
-            isAdmin = userMetadata?.role === 'admin'
+              userRole = profile?.role || null
+              isAdmin = profile?.role === 'admin'
+            } catch (err) {
+              const userMetadata = session.user.user_metadata
+              userRole = userMetadata?.role || null
+              isAdmin = userMetadata?.role === 'admin'
+            }
           }
 
           if (!isAdmin) {
@@ -232,11 +247,12 @@ export default function AdminLoginPage() {
         return
       }
 
-      // 登录成功，先设置 loading 为 false
-      setIsLoading(false)
+      // 登录成功，等待一小段时间确保 session 被正确设置
+      console.log('[AdminLogin] Admin verified, redirecting to /admin/dashboard')
+      await new Promise(resolve => setTimeout(resolve, 100))
 
-      // 使用 window.location.href 确保强制跳转
-      window.location.href = '/admin/dashboard'
+      // 使用 router.replace 进行客户端跳转（避免完全刷新）
+      router.replace('/admin/dashboard')
     } catch (error) {
       setAuthError('登录失败，请稍后重试')
       console.error('Admin login error:', error)
@@ -296,6 +312,10 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg-primary)] relative overflow-hidden">
+      {/* 主题切换按钮 - 右上角 */}
+      <div className="absolute top-6 right-6 z-20">
+        <ThemeSwitcher variant="minimal" />
+      </div>
       {/* 背景渐变效果 - 紫色主题 */}
       <div
         className="absolute inset-0 pointer-events-none"

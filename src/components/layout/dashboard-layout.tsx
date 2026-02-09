@@ -15,10 +15,9 @@
 
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { getBrowserClient } from '@/lib/supabase/client'
 import { Sidebar } from './sidebar'
 import { TabBarSpacer } from './tabbar'
 import { ThemeSwitcher } from './theme-switcher'
@@ -45,105 +44,52 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const [user, setUser] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const mountedRef = useRef(true)
-  const supabaseRef = useRef<ReturnType<typeof getBrowserClient> | null>(null)
 
-  // 获取当前用户信息
+  // 使用 authStore 而不是重复获取
+  const storeUser = useAuthStore((state) => state.user)
+  const storeProfile = useAuthStore((state) => state.profile)
+  const isInitialized = useAuthStore((state) => state.isInitialized)
+
+  // 合并用户数据：优先使用 profile，回退到 user
+  const user: Profile | null = storeProfile || (storeUser ? {
+    id: storeUser.id,
+    email: storeUser.email,
+    nickname: storeUser.email?.split('@')[0],
+    avatar_url: null,
+    bio: null,
+    role: userRole,
+    status: 'active',
+    form_count: 0,
+    submission_count: 0,
+    storage_used: 0,
+    preferences: {
+      theme: 'nebula',
+      mode: 'dark',
+      language: 'zh-CN',
+      notifications_enabled: true,
+      email_notifications: true,
+      timezone: 'Asia/Shanghai',
+    },
+    email_verified: storeUser.email_confirmed_at != null,
+    created_at: storeUser.created_at,
+    updated_at: storeUser.updated_at || storeUser.created_at,
+    last_login_at: null,
+    banned_at: null,
+    banned_reason: null,
+  } : null)
+
+  // 检查是否已初始化且未登录
   useEffect(() => {
-    mountedRef.current = true
+    if (typeof window === 'undefined') return
 
-    const getUser = async () => {
-      try {
-        // 使用单例客户端
-        if (!supabaseRef.current) {
-          supabaseRef.current = getBrowserClient()
-        }
-        const supabase = supabaseRef.current
-
-        const { data: { session } } = await supabase.auth.getSession()
-
-        if (!session) {
-          if (mountedRef.current) {
-            router.push('/login')
-          }
-          return
-        }
-
-        // 获取用户 profile，处理表不存在的情况
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-
-          if (mountedRef.current) {
-            // 如果 profiles 表不存在或查询失败，使用 session 数据作为 fallback
-            if (error || !profile) {
-              console.warn('Failed to fetch profile, using session data:', error?.message)
-              setUser({
-                id: session.user.id,
-                email: session.user.email || '',
-                nickname: session.user.user_metadata?.nickname || session.user.user_metadata?.name,
-                avatar_url: session.user.user_metadata?.avatar_url,
-                role: session.user.user_metadata?.role || userRole,
-                status: 'active',
-                form_count: 0,
-                submission_count: 0,
-                storage_used: 0,
-                preferences: {},
-                email_verified: session.user.email_confirmed_at != null,
-                created_at: session.user.created_at,
-                updated_at: session.user.updated_at || session.user.created_at,
-                last_login_at: session.user.last_sign_in_at,
-              } as Profile)
-            } else {
-              setUser(profile)
-            }
-          }
-        } catch (err) {
-          console.error('Error fetching profile:', err)
-          if (mountedRef.current) {
-            // 使用 session 数据作为 fallback
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              nickname: session.user.user_metadata?.nickname || session.user.user_metadata?.name,
-              avatar_url: session.user.user_metadata?.avatar_url,
-              role: session.user.user_metadata?.role || userRole,
-              status: 'active',
-              form_count: 0,
-              submission_count: 0,
-              storage_used: 0,
-              preferences: {},
-              email_verified: session.user.email_confirmed_at != null,
-              created_at: session.user.created_at,
-              updated_at: session.user.updated_at || session.user.created_at,
-              last_login_at: session.user.last_sign_in_at,
-            } as Profile)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to get user:', error)
-      } finally {
-        if (mountedRef.current) {
-          setLoading(false)
-        }
-      }
+    if (isInitialized && !storeUser) {
+      router.push('/login')
     }
+  }, [isInitialized, storeUser, router])
 
-    getUser()
-
-    // 清理函数
-    return () => {
-      mountedRef.current = false
-    }
-  }, [router, userRole])
-
-  if (loading) {
+  // 如果正在初始化，显示加载状态
+  if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
         <div className="flex flex-col items-center gap-4">

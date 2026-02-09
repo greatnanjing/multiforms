@@ -246,10 +246,9 @@ export default function AdminFormsPage() {
 
   return (
     <div className="space-y-6">
-      {/* 页面标题 */}
+      {/* 页面描述 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">表单管理</h1>
           <p className="text-[var(--text-secondary)]">
             管理和审核平台上的所有表单
           </p>

@@ -53,17 +53,22 @@ export default function TemplatesPage() {
 
   // 获取所有模板（预置 + 数据库）
   useEffect(() => {
+    // 防止服务器端渲染时执行
+    if (typeof window === 'undefined') return
+
     async function loadTemplates() {
       try {
-        setIsLoading(true)
+        // 先显示预置模板，让页面立即渲染
         const presetTemplates = getTemplatesForShowcase()
+        setAllTemplates(presetTemplates)
+        setIsLoading(false)
+
+        // 异步加载数据库模板，不阻塞渲染
         const dbTemplates = await getDatabaseTemplates()
         setAllTemplates([...presetTemplates, ...dbTemplates])
       } catch (err) {
         console.error('Failed to load templates:', err)
-        // 出错时至少显示预置模板
-        setAllTemplates(getTemplatesForShowcase())
-      } finally {
+        // 出错时至少显示预置模板（已经设置了）
         setIsLoading(false)
       }
     }

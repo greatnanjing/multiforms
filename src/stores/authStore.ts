@@ -69,7 +69,7 @@ interface AuthState {
   // 认证方法
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signUp: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string; requiresEmailVerification?: boolean }>
-  signOut: () => Promise<void>
+  signOut: (redirectPath?: string) => Promise<void>
   fetchProfile: () => Promise<void>
   refreshSession: () => Promise<void>
 
@@ -213,7 +213,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // ============================================
   // 登出
   // ============================================
-  signOut: async () => {
+  signOut: async (redirectPath = '/login') => {
     set({ isLoading: true, error: null })
 
     try {
@@ -230,7 +230,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // 刷新页面以确保状态完全清除
       if (typeof window !== 'undefined') {
-        window.location.href = '/login'
+        window.location.href = redirectPath
       }
     } catch (error) {
       if (isAbortError(error)) {

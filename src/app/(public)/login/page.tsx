@@ -19,7 +19,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -47,9 +47,13 @@ function validatePassword(password: string): string | null {
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
+
+  // 获取登录后要跳转的路径
+  const returnTo = searchParams.get('returnTo')
 
   // Form state
   const [email, setEmail] = useState('')
@@ -108,13 +112,27 @@ export default function LoginPage() {
       // auth provider 会在 SIGNED_IN 事件中处理重定向
       await new Promise(resolve => setTimeout(resolve, 100))
 
+      // 验证重定向路径是否安全（防止开放重定向漏洞）
+      const isValidRedirect = (path: string | null): boolean => {
+        if (!path) return false
+        try {
+          const decoded = decodeURIComponent(path)
+          // 必须是相对路径，且不能以 // 开头（防止协议相对 URL），不能包含 :（防止其他协议）
+          return decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.includes(':')
+        } catch {
+          return false
+        }
+      }
+
       // 检查会话是否已建立
       const { data: { session } } = await supabase.auth.getSession()
+      const redirectPath = isValidRedirect(returnTo) ? decodeURIComponent(returnTo!) : '/dashboard'
+
       if (session) {
-        router.replace('/dashboard')
+        router.replace(redirectPath)
       } else {
         // 如果会话还没建立，等待 auth provider 处理
-        router.push('/dashboard')
+        router.push(redirectPath)
       }
     } catch (error) {
       console.error('[Login] Unexpected error:', error)

@@ -230,7 +230,10 @@ export function ThemeSwitcher({
           )}
           title="切换主题"
         >
-          <Palette className="w-5 h-5" />
+          <div
+            className="w-5 h-5 rounded-full border border-white/20 transition-transform hover:scale-110"
+            style={{ background: getThemeGradient(currentTheme) }}
+          />
         </button>
 
         {/* Hover 展开所有主题 */}

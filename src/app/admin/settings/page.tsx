@@ -140,10 +140,9 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* 页面标题和操作 */}
+      {/* 页面描述和操作 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">系统设置</h1>
           <p className="text-[var(--text-secondary)]">
             配置平台参数和功能开关
           </p>

@@ -65,6 +65,9 @@ export function ThemeProvider({
   const applyToDOM = useThemeStore((state) => state.applyToDOM)
 
   useEffect(() => {
+    // 确保 DOM 已加载
+    if (typeof window === 'undefined') return
+
     // 初始化主题
     const initializeTheme = () => {
       // 从 localStorage 读取已保存的主题（由 zustand persist 中间件处理）

@@ -113,33 +113,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
                 const currentPath = window.location.pathname
 
-                // 管理员登录：需要先检查用户角色
+                // 管理员登录页面：不在这里处理重定向，让页面自己处理
+                // 避免在 auth provider 中进行异步操作导致渲染阻塞
                 if (currentPath === '/admin-login') {
-                  // 等待 profile 加载完成以检查角色
-                  await store.fetchProfile()
-                  const profile = useAuthStore.getState().profile
-
-                  if (profile?.role !== 'admin') {
-                    // 不是管理员，不重定向，让页面显示错误
-                    // 尝试从 user_metadata 获取角色
-                    const userMetadata = session.user.user_metadata
-                    if (userMetadata?.role !== 'admin') {
-                      // 确实不是管理员，不处理重定向（让页面自己处理）
-                      return
+                  // 异步获取 profile，不阻塞
+                  store.fetchProfile().catch((err) => {
+                    if (process.env.NODE_ENV === 'development') {
+                      console.warn('[AuthProvider] Profile fetch failed:', err)
                     }
-                  }
-                  // 是管理员，重定向到管理后台
-                  router.replace('/admin/dashboard')
+                  })
                   return
                 }
 
                 // 普通用户登录：直接重定向
                 if (currentPath === '/login' || currentPath === '/register') {
                   router.replace('/dashboard')
+                  // 异步获取 profile
+                  store.fetchProfile().catch((err) => {
+                    if (process.env.NODE_ENV === 'development') {
+                      console.warn('[AuthProvider] Profile fetch failed:', err)
+                    }
+                  })
+                } else {
+                  // 其他情况：异步获取 profile
+                  store.fetchProfile().catch((err) => {
+                    if (process.env.NODE_ENV === 'development') {
+                      console.warn('[AuthProvider] Profile fetch failed:', err)
+                    }
+                  })
                 }
-
-                // 其他情况：异步获取 profile，不阻塞
-                store.fetchProfile().catch(() => {})
               }
               break
 

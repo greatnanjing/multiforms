@@ -77,6 +77,10 @@ const bottomNavItems: SidebarNavItem[] = [
   { id: 'settings', label: '设置', href: '/settings', icon: Settings },
 ]
 
+const adminBottomNavItems: SidebarNavItem[] = [
+  // 管理员后台不需要底部设置链接
+]
+
 export function Sidebar({
   currentPath = '/',
   variant = 'dashboard',
@@ -88,6 +92,7 @@ export function Sidebar({
   const [navItems, setNavItems] = useState<SidebarNavItem[]>(
     variant === 'admin' ? adminNavItems : dashboardNavItems
   )
+  const currentBottomNavItems = variant === 'admin' ? adminBottomNavItems : bottomNavItems
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
 
   // Theme
@@ -108,9 +113,9 @@ export function Sidebar({
   // 退出登录
   const handleLogout = async () => {
     const signOut = useAuthStore.getState().signOut
-    await signOut()
-    router.push('/login')
-    router.refresh()
+    // 管理员跳转到管理员登录页，其他用户跳转到普通登录页
+    const redirectPath = variant === 'admin' ? '/admin-login' : '/login'
+    await signOut(redirectPath)
   }
 
   return (
@@ -161,7 +166,7 @@ export function Sidebar({
 
           {/* Bottom Section */}
           <ul className="mt-4 pt-4 border-t border-white/5 space-y-1 px-2">
-            {bottomNavItems.map((item) => {
+            {currentBottomNavItems.map((item) => {
               const isActive = getActiveState(item.href)
               const Icon = item.icon
 

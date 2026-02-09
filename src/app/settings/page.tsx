@@ -27,9 +27,8 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl">
-        {/* 页面头部 */}
+        {/* 页面描述 */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-white mb-2">设置</h1>
           <p className="text-[var(--text-secondary)]">
             管理您的账户和偏好设置
           </p>

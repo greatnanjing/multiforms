@@ -86,12 +86,22 @@ supabase/.db.git
 # ============================================
 .vscode/
 .idea/
+.cursor/
+.opencode/
+.trae/
+.windsurf/
 *.swp
 *.swo
 *~
 .project
 .classpath
 .settings/
+
+# ============================================
+# Build Tools Output
+# ============================================
+_bmad/
+_bmad-output/
 
 # ============================================
 # Claude Code

@@ -2,7 +2,7 @@
    MultiForms Templates Page
 
    模板库页面：
-   - 显示预置表单模板（与首页共享）
+   - 显示数据库中的表单模板（管理员创建）
    - 支持预览和使用模板
    - 点击模板创建表单并跳转到编辑页
    - 从数据库获取管理员创建的模板
@@ -15,15 +15,14 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
-import { FileText, Star, TrendingUp, Loader2, AlertCircle, ThumbsUp, MessageSquare, ClipboardList, HelpCircle, Calendar, Users, Tag } from 'lucide-react'
+import { FileText, TrendingUp, Loader2, AlertCircle, ThumbsUp, MessageSquare, ClipboardList, HelpCircle, Calendar, Users, Tag } from 'lucide-react'
 import { createFormFromTemplate } from '@/lib/api/templates'
-import { getTemplatesForShowcase, getDatabaseTemplates, subscribeToDatabaseTemplates, type TemplateShowcase } from '@/lib/templates/definitions'
+import { getDatabaseTemplates, subscribeToDatabaseTemplates, type TemplateShowcase } from '@/lib/templates'
 
 // 图标映射
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ThumbsUp,
   MessageSquare,
-  Star,
   ClipboardList,
   HelpCircle,
   Calendar,
@@ -51,24 +50,20 @@ export default function TemplatesPage() {
   const [isTemplatesLoading, setIsLoading] = useState(true)
   const unsubscribeRef = useRef<(() => void) | null>(null)
 
-  // 获取所有模板（预置 + 数据库）
+  // 获取所有模板（仅数据库模板，管理员创建）
   useEffect(() => {
     // 防止服务器端渲染时执行
     if (typeof window === 'undefined') return
 
     async function loadTemplates() {
       try {
-        // 先显示预置模板，让页面立即渲染
-        const presetTemplates = getTemplatesForShowcase()
-        setAllTemplates(presetTemplates)
-        setIsLoading(false)
-
-        // 异步加载数据库模板，不阻塞渲染
+        // 加载数据库模板（管理员创建的）
         const dbTemplates = await getDatabaseTemplates()
-        setAllTemplates([...presetTemplates, ...dbTemplates])
+        setAllTemplates(dbTemplates)
+        setIsLoading(false)
       } catch (err) {
         console.error('Failed to load templates:', err)
-        // 出错时至少显示预置模板（已经设置了）
+        setAllTemplates([])
         setIsLoading(false)
       }
     }
@@ -77,8 +72,7 @@ export default function TemplatesPage() {
     // 设置实时订阅监听数据库模板变化
     unsubscribeRef.current = subscribeToDatabaseTemplates((updatedDbTemplates) => {
       console.log('[Templates] Database templates updated, refreshing...')
-      const presetTemplates = getTemplatesForShowcase()
-      setAllTemplates([...presetTemplates, ...updatedDbTemplates])
+      setAllTemplates(updatedDbTemplates)
     })
 
     // 清理函数：取消订阅
@@ -200,8 +194,7 @@ export default function TemplatesPage() {
                   key={template.id}
                   className={`glass-card p-4 hover:border-indigo-500/30 transition-all duration-300 group relative ${
                     isCurrentLoading ? 'opacity-50 pointer-events-none' : ''
-                  } ${creatingTemplateId ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                  onClick={() => !creatingTemplateId && handleTemplateClick(template.id)}
+                  }`}
                 >
                 {isCurrentLoading && (
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10 rounded-xl">
@@ -214,15 +207,6 @@ export default function TemplatesPage() {
                       <IconComponent className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[#A78BFA] transition-colors" />
                     )}
                   </div>
-                  <button
-                    className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-muted)] hover:text-yellow-400 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      // TODO: 收藏功能
-                    }}
-                  >
-                    <Star className="w-4 h-4" />
-                  </button>
                 </div>
                 <h3 className="text-base font-semibold text-white mb-1 truncate">{template.name}</h3>
                 <p className="text-xs text-[var(--text-secondary)] mb-3 line-clamp-2 h-8">
@@ -242,6 +226,7 @@ export default function TemplatesPage() {
                       : 'bg-white/5 border border-white/10 text-white hover:bg-gradient-to-r hover:from-[var(--primary-start)] hover:to-[var(--primary-end)] hover:border-transparent'
                   }`}
                   disabled={isCurrentLoading}
+                  onClick={() => !creatingTemplateId && handleTemplateClick(template.id)}
                 >
                   {isCurrentLoading ? '创建中...' : '使用模板'}
                 </button>

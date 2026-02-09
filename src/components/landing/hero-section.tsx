@@ -29,7 +29,7 @@ export function HeroSection() {
 
         {/* Title */}
         <h1 className="font-bold mb-4 leading-tight" style={{ fontSize: '56px' }}>
-          <span className="gradient-text">5分钟创建</span>专业表单
+          <span className="gradient-text">1分钟创建</span>专业表单
         </h1>
 
         {/* Subtitle */}

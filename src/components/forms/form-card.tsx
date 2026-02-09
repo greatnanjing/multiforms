@@ -31,6 +31,7 @@ import {
   Edit,
   Trash2,
   MoreVertical,
+  Archive,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Form, FormType } from '@/types'
@@ -54,6 +55,8 @@ interface FormCardProps {
   onAnalyze?: (e: React.MouseEvent) => void
   /** 删除回调 */
   onDelete?: (e: React.MouseEvent) => void
+  /** 状态切换回调 */
+  onCycleStatus?: (e: React.MouseEvent) => void
   /** 是否显示删除按钮 */
   showDelete?: boolean
   /** 额外的类名 */
@@ -211,6 +214,7 @@ export function FormCard({
   onShare,
   onAnalyze,
   onDelete,
+  onCycleStatus,
   showDelete = true,
   className,
 }: FormCardProps) {
@@ -262,9 +266,9 @@ export function FormCard({
               已发布
             </span>
           )}
-          {form.status === 'closed' && (
-            <span className="text-xs font-medium text-amber-400 px-2 py-0.5 rounded-full bg-amber-500/10">
-              已关闭
+          {form.status === 'archived' && (
+            <span className="text-xs font-medium text-yellow-400 px-2 py-0.5 rounded-full bg-yellow-500/10">
+              已归档
             </span>
           )}
           {form.status === 'draft' && (
@@ -290,6 +294,15 @@ export function FormCard({
 
       {/* 操作按钮 */}
       <div className="flex items-center gap-2">
+        {onCycleStatus && (
+          <button
+            onClick={(e) => handleAction(e, onCycleStatus)}
+            className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-amber-500/10 hover:border-amber-500/50 group"
+            title="切换状态"
+          >
+            <Archive className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-amber-400 transition-colors" />
+          </button>
+        )}
         <button
           onClick={(e) => handleAction(e, onEdit)}
           className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-white/10 hover:border-indigo-500/50 group"

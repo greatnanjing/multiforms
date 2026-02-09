@@ -23,7 +23,8 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { duplicateQuestions } from './questions'
-import type { Form, FormInput, FormUpdateInput, FormType, FormStatus } from '@/types'
+import { SHORT_ID, escapeLikePattern } from '@/lib/utils'
+import type { Form, FormInput, FormUpdateInput, FormType, FormStatus, FormQuestion } from '@/types'
 
 // ============================================
 // Types
@@ -83,14 +84,14 @@ export function generateShortId(): string {
 
   // 使用 crypto API 生成安全随机数
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    const array = new Uint8Array(6)
+    const array = new Uint8Array(SHORT_ID.BYTES)
     crypto.getRandomValues(array)
     return Array.from(array, byte => chars[byte % chars.length]).join('')
   }
 
   // 最终降级方案（仅在 crypto 不可用时使用）
   let result = ''
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < SHORT_ID.LENGTH; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length))
   }
   return result
@@ -102,18 +103,19 @@ export function generateShortId(): string {
 export async function createForm(options: CreateFormOptions): Promise<Form> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
+  const user = session.user
 
   // 生成唯一的 short_id
   let shortId = generateShortId()
   let isUnique = false
   let attempts = 0
 
-  while (!isUnique && attempts < 10) {
+  while (!isUnique && attempts < SHORT_ID.MAX_ATTEMPTS) {
     const { data } = await supabase
       .from('forms')
       .select('short_id')
@@ -126,6 +128,11 @@ export async function createForm(options: CreateFormOptions): Promise<Form> {
       shortId = generateShortId()
       attempts++
     }
+  }
+
+  // 如果所有尝试都失败，抛出错误
+  if (!isUnique) {
+    throw new Error('无法生成唯一的短链接ID，请稍后重试')
   }
 
   // 默认主题配置
@@ -176,11 +183,12 @@ export async function createForm(options: CreateFormOptions): Promise<Form> {
 export async function getForms(options: GetFormsOptions = {}): Promise<GetFormsResponse> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快，从本地缓存读取
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
+  const user = session.user
 
   const {
     status,
@@ -212,9 +220,9 @@ export async function getForms(options: GetFormsOptions = {}): Promise<GetFormsR
     query = query.eq('type', type)
   }
 
-  // 搜索
+  // 搜索 - 转义特殊字符防止 SQL 注入
   if (search) {
-    query = query.ilike('title', `%${search}%`)
+    query = query.ilike('title', `%${escapeLikePattern(search)}%`)
   }
 
   // 创建日期范围筛选
@@ -265,22 +273,23 @@ export async function getForms(options: GetFormsOptions = {}): Promise<GetFormsR
 export async function getFormById(formId: string): Promise<Form> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
 
+  if (!session?.user) {
+    throw new Error('用户未登录')
+  }
+
+  // 在查询时同时验证权限（user_id 匹配），一次查询完成
   const { data, error } = await supabase
     .from('forms')
     .select('*')
     .eq('id', formId)
+    .eq('user_id', session.user.id) // 同时验证权限
     .single()
 
   if (error) {
     throw new Error(`获取表单失败: ${error.message}`)
-  }
-
-  // 检查权限：只有表单创建者可以访问
-  if (user && data.user_id !== user.id) {
-    throw new Error('无权访问此表单')
   }
 
   return data as Form
@@ -306,24 +315,58 @@ export async function getFormByShortId(shortId: string): Promise<Form> {
 }
 
 /**
+ * 获取表单及其题目（编辑页面专用 - 一次查询完成）
+ * 返回表单数据和题目数组，优化加载性能
+ */
+export async function getFormWithQuestions(
+  formId: string
+): Promise<{ form: Form; questions: FormQuestion[] }> {
+  const supabase = createClient()
+
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session?.user) {
+    throw new Error('用户未登录')
+  }
+
+  // 使用 JOIN 一次查询获取表单和题目，同时验证权限
+  const { data, error } = await supabase
+    .from('forms')
+    .select(`
+      *,
+      form_questions (*)
+    `)
+    .eq('id', formId)
+    .eq('user_id', session.user.id) // 同时验证权限
+    .single()
+
+  if (error) {
+    throw new Error(`获取表单失败: ${error.message}`)
+  }
+
+  // 题目按 order_index 排序
+  const questions = (data.form_questions || []).sort((a: any, b: any) => a.order_index - b.order_index)
+
+  return {
+    form: data as Form,
+    questions: questions as FormQuestion[],
+  }
+}
+
+/**
  * 更新表单
  */
 export async function updateForm(formId: string, updates: FormUpdateInput): Promise<Form> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
-  // 验证权限
-  const existingForm = await getFormById(formId)
-  if (existingForm.user_id !== user.id) {
-    throw new Error('无权修改此表单')
-  }
-
-  // 更新时自动更新 updated_at
+  // 在更新时同时验证权限（user_id 匹配），一次查询完成
   const { data, error } = await supabase
     .from('forms')
     .update({
@@ -331,6 +374,7 @@ export async function updateForm(formId: string, updates: FormUpdateInput): Prom
       updated_at: new Date().toISOString(),
     })
     .eq('id', formId)
+    .eq('user_id', session.user.id) // 同时验证权限
     .select()
     .single()
 
@@ -347,22 +391,18 @@ export async function updateForm(formId: string, updates: FormUpdateInput): Prom
 export async function deleteForm(formId: string): Promise<void> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
-  // 验证权限
-  const existingForm = await getFormById(formId)
-  if (existingForm.user_id !== user.id) {
-    throw new Error('无权删除此表单')
-  }
-
+  // 删除时同时验证权限（user_id 匹配），一次查询完成
   const { error } = await supabase
     .from('forms')
     .delete()
     .eq('id', formId)
+    .eq('user_id', session.user.id) // 同时验证权限
 
   if (error) {
     throw new Error(`删除表单失败: ${error.message}`)
@@ -375,16 +415,22 @@ export async function deleteForm(formId: string): Promise<void> {
 export async function duplicateForm(formId: string): Promise<Form> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
-  // 获取原表单
-  const originalForm = await getFormById(formId)
-  if (originalForm.user_id !== user.id) {
-    throw new Error('无权复制此表单')
+  // 获取原表单（同时验证权限）
+  const { data: originalForm, error: fetchError } = await supabase
+    .from('forms')
+    .select('*')
+    .eq('id', formId)
+    .eq('user_id', session.user.id) // 同时验证权限
+    .single()
+
+  if (fetchError || !originalForm) {
+    throw new Error(fetchError?.message || '无权复制此表单')
   }
 
   // 生成新的 short_id
@@ -392,7 +438,7 @@ export async function duplicateForm(formId: string): Promise<Form> {
   let isUnique = false
   let attempts = 0
 
-  while (!isUnique && attempts < 10) {
+  while (!isUnique && attempts < SHORT_ID.MAX_ATTEMPTS) {
     const { data } = await supabase
       .from('forms')
       .select('short_id')
@@ -407,9 +453,14 @@ export async function duplicateForm(formId: string): Promise<Form> {
     }
   }
 
+  // 如果所有尝试都失败，抛出错误
+  if (!isUnique) {
+    throw new Error('无法生成唯一的短链接ID，请稍后重试')
+  }
+
   // 创建新表单（复制原表单数据）
   const newFormData = {
-    user_id: user.id,
+    user_id: session.user.id,
     title: `${originalForm.title} (副本)`,
     description: originalForm.description,
     type: originalForm.type,
@@ -479,11 +530,27 @@ export async function archiveForm(formId: string): Promise<Form> {
 
 /**
  * 增加表单浏览次数
+ * 注意：此函数在高并发时可能有竞态条件
+ * 建议使用 PostgreSQL RPC 函数实现原子增量：
+ * CREATE OR REPLACE FUNCTION increment_view_count(form_id UUID)
+ * RETURNS void AS $$
+ * BEGIN
+ *   UPDATE forms SET view_count = view_count + 1 WHERE id = form_id;
+ * END;
+ * $$ LANGUAGE plpgsql;
  */
 export async function incrementFormViewCount(formId: string): Promise<void> {
   const supabase = createClient()
 
-  // 先获取当前值，再更新
+  // 尝试使用 RPC 函数（如果已创建）
+  try {
+    const { error } = await supabase.rpc('increment_view_count', { form_id: formId })
+    if (!error) return // RPC 成功则直接返回
+  } catch {
+    // RPC 不存在，降级到 read-modify-write 模式
+  }
+
+  // 先获取当前值，再更新（降级方案，低并发下可用）
   const { data: currentData } = await supabase
     .from('forms')
     .select('view_count')
@@ -500,11 +567,21 @@ export async function incrementFormViewCount(formId: string): Promise<void> {
 
 /**
  * 增加表单回复次数
+ * 注意：此函数在高并发时可能有竞态条件
+ * 建议使用 PostgreSQL RPC 函数实现原子增量
  */
 export async function incrementFormResponseCount(formId: string): Promise<void> {
   const supabase = createClient()
 
-  // 先获取当前值，再更新
+  // 尝试使用 RPC 函数（如果已创建）
+  try {
+    const { error } = await supabase.rpc('increment_response_count', { form_id: formId })
+    if (!error) return // RPC 成功则直接返回
+  } catch {
+    // RPC 不存在，降级到 read-modify-write 模式
+  }
+
+  // 先获取当前值，再更新（降级方案，低并发下可用）
   const { data: currentData } = await supabase
     .from('forms')
     .select('response_count')

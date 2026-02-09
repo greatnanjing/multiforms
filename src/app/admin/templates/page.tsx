@@ -38,9 +38,20 @@ import {
   ChevronUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { type TemplateQuestion } from '@/lib/templates/definitions'
 import { createClient } from '@/lib/supabase/client'
-import type { TemplateCategory } from '@/types'
+import type { TemplateCategory, QuestionType, QuestionOptions, QuestionValidation } from '@/types'
+
+// ============================================
+// Types
+// ============================================
+
+/** 模板题目定义 */
+export interface TemplateQuestion {
+  question_text: string
+  question_type: QuestionType
+  options?: QuestionOptions
+  validation?: QuestionValidation
+}
 
 // ============================================
 // Types
@@ -174,6 +185,7 @@ function QuestionEditor({
         </div>
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-white/5 transition-colors"
             title="展开/收起"
@@ -181,6 +193,7 @@ function QuestionEditor({
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
           <button
+            type="button"
             onClick={() => onRemove(index)}
             className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
             title="删除题目"
@@ -194,15 +207,20 @@ function QuestionEditor({
       {isExpanded && (
         <div className="space-y-3 pl-8">
           {/* 题目类型 */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
             <label className="text-xs text-[var(--text-muted)]">类型:</label>
             <select
               value={question.question_type}
-              onChange={(e) => handleUpdate('question_type', e.target.value)}
-              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-purple-500"
+              onChange={(e) => {
+                e.stopPropagation()
+                handleUpdate('question_type', e.target.value)
+              }}
+              onFocus={(e) => e.stopPropagation()}
+              onBlur={(e) => e.stopPropagation()}
+              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-purple-500 cursor-pointer"
             >
               {Object.entries(questionTypeLabels).map(([value, label]) => (
-                <option key={value} value={value} className="bg-[var(--bg-secondary)]">
+                <option key={value} value={value} className="bg-[var(--bg-secondary)] text-white">
                   {label}
                 </option>
               ))}
@@ -215,6 +233,7 @@ function QuestionEditor({
               <div className="flex items-center justify-between">
                 <label className="text-xs text-[var(--text-muted)]">选项:</label>
                 <button
+                  type="button"
                   onClick={handleAddOption}
                   className="text-xs px-2 py-1 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors"
                 >
@@ -232,6 +251,7 @@ function QuestionEditor({
                     placeholder={`选项 ${optIndex + 1}`}
                   />
                   <button
+                    type="button"
                     onClick={() => handleRemoveOption(optIndex)}
                     className="p-1 rounded text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                   >
@@ -854,7 +874,7 @@ function TemplateDialog({
                   <p className="text-xs text-[var(--text-muted)] mt-1">点击上方按钮添加题目</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
                   {formData.questions.map((q, index) => (
                     <QuestionEditor
                       key={index}
@@ -880,7 +900,11 @@ function TemplateDialog({
             取消
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              handleSubmit(new Event('submit') as any)
+            }}
             disabled={isSaving}
             className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
@@ -1371,7 +1395,7 @@ export default function AdminTemplatesPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {filteredTemplates.map(template => (
             <TemplateCard
               key={template.id}

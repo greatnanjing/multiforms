@@ -39,10 +39,19 @@ export function MainLayout({
   // 判断当前路径是否是公开页面
   const isPublicPage = !pathname.startsWith('/dashboard') && !pathname.startsWith('/admin')
 
+  // 根据路径选择导航栏变体
+  // 登录/注册页面使用 minimal 变体（不显示导航链接）
+  const getNavbarVariant = (): 'public' | 'minimal' => {
+    if (pathname === '/login' || pathname === '/register') {
+      return 'minimal'
+    }
+    return 'public'
+  }
+
   return (
     <div className={cn('min-h-screen flex flex-col', className)}>
       {/* Navbar */}
-      {!hideNavbar && <Navbar variant="public" currentPath={pathname} />}
+      {!hideNavbar && <Navbar variant={getNavbarVariant()} currentPath={pathname} />}
 
       {/* Main Content */}
       <main
@@ -65,7 +74,7 @@ export function MainLayout({
       {!hideNavbar && isPublicPage && (
         <footer className="border-t border-white/5 py-8 mt-auto">
           <div className="max-w-[1280px] mx-auto px-6 text-center text-sm text-[var(--text-muted)]">
-            <p>&copy; {new Date().getFullYear()} MultiForms. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} 表单随心填. All rights reserved.</p>
           </div>
         </footer>
       )}

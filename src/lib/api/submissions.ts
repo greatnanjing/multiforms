@@ -17,6 +17,7 @@
 ============================================ */
 
 import { createClient } from '@/lib/supabase/client'
+import { generateId } from '@/lib/utils'
 import type { SubmissionAnswers } from '@/types'
 
 // ============================================
@@ -43,10 +44,16 @@ export interface FormSubmission {
   session_id: string | null
   submitter_ip: string | null
   submitter_user_agent: string | null
-  submitter_location: any
+  submitter_location: {
+    country?: string
+    city?: string
+    ip?: string
+    latitude?: number
+    longitude?: number
+  } | null
   answers: SubmissionAnswers
   duration_seconds: number | null
-  status: string
+  status: 'draft' | 'completed'
   created_at: string
   updated_at: string
 }
@@ -69,15 +76,7 @@ export interface GetSubmissionsOptions {
 // Helper Functions
 // ============================================
 
-/**
- * 生成会话 ID（用于匿名用户）
- */
-function generateSessionId(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
-}
+// Helper functions 已移至 @/lib/utils.ts
 
 /**
  * 获取客户端 IP（需要在服务端调用）
@@ -166,9 +165,9 @@ export async function getFormSubmissions(
 ): Promise<{ data: FormSubmission[]; total: number }> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
@@ -177,14 +176,11 @@ export async function getFormSubmissions(
     .from('forms')
     .select('user_id')
     .eq('id', formId)
+    .eq('user_id', session.user.id) // 同时验证权限
     .single()
 
   if (!form) {
     throw new Error('表单不存在')
-  }
-
-  if (form.user_id !== user.id) {
-    throw new Error('无权访问此表单的提交记录')
   }
 
   const {
@@ -232,38 +228,29 @@ export async function getFormSubmissions(
 export async function getSubmissionById(submissionId: string): Promise<FormSubmission> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
-  const { data, error } = await supabase
+  // 获取提交记录和表单（JOIN 查询验证权限）
+  const { data: submission, error: subError } = await supabase
     .from('form_submissions')
-    .select('*')
+    .select('*, forms!inner(user_id)')
     .eq('id', submissionId)
     .single()
 
-  if (error) {
-    throw new Error(`获取提交记录失败: ${error.message}`)
+  if (subError || !submission) {
+    throw new Error(`获取提交记录失败: ${subError?.message || '不存在'}`)
   }
 
-  if (!data) {
-    throw new Error('提交记录不存在')
-  }
-
-  // 验证权限：检查表单所有者
-  const { data: form } = await supabase
-    .from('forms')
-    .select('user_id')
-    .eq('id', data.form_id)
-    .single()
-
-  if (!form || form.user_id !== user.id) {
+  // 验证权限
+  if ((submission as any).forms.user_id !== session.user.id) {
     throw new Error('无权访问此提交记录')
   }
 
-  return data as FormSubmission
+  return submission as FormSubmission
 }
 
 /**
@@ -272,31 +259,26 @@ export async function getSubmissionById(submissionId: string): Promise<FormSubmi
 export async function deleteSubmission(submissionId: string): Promise<void> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
-  // 获取提交记录
-  const { data: submission } = await supabase
+  // 获取提交记录和表单信息（JOIN 查询验证权限）
+  const { data: submission, error: subError } = await supabase
     .from('form_submissions')
-    .select('form_id')
+    .select('form_id, forms!inner(user_id, response_count)')
     .eq('id', submissionId)
     .single()
 
-  if (!submission) {
-    throw new Error('提交记录不存在')
+  if (subError || !submission) {
+    throw new Error(`提交记录不存在: ${subError?.message || ''}`)
   }
 
   // 验证权限
-  const { data: form } = await supabase
-    .from('forms')
-    .select('user_id, response_count')
-    .eq('id', submission.form_id)
-    .single()
-
-  if (!form || form.user_id !== user.id) {
+  const form = (submission as any).forms
+  if (form.user_id !== session.user.id) {
     throw new Error('无权删除此提交记录')
   }
 
@@ -330,16 +312,16 @@ export async function deleteSubmission(submissionId: string): Promise<void> {
 export async function deleteSubmissions(submissionIds: string[]): Promise<void> {
   const supabase = createClient()
 
-  // 获取当前用户
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
-  // 获取所有提交记录的表单 ID
+  // 获取所有提交记录的表单 ID（同时验证权限）
   const { data: submissions } = await supabase
     .from('form_submissions')
-    .select('id, form_id')
+    .select('form_id, forms!inner(user_id)')
     .in('id', submissionIds)
 
   if (!submissions || submissions.length === 0) {
@@ -349,15 +331,9 @@ export async function deleteSubmissions(submissionIds: string[]): Promise<void> 
   // 验证权限：所有提交必须属于同一用户的表单
   const formIds = [...new Set(submissions.map((s: any) => s.form_id))]
 
-  for (const formId of formIds) {
-    const { data: form } = await supabase
-      .from('forms')
-      .select('user_id')
-      .eq('id', formId)
-      .single()
-
-    if (!form || form.user_id !== user.id) {
-      throw new Error(`无权删除表单 ${formId} 的提交记录`)
+  for (const sub of submissions) {
+    if ((sub as any).forms.user_id !== session.user.id) {
+      throw new Error(`无权删除表单 ${(sub as any).form_id} 的提交记录`)
     }
   }
 

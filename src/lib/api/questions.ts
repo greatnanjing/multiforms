@@ -56,17 +56,19 @@ function generateId(): string {
  */
 async function validateFormAccess(formId: string): Promise<boolean> {
   const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) return false
-  
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session?.user) return false
+
   const { data: form } = await supabase
     .from('forms')
     .select('user_id')
     .eq('id', formId)
+    .eq('user_id', session.user.id) // 同时验证权限
     .single()
-  
-  return form?.user_id === user.id
+
+  return !!form
 }
 
 // ============================================
@@ -166,29 +168,42 @@ export async function createQuestion(
 }
 
 /**
- * 批量创建题目
+ * 批量创建题目（优化版 - 可跳过权限验证）
  */
 export async function createQuestions(
   formId: string,
-  questions: CreateQuestionOptions[]
+  questions: CreateQuestionOptions[],
+  options?: { skipValidation?: boolean } // 新增选项参数
 ): Promise<FormQuestion[]> {
   const supabase = createClient()
 
-  // 验证权限
-  const hasAccess = await validateFormAccess(formId)
-  if (!hasAccess) {
-    throw new Error('无权操作此表单')
+  if (questions.length === 0) {
+    return []
   }
 
-  // 获取当前最大 order_index
-  const { data: existingQuestions } = await supabase
-    .from('form_questions')
-    .select('order_index')
-    .eq('form_id', formId)
-    .order('order_index', { ascending: false })
-    .limit(1)
+  // 验证权限（可跳过以避免重复验证）
+  if (!options?.skipValidation) {
+    const hasAccess = await validateFormAccess(formId)
+    if (!hasAccess) {
+      throw new Error('无权操作此表单')
+    }
+  }
 
-  const startOrderIndex = (existingQuestions?.[0]?.order_index ?? -1) + 1
+  // 如果所有题目都有 order_index，跳过查询数据库
+  const allHaveOrderIndex = questions.every(q => q.order_index !== undefined)
+
+  let startOrderIndex = 0
+  if (!allHaveOrderIndex) {
+    // 只有在需要时才查询最大 order_index
+    const { data: existingQuestions } = await supabase
+      .from('form_questions')
+      .select('order_index')
+      .eq('form_id', formId)
+      .order('order_index', { ascending: false })
+      .limit(1)
+
+    startOrderIndex = (existingQuestions?.[0]?.order_index ?? -1) + 1
+  }
 
   const questionsData = questions.map((q, index) => {
     // Get default validation and merge with provided validation
@@ -205,7 +220,7 @@ export async function createQuestions(
       options: q.options || getDefaultOptions(q.question_type),
       validation: finalValidation,
       logic_rules: q.logic_rules || [],
-      order_index: q.order_index ?? startOrderIndex + index,
+      order_index: q.order_index ?? (allHaveOrderIndex ? 0 : startOrderIndex + index),
       created_at: new Date().toISOString(),
     }
   })
@@ -265,39 +280,37 @@ export async function updateQuestion(
 }
 
 /**
- * 批量更新题目
+ * 批量更新题目（优化版 - 只验证一次权限）
  */
 export async function updateQuestions(
   questions: Array<{ id: string } & UpdateQuestionOptions>
 ): Promise<FormQuestion[]> {
   const supabase = createClient()
 
-  // 验证所有题目的权限
-  for (const q of questions) {
-    const { data: question } = await supabase
-      .from('form_questions')
-      .select('form_id')
-      .eq('id', q.id)
-      .single()
-
-    if (!question) {
-      throw new Error(`题目 ${q.id} 不存在`)
-    }
-
-    const hasAccess = await validateFormAccess(question.form_id)
-    if (!hasAccess) {
-      throw new Error(`无权操作题目 ${q.id}`)
-    }
+  if (questions.length === 0) {
+    return []
   }
 
-  const results: FormQuestion[] = []
+  // 只验证一次权限：获取所有题目及其 form_id
+  const { data: existingQuestions } = await supabase
+    .from('form_questions')
+    .select('id, form_id')
+    .in('id', questions.map(q => q.id))
 
-  for (const q of questions) {
+  if (!existingQuestions || existingQuestions.length !== questions.length) {
+    throw new Error('部分题目不存在')
+  }
+
+  // 验证权限 - 只验证第一个题目的 form_id（所有题目都属于同一表单）
+  const formId = existingQuestions[0].form_id
+  const hasAccess = await validateFormAccess(formId)
+  if (!hasAccess) {
+    throw new Error(`无权操作此表单的题目`)
+  }
+
+  // 批量更新 - 使用 Promise.all 并行执行
+  const updatePromises = questions.map(async (q) => {
     const { id, ...updates } = q
-    console.log(`[updateQuestions] Question ${id}:`, {
-      updates,
-      validationRequired: updates.validation?.required,
-    })
     const { data, error } = await supabase
       .from('form_questions')
       .update(updates)
@@ -310,10 +323,10 @@ export async function updateQuestions(
       throw new Error(`更新题目 ${id} 失败: ${error.message}`)
     }
 
-    console.log(`[updateQuestions] Success ${id}:`, data)
-    results.push(data as FormQuestion)
-  }
+    return data as FormQuestion
+  })
 
+  const results = await Promise.all(updatePromises)
   return results
 }
 
@@ -364,6 +377,40 @@ export async function deleteQuestion(questionId: string): Promise<void> {
         .update({ order_index: question.order_index + i })
         .eq('id', remainingQuestions[i].id)
     }
+  }
+}
+
+/**
+ * 批量删除题目（优化版 - 只验证一次权限，不重新排序）
+ * 用于表单编辑时的批量删除，因为后续会重新设置所有题目的 order_index
+ */
+export async function deleteQuestions(
+  formId: string,
+  questionIds: string[],
+  options?: { skipValidation?: boolean }
+): Promise<void> {
+  const supabase = createClient()
+
+  if (questionIds.length === 0) {
+    return
+  }
+
+  // 验证权限（可跳过以避免重复验证）
+  if (!options?.skipValidation) {
+    const hasAccess = await validateFormAccess(formId)
+    if (!hasAccess) {
+      throw new Error('无权操作此表单')
+    }
+  }
+
+  // 批量删除（不重新排序，因为调用方会重新设置所有题目的 order_index）
+  const { error } = await supabase
+    .from('form_questions')
+    .delete()
+    .in('id', questionIds)
+
+  if (error) {
+    throw new Error(`批量删除题目失败: ${error.message}`)
   }
 }
 

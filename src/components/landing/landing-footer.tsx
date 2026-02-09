@@ -16,10 +16,10 @@ export function LandingFooter() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center">
                 <FileText className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold font-heading">MultiForms</span>
+              <span className="text-xl font-bold font-heading">表单随心填</span>
             </div>
             <p className="text-sm text-[var(--text-secondary)] max-w-[250px]">
-              5分钟创建专业表单，让数据收集变得简单高效
+              1分钟创建专业表单，让数据收集变得简单高效
             </p>
           </div>
 
@@ -36,11 +36,6 @@ export function LandingFooter() {
                 <li>
                   <a href="#templates" className="text-sm text-[var(--text-secondary)] hover:text-[#A78BFA] transition-colors">
                     模板
-                  </a>
-                </li>
-                <li>
-                  <a href="#pricing" className="text-sm text-[var(--text-secondary)] hover:text-[#A78BFA] transition-colors">
-                    价格
                   </a>
                 </li>
               </ul>
@@ -87,7 +82,7 @@ export function LandingFooter() {
 
         {/* Bottom */}
         <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-[var(--text-muted)]">
-          <p>&copy; 2026 MultiForms. All rights reserved.</p>
+          <p>&copy; 2026 表单随心填. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-[#A78BFA] transition-colors">GitHub</a>
             <a href="#" className="hover:text-[#A78BFA] transition-colors">Twitter</a>

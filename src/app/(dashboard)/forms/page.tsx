@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { getForms } from '@/lib/api/forms'
 import { FormCard, FormCardSkeleton } from '@/components/forms/form-card'
 import { useToast } from '@/components/shared/toast'
+import type { FormStatus } from '@/types'
 import { useConfirm } from '@/components/shared/confirm-dialog'
 import type { Form } from '@/types'
 
@@ -201,6 +202,38 @@ export default function MyFormsPage() {
     } catch (error) {
       console.error('Failed to delete form:', error)
       toast.error('删除失败')
+    }
+  }
+
+  // 循环切换表单状态：draft → published → archived → draft
+  const handleCycleStatus = async (formId: string) => {
+    const form = forms.find(f => f.id === formId)
+    if (!form) return
+
+    const statusOrder: Record<FormStatus, FormStatus> = {
+      draft: 'published',
+      published: 'archived',
+      archived: 'draft',
+      closed: 'draft' // 添加 closed 状态的处理
+    }
+    const newStatus = statusOrder[form.status as FormStatus] || 'published'
+    const oldStatus = form.status as FormStatus
+
+    // 乐观更新：立即更新 UI
+    setForms(forms.map(f =>
+      f.id === formId ? { ...f, status: newStatus as FormStatus } : f
+    ))
+
+    try {
+      const { updateForm } = await import('@/lib/api/forms')
+      await updateForm(formId, { status: newStatus })
+    } catch (error) {
+      // 失败时回滚状态
+      console.error('切换状态失败:', error)
+      setForms(forms.map(f =>
+        f.id === formId ? { ...f, status: oldStatus } : f
+      ))
+      toast.error('操作失败，请稍后重试')
     }
   }
 
@@ -476,6 +509,10 @@ export default function MyFormsPage() {
               key={form.id}
               form={form}
               onClick={() => handleEditForm(form.id)}
+              onCycleStatus={(e) => {
+                e.stopPropagation()
+                handleCycleStatus(form.id)
+              }}
               onEdit={(e) => {
                 e.stopPropagation()
                 handleEditForm(form.id)

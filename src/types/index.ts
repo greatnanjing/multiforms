@@ -241,7 +241,7 @@ export interface QuestionOptions {
 
   // 其他配置
   placeholder?: string
-  default_value?: any
+  default_value?: string | number | boolean | string[] | null
   allow_other?: boolean  // 是否允许填写"其他"选项
   other_label?: string   // "其他"选项的标签
 }
@@ -268,7 +268,7 @@ export interface LogicRule {
   condition: {
     question_id: string
     operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than'
-    value: any
+    value: string | number | boolean | string[]
   }
   action: 'show' | 'hide' | 'jump_to'
   target_question_ids?: string[]

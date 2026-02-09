@@ -1,5 +1,5 @@
 /* ============================================
-   MultiForms Dashboard Content Component
+   表单随心填 Dashboard Content Component
 
    仪表盘内容组件：
    - Bento Grid 统计卡片
@@ -19,7 +19,7 @@ import { FormCard, FormCardSkeleton } from '@/components/forms/form-card'
 import { useToast } from '@/components/shared/toast'
 import { useConfirm } from '@/components/shared/confirm-dialog'
 import { cn } from '@/lib/utils'
-import type { Form } from '@/types'
+import type { Form, FormStatus } from '@/types'
 
 // ============================================
 // Dashboard Stats Interface
@@ -206,6 +206,38 @@ export default function DashboardContent() {
     }
   }
 
+  // 循环切换表单状态：draft → published → archived → draft
+  const handleCycleStatus = async (formId: string) => {
+    const form = forms.find(f => f.id === formId)
+    if (!form) return
+
+    const statusOrder: Record<FormStatus, FormStatus> = {
+      draft: 'published',
+      published: 'archived',
+      archived: 'draft',
+      closed: 'draft' // 添加 closed 状态的处理
+    }
+    const newStatus = statusOrder[form.status as FormStatus] || 'published'
+    const oldStatus = form.status as FormStatus
+
+    // 乐观更新：立即更新 UI
+    setForms(forms.map(f =>
+      f.id === formId ? { ...f, status: newStatus as FormStatus } : f
+    ))
+
+    try {
+      const { updateForm } = await import('@/lib/api/forms')
+      await updateForm(formId, { status: newStatus })
+    } catch (error) {
+      // 失败时回滚状态
+      console.error('切换状态失败:', error)
+      setForms(forms.map(f =>
+        f.id === formId ? { ...f, status: oldStatus } : f
+      ))
+      toast.error('操作失败，请稍后重试')
+    }
+  }
+
   // 加载状态
   if (authLoading || isLoading) {
     return (
@@ -317,6 +349,10 @@ export default function DashboardContent() {
                 key={form.id}
                 form={form}
                 onClick={() => handleEditForm(form.id)}
+                onCycleStatus={(e) => {
+                  e.stopPropagation()
+                  handleCycleStatus(form.id)
+                }}
                 onEdit={(e) => {
                   e.stopPropagation()
                   handleEditForm(form.id)

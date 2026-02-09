@@ -60,35 +60,22 @@ export interface GetSubmissionsOptions {
 export async function getFormStats(options: GetStatsOptions): Promise<FormOverviewStats & { form: Form }> {
   const supabase = createClient()
 
-  console.log('[getFormStats] 开始获取统计, formId:', options.formId)
-
-  // 检查会话状态
-  const { data: sessionData } = await supabase.auth.getSession()
-  console.log('[getFormStats] 会话状态:', sessionData.session ? '有会话' : '无会话')
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    console.error('[getFormStats] 用户未登录')
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
-  console.log('[getFormStats] 当前用户:', user.id)
-
-  // 获取表单
+  // 获取表单（同时验证权限）
   const { data: form, error: formError } = await supabase
     .from('forms')
     .select('*')
     .eq('id', options.formId)
+    .eq('user_id', session.user.id) // 同时验证权限
     .single()
-
-  console.log('[getFormStats] 表单数据:', form, '错误:', formError)
 
   if (formError || !form) {
     throw new Error('表单不存在')
-  }
-
-  if (form.user_id !== user.id) {
-    throw new Error('无权访问此表单')
   }
 
   // 计算今日和本周的开始时间
@@ -97,6 +84,7 @@ export async function getFormStats(options: GetStatsOptions): Promise<FormOvervi
   const weekStart = new Date(now)
   weekStart.setDate(now.getDate() - 7)
   const weekStartIso = weekStart.toISOString()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
   // 获取本周和今日的回复数
   const { data: submissions, error: submissionsError } = await supabase
@@ -105,14 +93,13 @@ export async function getFormStats(options: GetStatsOptions): Promise<FormOvervi
     .eq('form_id', options.formId)
     .eq('status', 'completed')
 
-  // 调试日志
   if (submissionsError) {
     console.error('获取提交数据失败:', submissionsError)
   }
-  console.log('获取到的提交数据:', submissions)
 
   const responsesToday = submissions?.filter((s: any) => s.created_at >= todayStart).length || 0
   const responsesThisWeek = submissions?.filter((s: any) => s.created_at >= weekStartIso).length || 0
+  const responsesThisMonth = submissions?.filter((s: any) => s.created_at >= monthStart).length || 0
 
   // 计算平均完成时间（秒）
   const durations = submissions?.map((s: any) => s.duration_seconds).filter((d: any): d is number => d !== null) || []
@@ -133,10 +120,7 @@ export async function getFormStats(options: GetStatsOptions): Promise<FormOvervi
     avg_duration: avgDuration,
     responses_today: responsesToday,
     responses_this_week: responsesThisWeek,
-    responses_this_month: submissions?.filter((s: any) => {
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-      return s.created_at >= monthStart
-    }).length || 0,
+    responses_this_month: responsesThisMonth,
   }
 }
 
@@ -146,8 +130,9 @@ export async function getFormStats(options: GetStatsOptions): Promise<FormOvervi
 export async function getResponseTrend(options: GetTrendOptions): Promise<TrendDataPoint[]> {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
@@ -176,7 +161,18 @@ export async function getResponseTrend(options: GetTrendOptions): Promise<TrendD
 
   const startDateIso = startDate.toISOString()
 
-  // 获取提交数据
+  // 获取提交数据（同时验证表单所有权）
+  const { data: form } = await supabase
+    .from('forms')
+    .select('id')
+    .eq('id', options.formId)
+    .eq('user_id', session.user.id)
+    .single()
+
+  if (!form) {
+    throw new Error('表单不存在')
+  }
+
   const { data: submissions, error } = await supabase
     .from('form_submissions')
     .select('created_at')
@@ -220,9 +216,22 @@ export async function getResponseTrend(options: GetTrendOptions): Promise<TrendD
 export async function getQuestionStats(options: GetQuestionStatsOptions): Promise<QuestionStats[]> {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
+  }
+
+  // 获取表单的所有题目（同时验证权限）
+  const { data: form } = await supabase
+    .from('forms')
+    .select('id')
+    .eq('id', options.formId)
+    .eq('user_id', session.user.id)
+    .single()
+
+  if (!form) {
+    throw new Error('表单不存在')
   }
 
   // 获取表单的所有题目
@@ -401,9 +410,22 @@ export async function getSubmissions(
 ): Promise<PaginatedResponse<FormSubmission>> {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
+  }
+
+  // 验证表单权限
+  const { data: form } = await supabase
+    .from('forms')
+    .select('id')
+    .eq('id', options.formId)
+    .eq('user_id', session.user.id)
+    .single()
+
+  if (!form) {
+    throw new Error('表单不存在')
   }
 
   const {
@@ -430,12 +452,6 @@ export async function getSubmissions(
   query = query.range(from, to)
 
   const { data, error, count } = await query
-
-  // 调试日志
-  console.log('getSubmissions - formId:', formId, 'user:', user.id)
-  console.log('getSubmissions - error:', error)
-  console.log('getSubmissions - data:', data)
-  console.log('getSubmissions - count:', count)
 
   if (error) {
     throw new Error(`获取提交数据失败: ${error.message}`)
@@ -534,8 +550,9 @@ export interface GlobalAnalyticsStats {
 export async function getGlobalAnalytics(): Promise<GlobalAnalyticsStats> {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // 使用 getSession() 更快
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
     throw new Error('用户未登录')
   }
 
@@ -551,7 +568,7 @@ export async function getGlobalAnalytics(): Promise<GlobalAnalyticsStats> {
   const { data: forms, error: formsError } = await supabase
     .from('forms')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', session.user.id)
     .order('response_count', { ascending: false })
 
   if (formsError) {

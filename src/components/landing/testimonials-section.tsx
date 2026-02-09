@@ -9,7 +9,7 @@ import { Quote } from 'lucide-react'
 
 const testimonials = [
   {
-    quote: '超级好用！5分钟就搞定了一个专业问卷，界面设计很漂亮，用户体验一流！',
+    quote: '超级好用！1分钟就搞定了一个专业问卷，界面设计很漂亮，用户体验一流！',
     author: '张三',
     role: '产品经理',
   },

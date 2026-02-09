@@ -113,12 +113,24 @@ export default function LoginPage() {
       await new Promise(resolve => setTimeout(resolve, 100))
 
       // 验证重定向路径是否安全（防止开放重定向漏洞）
+      // 使用白名单方式，只允许特定的安全路径
+      const validRedirectPaths = [
+        '/dashboard',
+        '/dashboard/',
+        '/forms',
+        '/forms/',
+        '/settings',
+        '/settings/',
+      ]
+
       const isValidRedirect = (path: string | null): boolean => {
         if (!path) return false
         try {
           const decoded = decodeURIComponent(path)
-          // 必须是相对路径，且不能以 // 开头（防止协议相对 URL），不能包含 :（防止其他协议）
-          return decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.includes(':')
+          // 检查是否在白名单中（以允许的路径开头）
+          return validRedirectPaths.some(allowed =>
+            decoded === allowed || decoded.startsWith(allowed)
+          )
         } catch {
           return false
         }

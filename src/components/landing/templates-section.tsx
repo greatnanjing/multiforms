@@ -4,19 +4,17 @@
    首页精选模板区域，支持：
    - 未登录用户点击跳转到登录页
    - 已登录用户点击创建对应模板的表单并跳转到编辑页
+   - 从数据库获取管理员创建的模板
 ============================================ */
 
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
-import { ThumbsUp, MessageSquare, Star, ClipboardList, HelpCircle, Calendar, Users, Tag, Loader2, AlertCircle } from 'lucide-react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
+import { ThumbsUp, MessageSquare, Star, ClipboardList, HelpCircle, Calendar, Users, Tag, Loader2, AlertCircle, FileText } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'next/navigation'
 import { createFormFromTemplate } from '@/lib/api/templates'
-import { getTemplatesForShowcase } from '@/lib/templates/definitions'
-
-// 从模板定义获取展示数据（使用 useMemo 避免重复计算）
-const getTemplateList = () => getTemplatesForShowcase()
+import { getDatabaseTemplates, type TemplateShowcase } from '@/lib/templates'
 
 // 图标映射
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -28,6 +26,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Calendar,
   Users,
   Tag,
+  FileText,
 }
 
 export function TemplatesSection() {
@@ -35,9 +34,24 @@ export function TemplatesSection() {
   const router = useRouter()
   const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [templates, setTemplates] = useState<TemplateShowcase[]>([])
 
-  // 使用 useMemo 缓存模板列表
-  const templates = useMemo(() => getTemplateList(), [])
+  // 从数据库获取模板
+  useEffect(() => {
+    // 防止服务器端渲染时执行
+    if (typeof window === 'undefined') return
+
+    async function loadTemplates() {
+      try {
+        const dbTemplates = await getDatabaseTemplates()
+        // 只显示前 8 个模板作为精选
+        setTemplates(dbTemplates.slice(0, 8))
+      } catch (err) {
+        console.error('Failed to load templates:', err)
+      }
+    }
+    loadTemplates()
+  }, [])
 
   // 使用 useCallback 缓存处理函数
   const handleTemplateClick = useCallback(async (
@@ -134,40 +148,46 @@ export function TemplatesSection() {
         )}
 
         {/* Templates Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {templates.map((template) => {
-            const IconComponent = iconMap[template.iconName]
-            const isCurrentLoading = creatingTemplateId === template.id
+        {templates.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {templates.map((template) => {
+              const IconComponent = iconMap[template.iconName]
+              const isCurrentLoading = creatingTemplateId === template.id
 
-            return (
-              <button
-                key={template.id}
-                onClick={(e) => handleTemplateClick(e, template.id)}
-                disabled={isLoading}
-                aria-disabled={isLoading || undefined}
-                aria-busy={isCurrentLoading || undefined}
-                className={`glass-card rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:border-[#6366F1]/30 hover:shadow-xl group relative text-left w-full ${
-                  isCurrentLoading ? 'opacity-50 pointer-events-none' : ''
-                } ${isLoading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-              >
-                {isCurrentLoading && (
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10">
-                    <Loader2 className="w-6 h-6 text-white animate-spin" />
-                  </div>
-                )}
-                <div className="h-36 bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)] flex items-center justify-center">
-                  {IconComponent && (
-                    <IconComponent className="w-12 h-12 text-[var(--text-muted)] group-hover:text-[#A78BFA] transition-colors" />
+              return (
+                <button
+                  key={template.id}
+                  onClick={(e) => handleTemplateClick(e, template.id)}
+                  disabled={isLoading}
+                  aria-disabled={isLoading || undefined}
+                  aria-busy={isCurrentLoading || undefined}
+                  className={`glass-card rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:border-[#6366F1]/30 hover:shadow-xl group relative text-left w-full ${
+                    isCurrentLoading ? 'opacity-50 pointer-events-none' : ''
+                  } ${isLoading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  {isCurrentLoading && (
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10">
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    </div>
                   )}
-                </div>
-                <div className="p-5">
-                  <h4 className="font-semibold mb-1">{template.name}</h4>
-                  <p className="text-sm text-[var(--text-muted)]">{template.type}</p>
-                </div>
-              </button>
-            )
-          })}
-        </div>
+                  <div className="h-36 bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)] flex items-center justify-center">
+                    {IconComponent && (
+                      <IconComponent className="w-12 h-12 text-[var(--text-muted)] group-hover:text-[#A78BFA] transition-colors" />
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <h4 className="font-semibold mb-1">{template.name}</h4>
+                    <p className="text-sm text-[var(--text-muted)]">{template.type}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-center text-[var(--text-muted)]">
+            暂无可用模板，请联系管理员添加
+          </div>
+        )}
       </div>
     </section>
   )

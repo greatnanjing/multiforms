@@ -1,5 +1,5 @@
 /* ============================================
-   MultiForms Navbar Component
+   表单随心填 Navbar Component
 
    顶部导航栏组件，支持：
    - Logo（渐变色文字）
@@ -12,6 +12,7 @@
    Usage:
    <Navbar />
    <Navbar variant="dashboard" />
+   <Navbar variant="minimal" />
 ============================================ */
 
 'use client'
@@ -29,7 +30,7 @@ type ThemeMode = 'dark' | 'light'
 
 interface NavbarProps {
   /** 导航栏变体 */
-  variant?: 'public' | 'dashboard' | 'admin'
+  variant?: 'public' | 'dashboard' | 'admin' | 'minimal'
   /** 当前激活的路径 */
   currentPath?: string
   /** 用户信息 */
@@ -82,7 +83,6 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
         { label: '首页', href: '/', active: currentPath === '/' },
         { label: '模板库', href: '/templates', active: currentPath.startsWith('/templates') },
         { label: '功能', href: '#features', active: false },
-        { label: '价格', href: '#pricing', active: false },
       ]
     : variant === 'dashboard'
     ? [
@@ -90,6 +90,8 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
         { label: '我的表单', href: '/forms', active: currentPath.startsWith('/forms') && !currentPath.includes('/analytics') },
         { label: '模板库', href: '/templates', active: currentPath.startsWith('/templates') },
       ]
+    : variant === 'minimal'
+    ? [{ label: '首页', href: '/', active: currentPath === '/' }] // 简洁模式 - 只显示首页链接
     : [
         { label: '仪表盘', href: '/admin', active: currentPath === '/admin' },
         { label: '用户管理', href: '/admin/users', active: currentPath.startsWith('/admin/users') },
@@ -161,7 +163,7 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
                 <LayoutDashboard className="w-5 h-5" />
               </div>
               <span className="bg-gradient-to-r from-[var(--primary-start)] via-[var(--primary-end)] to-[var(--accent-pink)] bg-clip-text text-transparent">
-                MultiForms
+                表单随心填
               </span>
             </Link>
 
@@ -290,7 +292,7 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
                 <div className="hidden sm:flex items-center gap-2">
                   <Link
                     href="/login"
-                    className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-white border border-white/10 rounded-lg hover:border-[var(--primary-start)] transition-all"
+                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] rounded-lg hover:shadow-lg hover:shadow-[var(--primary-start)]/30 transition-all"
                   >
                     登录
                   </Link>
@@ -403,7 +405,7 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
                   <Link
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full px-4 py-3 text-center rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all"
+                    className="block w-full px-4 py-3 text-center rounded-lg bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white font-medium"
                   >
                     登录
                   </Link>

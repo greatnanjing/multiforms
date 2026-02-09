@@ -27,7 +27,8 @@ import {
   Filter,
   Loader2,
   FileText,
-  TrendingUp
+  TrendingUp,
+  Archive
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -67,12 +68,14 @@ function FormCard({
   form,
   onView,
   onStats,
-  onDelete
+  onDelete,
+  onCycleStatus
 }: {
   form: Form
   onView: (id: string) => void
   onStats: (id: string) => void
   onDelete: (id: string) => void
+  onCycleStatus: (id: string) => void
 }) {
   const statusColors: Record<string, string> = {
     draft: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
@@ -155,6 +158,13 @@ function FormCard({
         >
           <BarChart3 className="w-4 h-4" />
           数据
+        </button>
+        <button
+          onClick={() => onCycleStatus(form.id)}
+          className="p-2 rounded-lg hover:bg-amber-500/10 text-[var(--text-secondary)] hover:text-amber-400 transition-colors"
+          title="切换状态"
+        >
+          <Archive className="w-4 h-4" />
         </button>
         <button
           onClick={() => onDelete(form.id)}
@@ -244,6 +254,42 @@ export default function AdminFormsPage() {
     }
   }
 
+  // 循环切换表单状态：draft → published → archived → draft
+  const handleCycleStatus = async (formId: string) => {
+    const form = forms.find(f => f.id === formId)
+    if (!form) return
+
+    const statusOrder: Record<string, string> = {
+      draft: 'published',
+      published: 'archived',
+      archived: 'draft'
+    }
+    const newStatus = statusOrder[form.status] || 'published'
+    const oldStatus = form.status
+
+    // 乐观更新：立即更新 UI
+    setForms(forms.map(f =>
+      f.id === formId ? { ...f, status: newStatus } : f
+    ))
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('forms')
+        .update({ status: newStatus })
+        .eq('id', formId)
+
+      if (error) throw error
+    } catch (error) {
+      // 失败时回滚状态
+      console.error('Failed to cycle status:', error)
+      setForms(forms.map(f =>
+        f.id === formId ? { ...f, status: oldStatus } : f
+      ))
+      alert('操作失败，请稍后重试')
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* 页面描述 */}
@@ -276,10 +322,10 @@ export default function AdminFormsPage() {
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-purple-500 transition-colors"
           >
-            <option value="all">所有状态</option>
-            <option value="draft">草稿</option>
-            <option value="published">已发布</option>
-            <option value="archived">已归档</option>
+            <option value="all" className="bg-[var(--bg-secondary)] text-white">所有状态</option>
+            <option value="draft" className="bg-[var(--bg-secondary)] text-white">草稿</option>
+            <option value="published" className="bg-[var(--bg-secondary)] text-white">已发布</option>
+            <option value="archived" className="bg-[var(--bg-secondary)] text-white">已归档</option>
           </select>
 
           <select
@@ -287,24 +333,32 @@ export default function AdminFormsPage() {
             onChange={(e) => setFilters({ ...filters, type: e.target.value })}
             className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-purple-500 transition-colors"
           >
-            <option value="all">所有类型</option>
-            <option value="vote">投票</option>
-            <option value="survey">问卷</option>
-            <option value="rating">评分</option>
-            <option value="feedback">反馈</option>
-            <option value="collection">收集</option>
+            <option value="all" className="bg-[var(--bg-secondary)] text-white">所有类型</option>
+            <option value="vote" className="bg-[var(--bg-secondary)] text-white">投票</option>
+            <option value="survey" className="bg-[var(--bg-secondary)] text-white">问卷</option>
+            <option value="rating" className="bg-[var(--bg-secondary)] text-white">评分</option>
+            <option value="feedback" className="bg-[var(--bg-secondary)] text-white">反馈</option>
+            <option value="collection" className="bg-[var(--bg-secondary)] text-white">收集</option>
           </select>
         </div>
       </div>
 
       {/* 统计信息 */}
-      <div className="flex items-center gap-6 text-sm">
+      <div className="flex flex-wrap items-center gap-4 text-sm">
         <span className="text-[var(--text-secondary)]">
           共 <span className="text-white font-medium">{filteredForms.length}</span> 个表单
         </span>
         <span className="text-[var(--text-muted)]">|</span>
         <span className="text-[var(--text-secondary)]">
+          草稿 <span className="text-gray-400 font-medium">{forms.filter(f => f.status === 'draft').length}</span>
+        </span>
+        <span className="text-[var(--text-muted)]">|</span>
+        <span className="text-[var(--text-secondary)]">
           已发布 <span className="text-green-400 font-medium">{forms.filter(f => f.status === 'published').length}</span>
+        </span>
+        <span className="text-[var(--text-muted)]">|</span>
+        <span className="text-[var(--text-secondary)]">
+          已归档 <span className="text-yellow-400 font-medium">{forms.filter(f => f.status === 'archived').length}</span>
         </span>
         <span className="text-[var(--text-muted)]">|</span>
         <span className="text-[var(--text-secondary)]">
@@ -323,7 +377,7 @@ export default function AdminFormsPage() {
           <p className="text-[var(--text-secondary)]">没有找到匹配的表单</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {filteredForms.map(form => (
             <FormCard
               key={form.id}
@@ -331,6 +385,7 @@ export default function AdminFormsPage() {
               onView={(id) => router.push(`/f/${form.short_id}`)}
               onStats={(id) => router.push(`/admin/forms/${id}/stats`)}
               onDelete={handleDelete}
+              onCycleStatus={handleCycleStatus}
             />
           ))}
         </div>

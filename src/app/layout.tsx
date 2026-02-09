@@ -1,5 +1,5 @@
 /* ============================================
-   MultiForms Root Layout
+   表单随心填 Root Layout
 
    根布局文件：
    - Google Fonts 导入
@@ -22,28 +22,28 @@ import { ConfirmProvider } from '@/components/shared/confirm-dialog'
 // 元数据配置
 export const metadata: Metadata = {
   title: {
-    default: 'MultiForms - 5分钟创建专业表单',
-    template: '%s | MultiForms',
+    default: '表单随心填 - 1分钟创建专业表单',
+    template: '%s | 表单随心填',
   },
   description:
-    'MultiForms 是一款在线表单构建工具，支持投票、评分、问卷、信息收集等多种场景。拖拽式操作，5分钟即可创建专业表单。',
+    '表单随心填 是一款在线表单构建工具，支持投票、评分、问卷、信息收集等多种场景。拖拽式操作，1分钟即可创建专业表单。',
   keywords: ['表单', '问卷', '投票', '评分', '信息收集', '在线表单', '表单 builder'],
-  authors: [{ name: 'MultiForms' }],
-  creator: 'MultiForms',
-  publisher: 'MultiForms',
+  authors: [{ name: '表单随心填' }],
+  creator: '表单随心填',
+  publisher: '表单随心填',
   robots: 'index, follow',
   openGraph: {
     type: 'website',
     locale: 'zh_CN',
     url: 'https://multiforms.app',
-    title: 'MultiForms - 5分钟创建专业表单',
-    description: '投票、评分、问卷、信息收集，5分钟创建专业表单',
-    siteName: 'MultiForms',
+    title: '表单随心填 - 1分钟创建专业表单',
+    description: '投票、评分、问卷、信息收集，1分钟创建专业表单',
+    siteName: '表单随心填',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MultiForms - 5分钟创建专业表单',
-    description: '投票、评分、问卷、信息收集，5分钟创建专业表单',
+    title: '表单随心填 - 1分钟创建专业表单',
+    description: '投票、评分、问卷、信息收集，1分钟创建专业表单',
   },
   icons: {
     icon: '/favicon.ico',

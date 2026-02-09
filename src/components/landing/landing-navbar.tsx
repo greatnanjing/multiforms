@@ -60,7 +60,6 @@ export function LandingNavbar() {
   const navLinks = [
     { href: '#features', label: '功能' },
     { href: '#templates', label: '模板' },
-    { href: '#pricing', label: '价格' },
   ]
 
   return (
@@ -78,7 +77,7 @@ export function LandingNavbar() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center">
               <FileText className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold font-heading">MultiForms</span>
+            <span className="text-xl font-bold font-heading">表单随心填</span>
           </Link>
 
           {/* Desktop Nav */}

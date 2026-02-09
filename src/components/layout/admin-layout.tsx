@@ -17,7 +17,7 @@ import { Sidebar } from './sidebar'
 import { TabBarSpacer } from './tabbar'
 import { ThemeSwitcher } from './theme-switcher'
 import { cn } from '@/lib/utils'
-import { ShieldAlert, LogOut, Bell } from 'lucide-react'
+import { ShieldAlert, LogOut } from 'lucide-react'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -77,11 +77,6 @@ export function AdminLayout({
             <div className="flex items-center gap-3">
               {/* 主题切换器 */}
               <ThemeSwitcher variant="compact" />
-
-              <button className="relative p-2 rounded-lg hover:bg-white/5 transition-colors text-[var(--text-secondary)] hover:text-white">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              </button>
 
               <button
                 onClick={handleLogout}

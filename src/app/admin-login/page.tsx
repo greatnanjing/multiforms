@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, Info, X } from 'lucide-react'
+import { Shield, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, Info, X, XCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { ThemeSwitcher } from '@/components/layout/theme-switcher'
@@ -82,6 +82,18 @@ export default function AdminLoginPage() {
       }
     }
   }, [permissionDenied, countdown, router])
+
+  // 取消倒计时，恢复表单编辑
+  const handleCancelCountdown = () => {
+    if (countdownRef.current) {
+      clearTimeout(countdownRef.current)
+      countdownRef.current = null
+    }
+    setPermissionDenied(false)
+    setCountdown(30)
+    setAuthError(null)
+    hasRedirectedRef.current = false
+  }
 
   // 清理状态
   useEffect(() => {
@@ -388,8 +400,16 @@ export default function AdminLoginPage() {
 
           {/* 权限不足提示 */}
           {permissionDenied && (
-            <div className="mb-5 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30">
-              <div className="flex items-start gap-3">
+            <div className="mb-5 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 relative">
+              {/* 取消按钮 */}
+              <button
+                onClick={handleCancelCountdown}
+                className="absolute top-3 right-3 text-orange-400/50 hover:text-orange-400 transition-colors"
+                title="取消并重新登录"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+              <div className="flex items-start gap-3 pr-6">
                 <AlertCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm text-orange-400 font-medium mb-2">权限不足</p>
@@ -402,15 +422,23 @@ export default function AdminLoginPage() {
                         : '正在跳转...'}
                     </span>
                   </div>
-                  <button
-                    onClick={() => {
-                      hasRedirectedRef.current = true
-                      router.push('/dashboard')
-                    }}
-                    className="mt-3 w-full py-2.5 px-4 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 text-orange-400 text-sm font-medium transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/10"
-                  >
-                    前往用户中心 →
-                  </button>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={handleCancelCountdown}
+                      className="flex-1 py-2.5 px-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-orange-300/80 hover:text-orange-300 text-sm font-medium transition-all duration-200"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={() => {
+                        hasRedirectedRef.current = true
+                        router.push('/dashboard')
+                      }}
+                      className="flex-1 py-2.5 px-4 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 text-orange-400 text-sm font-medium transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/10"
+                    >
+                      前往用户中心 →
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

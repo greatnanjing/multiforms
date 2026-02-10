@@ -12,10 +12,15 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, LogOut, LayoutDashboard, ListTodo } from 'lucide-react'
+import { Menu, X, LogOut, LayoutDashboard, ListTodo, LayoutGrid } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ThemeSwitcher } from '@/components/layout/theme-switcher'
 import { cn } from '@/lib/utils'
+
+// 移动端导航链接
+const navLinks = [
+  { href: '/templates', label: '模板库' },
+]
 
 export function LandingNavbar() {
   const [isScrolled, setIsScrolled] = useState(false)

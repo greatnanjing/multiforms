@@ -28,7 +28,12 @@ import {
   Loader2,
   ListTodo,
   TrendingUp,
-  Archive
+  Archive,
+  Vote,
+  ClipboardList,
+  Star,
+  MessageSquare,
+  FileEdit
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -89,21 +94,24 @@ function FormCard({
     archived: '已归档'
   }
 
-  const typeIcons: Record<string, string> = {
-    vote: '🗳️',
-    survey: '📋',
-    rating: '⭐',
-    feedback: '💬',
-    collection: '📝'
+  const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+    vote: Vote,
+    survey: ClipboardList,
+    rating: Star,
+    feedback: MessageSquare,
+    collection: FileEdit,
+    default: ListTodo
   }
+
+  const TypeIcon = typeIcons[form.type] || typeIcons.default
 
   return (
     <div className="p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all hover:scale-[1.01]">
       {/* 头部 */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-2xl">
-            {typeIcons[form.type] || '📄'}
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+            <TypeIcon className="w-6 h-6 text-purple-400" />
           </div>
           <div>
             <h3 className="text-white font-medium line-clamp-1">{form.title}</h3>

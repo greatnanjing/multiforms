@@ -61,6 +61,27 @@ export async function getDatabaseTemplates(): Promise<TemplateShowcase[]> {
     }
 
     // 将数据库模板转换为 TemplateShowcase 格式
+    // 根据类别映射到对应的 Lucide 图标名称
+    const categoryIconMap: Record<string, string> = {
+      '投票': 'Vote',
+      'vote': 'Vote',
+      '评分': 'Star',
+      'rating': 'Star',
+      '问卷': 'ClipboardList',
+      'survey': 'ClipboardList',
+      '调研': 'BarChart3',
+      '报名': 'Users',
+      '注册': 'UserPlus',
+      '订单': 'ShoppingCart',
+      '意见': 'MessageSquare',
+      'feedback': 'MessageSquare',
+      '反馈': 'MessageSquare',
+      'collection': 'FileEdit',
+      '收集': 'FileEdit',
+      '其他': 'ListTodo',
+      'other': 'ListTodo',
+    }
+
     return data.map((t: any) => ({
       id: t.id,
       name: t.title,
@@ -72,7 +93,7 @@ export async function getDatabaseTemplates(): Promise<TemplateShowcase[]> {
       is_featured: t.is_featured,
       is_active: t.is_active,
       sort_order: t.sort_order,
-      iconName: 'ListTodo',
+      iconName: categoryIconMap[t.category] || categoryIconMap[t.category?.toLowerCase()] || 'ListTodo',
       questionsCount: 0, // TODO: 可以从 demo_form_id 关联获取
       useCount: t.use_count || 0,
     }))

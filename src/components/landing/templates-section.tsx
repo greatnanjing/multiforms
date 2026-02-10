@@ -10,7 +10,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { ThumbsUp, MessageSquare, Star, ClipboardList, HelpCircle, Calendar, Users, Tag, Loader2, AlertCircle, FileText } from 'lucide-react'
+import { ThumbsUp, MessageSquare, Star, ClipboardList, HelpCircle, Calendar, Users, Tag, Loader2, AlertCircle, ListTodo } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'next/navigation'
 import { createFormFromTemplate } from '@/lib/api/templates'
@@ -26,7 +26,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Calendar,
   Users,
   Tag,
-  FileText,
+  ListTodo,
 }
 
 export function TemplatesSection() {

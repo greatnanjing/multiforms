@@ -15,7 +15,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
-import { FileText, TrendingUp, Loader2, AlertCircle, ThumbsUp, MessageSquare, ClipboardList, HelpCircle, Calendar, Users, Tag } from 'lucide-react'
+import { ListTodo, TrendingUp, Loader2, AlertCircle, ThumbsUp, MessageSquare, ClipboardList, HelpCircle, Calendar, Users, Tag } from 'lucide-react'
 import { createFormFromTemplate } from '@/lib/api/templates'
 import { getDatabaseTemplates, subscribeToDatabaseTemplates, type TemplateShowcase } from '@/lib/templates'
 
@@ -240,7 +240,7 @@ export default function TemplatesPage() {
         <div className="glass-card p-6 border border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 to-violet-500/5">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-              <FileText className="w-6 h-6 text-indigo-400" />
+              <ListTodo className="w-6 h-6 text-indigo-400" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white mb-1">需要自定义表单？</h3>

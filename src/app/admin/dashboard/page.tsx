@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Users,
-  FileText,
+  ListTodo,
   BarChart3,
   Activity,
   TrendingUp,
@@ -152,7 +152,7 @@ export default function AdminDashboardPage() {
           title="表单数量"
           value={stats.totalForms}
           change={`+${stats.formsChange}`}
-          icon={FileText}
+          icon={ListTodo}
           color="bg-gradient-to-br from-purple-500 to-pink-500"
           loading={loading}
         />

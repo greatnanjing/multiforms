@@ -21,7 +21,7 @@ import {
   Shield,
   Clock,
   Loader2,
-  FileText,
+  ListTodo,
   User,
   MapPin
 } from 'lucide-react'
@@ -218,7 +218,7 @@ export default function AdminLogsPage() {
         </div>
       ) : filteredLogs.length === 0 ? (
         <div className="text-center py-12 rounded-2xl bg-white/5 border border-white/10">
-          <FileText className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
+          <ListTodo className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
           <p className="text-[var(--text-secondary)]">暂无日志记录</p>
         </div>
       ) : (

@@ -12,7 +12,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FileText, Menu, X, LogOut, LayoutDashboard } from 'lucide-react'
+import { Menu, X, LogOut, LayoutDashboard, ListTodo } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ThemeSwitcher } from '@/components/layout/theme-switcher'
 import { cn } from '@/lib/utils'
@@ -57,15 +57,10 @@ export function LandingNavbar() {
     setIsMobileMenuOpen(false)
   }, [pathname])
 
-  const navLinks = [
-    { href: '#features', label: '功能' },
-    { href: '#templates', label: '模板' },
-  ]
-
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? 'bg-[var(--bg-primary)]/80 backdrop-blur-xl border-b border-white/5 py-3'
             : 'bg-transparent py-4'
@@ -73,32 +68,22 @@ export function LandingNavbar() {
       >
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center">
-              <FileText className="w-6 h-6 text-white" />
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative w-11 h-11">
+              <div className="w-full h-full bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-[#6366F1]/20 transition-all duration-200">
+                <ListTodo className="w-6 h-6 text-white" strokeWidth={2} />
+              </div>
             </div>
-            <span className="text-xl font-bold font-heading">表单随心填</span>
+            <span className="text-lg font-semibold text-white/90">表单随心填</span>
           </Link>
 
-          {/* Desktop Nav */}
-          <ul className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-[#6366F1] after:to-[#8B5CF6] hover:after:w-full after:transition-all"
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-3">
-            {/* Theme Switcher with Hover Preview */}
+          {/* Desktop Nav - 主题切换器居中 */}
+          <div className="hidden md:flex flex-1 items-center justify-center">
             <ThemeSwitcher variant="compact" showModeToggle={true} />
+          </div>
 
+          {/* Desktop Actions - 登录注册右对齐 */}
+          <div className="hidden md:flex items-center gap-3">
             {/* Auth Buttons / User Menu */}
             {isAuthenticated && user ? (
               <div className="relative">
@@ -152,7 +137,7 @@ export function LandingNavbar() {
               <>
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-sm font-medium text-[var(--text-primary)] border border-white/10 rounded-xl hover:bg-white/5 hover:border-[#6366F1] hover:text-[#A78BFA] transition-all"
+                  className="mr-6 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-xl shadow-lg shadow-[#6366F1]/30 hover:shadow-xl hover:shadow-[#6366F1]/40 hover:-translate-y-0.5 transition-all"
                 >
                   登录
                 </Link>

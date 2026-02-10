@@ -12,7 +12,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, FileText, Users, Target, TrendingUp, ArrowRight } from 'lucide-react'
+import { Plus, ListTodo, Users, Target, TrendingUp, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { getForms } from '@/lib/api/forms'
 import { FormCard, FormCardSkeleton } from '@/components/forms/form-card'
@@ -86,7 +86,7 @@ function EmptyState({ onCreateForm }: EmptyStateProps) {
   return (
     <div className="text-center py-16">
       <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/3 flex items-center justify-center">
-        <FileText className="w-10 h-10 text-[var(--text-muted)]" />
+        <ListTodo className="w-10 h-10 text-[var(--text-muted)]" />
       </div>
       <h3 className="text-xl font-semibold text-white mb-2">还没有表单</h3>
       <p className="text-[var(--text-secondary)] mb-6 max-w-sm mx-auto">
@@ -283,7 +283,7 @@ export default function DashboardContent() {
         <StatCard
           title="表单总数"
           value={stats.totalForms}
-          icon={<FileText className="w-6 h-6 text-indigo-400" />}
+          icon={<ListTodo className="w-6 h-6 text-indigo-400" />}
           iconColor="bg-indigo-500/15"
           trend={{ value: '+12%', positive: true }}
         />

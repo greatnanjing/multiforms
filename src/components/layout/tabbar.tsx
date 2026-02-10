@@ -18,7 +18,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import {
   Home,
-  FileText,
+  ListTodo,
   Layers,
   BarChart3,
   Settings,
@@ -51,14 +51,14 @@ interface TabBarProps {
 
 const defaultItems: TabBarItem[] = [
   { id: 'home', label: '首页', href: '/', icon: Home },
-  { id: 'forms', label: '表单', href: '/forms', icon: FileText },
+  { id: 'forms', label: '表单', href: '/forms', icon: ListTodo },
   { id: 'templates', label: '模板', href: '/templates', icon: Layers },
   { id: 'profile', label: '我的', href: '/profile', icon: User },
 ]
 
 const creatorItems: TabBarItem[] = [
   { id: 'dashboard', label: '仪表盘', href: '/dashboard', icon: BarChart3 },
-  { id: 'forms', label: '我的表单', href: '/forms', icon: FileText },
+  { id: 'forms', label: '我的表单', href: '/forms', icon: ListTodo },
   { id: 'templates', label: '模板库', href: '/templates', icon: Layers },
   { id: 'settings', label: '设置', href: '/settings', icon: Settings },
 ]

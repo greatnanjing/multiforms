@@ -25,7 +25,7 @@
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import {
-  FileText,
+  ListTodo,
   BarChart3,
   Share2,
   Edit,
@@ -286,7 +286,7 @@ export function FormCard({
             {form.response_count} {responseText}
           </span>
           <span className="flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5" />
+            <ListTodo className="w-3.5 h-3.5" />
             {timeAgo}
           </span>
         </div>

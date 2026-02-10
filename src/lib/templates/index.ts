@@ -72,7 +72,7 @@ export async function getDatabaseTemplates(): Promise<TemplateShowcase[]> {
       is_featured: t.is_featured,
       is_active: t.is_active,
       sort_order: t.sort_order,
-      iconName: 'FileText',
+      iconName: 'ListTodo',
       questionsCount: 0, // TODO: 可以从 demo_form_id 关联获取
       useCount: t.use_count || 0,
     }))

@@ -23,7 +23,7 @@ import {
   Star,
   TrendingUp,
   FolderOpen,
-  FileText,
+  ListTodo,
   Plus,
   Trash2,
   Eye,
@@ -869,7 +869,7 @@ function TemplateDialog({
 
               {formData.questions.length === 0 ? (
                 <div className="text-center py-12 rounded-xl bg-white/5 border border-dashed border-white/20">
-                  <FileText className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+                  <ListTodo className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
                   <p className="text-sm text-[var(--text-secondary)]">暂无题目</p>
                   <p className="text-xs text-[var(--text-muted)] mt-1">点击上方按钮添加题目</p>
                 </div>
@@ -1301,7 +1301,7 @@ export default function AdminTemplatesPage() {
         <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-purple-500/20">
-              <FileText className="w-5 h-5 text-purple-400" />
+              <ListTodo className="w-5 h-5 text-purple-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-white">{stats.total}</p>

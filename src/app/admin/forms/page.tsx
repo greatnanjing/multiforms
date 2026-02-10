@@ -26,7 +26,7 @@ import {
   User,
   Filter,
   Loader2,
-  FileText,
+  ListTodo,
   TrendingUp,
   Archive
 } from 'lucide-react'
@@ -373,7 +373,7 @@ export default function AdminFormsPage() {
         </div>
       ) : filteredForms.length === 0 ? (
         <div className="text-center py-12">
-          <FileText className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
+          <ListTodo className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
           <p className="text-[var(--text-secondary)]">没有找到匹配的表单</p>
         </div>
       ) : (

@@ -60,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body
-        className="antialiased"
+        className="antialiased overflow-hidden"
         suppressHydrationWarning
       >
         <ThemeProvider defaultTheme="nebula" defaultMode="dark">

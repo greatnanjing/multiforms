@@ -17,7 +17,7 @@ import {
   BarChart3,
   TrendingUp,
   Users,
-  FileText,
+  ListTodo,
   Eye,
   RefreshCw,
   ArrowRight,
@@ -239,7 +239,7 @@ export default function AnalyticsPage() {
       {/* Stats Overview - First Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatsCard
-          icon={<FileText className="w-5 h-5" />}
+          icon={<ListTodo className="w-5 h-5" />}
           label="表单总数"
           value={stats?.total_forms || 0}
           color="indigo"

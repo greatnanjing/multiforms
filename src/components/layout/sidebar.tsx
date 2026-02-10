@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
   LayoutDashboard,
-  FileText,
+  ListTodo,
   Layers,
   BarChart3,
   Settings,
@@ -60,7 +60,7 @@ interface SidebarProps {
 
 const dashboardNavItems: SidebarNavItem[] = [
   { id: 'dashboard', label: '仪表盘', href: '/dashboard', icon: LayoutDashboard },
-  { id: 'forms', label: '我的表单', href: '/forms', icon: FileText },
+  { id: 'forms', label: '我的表单', href: '/forms', icon: ListTodo },
   { id: 'templates', label: '模板库', href: '/templates', icon: Layers },
   { id: 'analytics', label: '数据分析', href: '/analytics', icon: BarChart3 },
 ]
@@ -68,7 +68,7 @@ const dashboardNavItems: SidebarNavItem[] = [
 const adminNavItems: SidebarNavItem[] = [
   { id: 'admin-dashboard', label: '仪表盘', href: '/admin', icon: LayoutDashboard },
   { id: 'users', label: '用户管理', href: '/admin/users', icon: Users },
-  { id: 'forms', label: '表单管理', href: '/admin/forms', icon: FileText },
+  { id: 'forms', label: '表单管理', href: '/admin/forms', icon: ListTodo },
   { id: 'templates', label: '模板管理', href: '/admin/templates', icon: FolderOpen },
   { id: 'settings', label: '系统设置', href: '/admin/settings', icon: Settings },
 ]

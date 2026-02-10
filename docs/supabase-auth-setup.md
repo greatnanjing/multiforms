@@ -1,4 +1,8 @@
-# Supabase 本地开发配置指南
+# Supabase 认证配置指南
+
+本文档包含邮箱验证和 GitHub OAuth 登录的配置说明。
+
+---
 
 ## 问题：邮箱验证链接过期或无效
 
@@ -80,3 +84,79 @@ A: 在登录页面点击"重新发送验证邮件"，或者调用 `supabase.auth
 
 ### Q: 可以跳过邮箱验证吗？
 A: 在 Supabase 的 Auth Settings 中可以禁用邮箱验证，但生产环境不建议这样做。
+
+---
+
+## GitHub OAuth 配置
+
+### 启用 GitHub 提供商
+
+1. 登录 [Supabase Dashboard](https://app.supabase.io)
+2. 选择你的项目
+3. 进入 **Authentication** → **Providers**
+4. 找到 **GitHub** 提供商
+5. 点击启用，并记下 **Client ID** 和 **Redirect URL**
+
+### 在 GitHub 创建 OAuth App
+
+1. 登录 GitHub，进入 **Settings** → **Developer settings** → **OAuth Apps**
+2. 点击 **New OAuth App**
+3. 填写以下信息：
+   - **Application name**: MultiForms (或你喜欢的名称)
+   - **Homepage URL**: `http://localhost:3000` (开发环境)
+   - **Authorization callback URL**: 从 Supabase Dashboard 复制的 Redirect URL
+4. 创建后记下 **Client ID** 和生成 **Client Secret**
+
+### 配置 Supabase
+
+回到 Supabase Dashboard：
+
+1. 在 GitHub provider 设置中：
+   - 填入 **Client ID**
+   - 填入 **Client Secret**
+2. 保存设置
+
+### 环境变量
+
+确保 `.env.local` 中包含：
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
+```
+
+### 本地开发测试
+
+1. 启动开发服务器：`pnpm dev`
+2. 访问登录页面，点击 GitHub 登录按钮
+3. 应该跳转到 GitHub 授权页面
+4. 授权后自动跳转回 `/auth/callback`，然后到 `/dashboard`
+
+### 生产环境配置
+
+生产环境需要创建新的 GitHub OAuth App：
+
+1. 在 GitHub 创建新的 OAuth App
+2. **Homepage URL**: `https://yourdomain.com`
+3. **Authorization callback URL**: Supabase 生产环境的 Redirect URL
+4. 在 Supabase 生产项目中配置新的 Client ID 和 Secret
+
+### OAuth 流程详解
+
+详细的 GitHub OAuth 登录流程请参考 [docs/github-oauth-flow.md](github-oauth-flow.md)
+
+关键点：
+- GitHub Access Token 只在 Supabase 后端使用
+- 前端只收到 Supabase Session JWT（通过 HttpOnly Cookie）
+- Client Secret 只用于 Supabase ↔ GitHub 的服务器通信
+
+### 常见问题
+
+**Q: GitHub 登录后没有跳转回应用？**
+A: 检查 GitHub OAuth App 的 Authorization callback URL 是否与 Supabase 配置一致。
+
+**Q: 提示 "Application was not registered" 错误？**
+A: 确保 GitHub OAuth App 的 Homepage URL 和 Callback URL 配置正确。
+
+**Q: 如何获取用户的 GitHub 信息？**
+A: 登录成功后，用户信息存储在 `user.user_metadata` 中，包含 avatar_url、name 等字段。
+

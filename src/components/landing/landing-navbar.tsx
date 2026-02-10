@@ -83,7 +83,7 @@ export function LandingNavbar() {
           </Link>
 
           {/* Desktop Nav - 主题切换器居中 */}
-          <div className="hidden md:flex flex-1 items-center justify-center">
+          <div className="hidden md:flex flex-1 items-center justify-center" style={{ marginLeft: '-80px' }}>
             <ThemeSwitcher variant="compact" showModeToggle={true} />
           </div>
 

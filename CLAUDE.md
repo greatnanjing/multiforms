@@ -81,7 +81,7 @@ supabase db reset
 
 ## Current Implementation Status
 
-**Last Updated:** 2026-02-10 (New logo design, smart CTA navigation)
+**Last Updated:** 2026-02-10 (Login/register navbar centered navigation, theme toggle positioning)
 
 | Phase | Status | Notes |
 |-------|--------|-------|
@@ -576,3 +576,16 @@ These are expected when `profiles` table doesn't exist yet:
 For `AuthChangeEvent` type mismatches:
 - Use `string` or `any` type for the event parameter in auth listeners
 - Supabase types may not always align with actual values received
+
+### Login/Register Page Navbar
+
+The login and register pages use a special `minimal` variant of the Navbar component:
+- Navigation links ("首页") are centered in the viewport using `absolute left-1/2 -translate-x-1/2`
+- Theme toggle is positioned with `transform: translateX(-80px)` to avoid overlapping
+- Parent container has `relative` class to support absolute positioning of centered nav
+
+**Files:**
+- `src/components/layout/navbar.tsx` - Main navbar with variant support
+- `src/components/layout/main-layout.tsx` - Routes to `variant="minimal"` for auth pages
+- `src/app/(public)/login/page.tsx` - Login page
+- `src/app/(public)/register/page.tsx` - Register page

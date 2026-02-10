@@ -153,7 +153,7 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
         )}
       >
         <div className="max-w-[1280px] mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16 relative">
             {/* Logo */}
             <Link
               href={variant === 'public' ? '/' : variant === 'dashboard' ? '/dashboard' : '/admin'}
@@ -167,8 +167,11 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <ul className="hidden md:flex items-center gap-8">
+            {/* Desktop Navigation - minimal 变体时居中 */}
+            <ul className={cn(
+              'hidden md:flex items-center gap-8',
+              variant === 'minimal' && 'absolute left-1/2 -translate-x-1/2'
+            )}>
               {navLinks.map((link) => (
                 <li key={link.href}>
                   {link.href === '/templates' && variant === 'public' ? (
@@ -204,7 +207,7 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
             {/* Right Actions */}
             <div className="flex items-center gap-3">
               {/* Theme Toggle */}
-              <div className="hidden sm:flex items-center">
+              <div className="hidden md:flex items-center" style={{ transform: 'translateX(-80px)' }}>
                 <button
                   onClick={cycleTheme}
                   className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all"
@@ -289,7 +292,7 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
                   )}
                 </div>
               ) : (
-                <div className="hidden sm:flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-4">
                   <Link
                     href="/login"
                     className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] rounded-lg hover:shadow-lg hover:shadow-[var(--primary-start)]/30 transition-all"

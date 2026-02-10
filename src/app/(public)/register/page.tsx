@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, User, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, Loader2, CheckCircle2, Github } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
@@ -98,11 +98,6 @@ function validateConfirmPassword(password: string, confirmPassword: string): str
   return null
 }
 
-function validateTerms(accepted: boolean): string | null {
-  if (!accepted) return '请阅读并同意服务条款'
-  return null
-}
-
 // ============================================
 // Register Page Component
 // ============================================
@@ -120,14 +115,12 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [terms, setTerms] = useState(false)
 
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string
     email?: string
     password?: string
     confirmPassword?: string
-    terms?: string
   }>({})
 
   const passwordStrength = calculatePasswordStrength(password)
@@ -142,20 +135,17 @@ export default function RegisterPage() {
       email?: string
       password?: string
       confirmPassword?: string
-      terms?: string
     } = {}
 
     const nameError = validateName(name)
     const emailError = validateEmail(email)
     const passwordError = validatePassword(password)
     const confirmError = validateConfirmPassword(password, confirmPassword)
-    const termsError = validateTerms(terms)
 
     if (nameError) errors.name = nameError
     if (emailError) errors.email = emailError
     if (passwordError) errors.password = passwordError
     if (confirmError) errors.confirmPassword = confirmError
-    if (termsError) errors.terms = termsError
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
@@ -221,14 +211,39 @@ export default function RegisterPage() {
     }
   }
 
-  const handleSocialLogin = async (provider: 'google' | 'wechat') => {
-    setAuthError(`${provider === 'google' ? 'Google' : '微信'}登录功能暂未开放`)
+  const handleSocialLogin = async (provider: 'github') => {
+    setIsLoading(true)
+    setAuthError(null)
+
+    try {
+      const supabase = createClient()
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            skip_http_redirect: 'true'
+          }
+        }
+      })
+
+      if (error) {
+        setAuthError(`GitHub登录失败: ${error.message}`)
+      }
+      // OAuth 会自动重定向，不需要手动处理
+    } catch (error) {
+      console.error('[GitHub Login] Error:', error)
+      setAuthError('GitHub登录失败，请稍后重试')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // 注册成功状态
   if (registerSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg-primary)] relative overflow-hidden">
+      <div className="h-full flex items-center justify-center px-6 pt-16 bg-[var(--bg-primary)] relative overflow-hidden">
         {/* 背景渐变效果 */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -242,7 +257,7 @@ export default function RegisterPage() {
         />
 
         <div className="relative z-10 w-full max-w-[400px]">
-          <div className="glass-card p-12 text-center">
+          <div className="glass-card p-8 text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/10 flex items-center justify-center">
               <CheckCircle2 className="w-10 h-10 text-green-400" />
             </div>
@@ -259,7 +274,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg-primary)] relative overflow-hidden">
+    <div className="h-full flex items-center justify-center px-6 pt-16 bg-[var(--bg-primary)] relative overflow-hidden">
       {/* 背景渐变效果 */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -309,10 +324,10 @@ export default function RegisterPage() {
 
       {/* 注册卡片 */}
       <div className="relative z-10 w-full max-w-[420px]">
-        <div className="glass-card p-10 sm:p-12 shadow-2xl">
+        <div className="glass-card p-5 sm:p-6 shadow-2xl max-h-full overflow-y-auto">
           {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)] flex items-center justify-center mb-4 shadow-lg">
+          <div className="flex flex-col items-center mb-5">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)] flex items-center justify-center mb-3 shadow-lg">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -329,7 +344,7 @@ export default function RegisterPage() {
                 <line x1="9" y1="17" x2="13" y2="17" />
               </svg>
             </div>
-            <h1 className="text-2xl font-semibold text-white text-center mb-2">
+            <h1 className="text-xl font-semibold text-white text-center mb-2">
               创建账号
             </h1>
             <p className="text-sm text-[var(--text-secondary)] text-center">
@@ -345,9 +360,9 @@ export default function RegisterPage() {
           )}
 
           {/* 注册表单 */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             {/* 姓名输入 */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <label htmlFor="name" className="text-sm font-medium text-[var(--text-primary)]">
                 姓名
               </label>
@@ -364,7 +379,7 @@ export default function RegisterPage() {
                   autoComplete="name"
                   placeholder="请输入您的姓名"
                   className={cn(
-                    'w-full px-4 py-3.5 pl-12',
+                    'w-full px-4 py-2.5 pl-12',
                     'text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
                     'bg-[rgba(255,255,255,0.05)]',
                     'border border-[var(--input-border)] rounded-xl',
@@ -381,7 +396,7 @@ export default function RegisterPage() {
             </div>
 
             {/* 邮箱输入 */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-sm font-medium text-[var(--text-primary)]">
                 邮箱
               </label>
@@ -398,7 +413,7 @@ export default function RegisterPage() {
                   autoComplete="email"
                   placeholder="请输入邮箱"
                   className={cn(
-                    'w-full px-4 py-3.5 pl-12',
+                    'w-full px-4 py-2.5 pl-12',
                     'text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
                     'bg-[rgba(255,255,255,0.05)]',
                     'border border-[var(--input-border)] rounded-xl',
@@ -415,7 +430,7 @@ export default function RegisterPage() {
             </div>
 
             {/* 密码输入 */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <label htmlFor="password" className="text-sm font-medium text-[var(--text-primary)]">
                 密码
               </label>
@@ -432,7 +447,7 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                   placeholder="请输入密码（至少8位）"
                   className={cn(
-                    'w-full px-4 py-3.5 pl-12 pr-12',
+                    'w-full px-4 py-2.5 pl-12 pr-12',
                     'text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
                     'bg-[rgba(255,255,255,0.05)]',
                     'border border-[var(--input-border)] rounded-xl',
@@ -486,7 +501,7 @@ export default function RegisterPage() {
             </div>
 
             {/* 确认密码输入 */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <label htmlFor="confirmPassword" className="text-sm font-medium text-[var(--text-primary)]">
                 确认密码
               </label>
@@ -503,7 +518,7 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                   placeholder="请再次输入密码"
                   className={cn(
-                    'w-full px-4 py-3.5 pl-12 pr-12',
+                    'w-full px-4 py-2.5 pl-12 pr-12',
                     'text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
                     'bg-[rgba(255,255,255,0.05)]',
                     'border border-[var(--input-border)] rounded-xl',
@@ -531,45 +546,13 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* 服务条款勾选框 */}
-            <div className="flex items-start gap-3 mt-1">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={terms}
-                onChange={(e) => {
-                  setTerms(e.target.checked)
-                  if (fieldErrors.terms) setFieldErrors({ ...fieldErrors, terms: undefined })
-                }}
-                className={cn(
-                  'w-[18px] h-[18px] mt-0.5 rounded',
-                  'accent-[var(--primary-start)]',
-                  'cursor-pointer',
-                  fieldErrors.terms && 'border-red-500'
-                )}
-                disabled={isLoading}
-              />
-              <label htmlFor="terms" className="text-sm text-[var(--text-secondary)] leading-relaxed cursor-pointer">
-                我已阅读并同意{' '}
-                <a href="/terms" className="text-[var(--primary-glow)] hover:underline">
-                  服务条款
-                </a>{' '}
-                和{' '}
-                <a href="/privacy" className="text-[var(--primary-glow)] hover:underline">
-                  隐私政策
-                </a>
-              </label>
-            </div>
-            {fieldErrors.terms && (
-              <p className="text-xs text-red-400 -mt-2">{fieldErrors.terms}</p>
-            )}
-
             {/* 注册按钮 */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={cn(
-                'w-full py-4 mt-2',
+            <div className="ml-8 mr-8">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={cn(
+                  'w-full py-3',
                 'text-base font-semibold text-white',
                 'bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)]',
                 'rounded-xl',
@@ -588,10 +571,11 @@ export default function RegisterPage() {
                 '创建账号'
               )}
             </button>
+            </div>
           </form>
 
           {/* 分隔线 */}
-          <div className="flex items-center gap-4 my-6">
+          <div className="flex items-center gap-4 my-4">
             <div className="flex-1 h-px bg-white/10" />
             <span className="text-sm text-[var(--text-muted)]">或</span>
             <div className="flex-1 h-px bg-white/10" />
@@ -599,48 +583,20 @@ export default function RegisterPage() {
 
           {/* 社交登录 */}
           <div className="flex justify-center gap-4">
-            {/* 微信登录 */}
+            {/* GitHub 登录 */}
             <button
               type="button"
-              onClick={() => handleSocialLogin('wechat')}
-              disabled
+              onClick={() => handleSocialLogin('github')}
+              disabled={isLoading}
               className="w-12 h-12 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:scale-110 hover:bg-white/10 hover:border-[var(--primary-start)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-              title="微信登录"
+              title="GitHub 登录"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-6 h-6 text-[var(--text-secondary)]"
-              >
-                <path d="M8.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm-7 4.5c-2.485 0-4.5-1.57-4.5-3.5S4.015 8.5 6.5 8.5 11 10.07 11 12s-2.015 3.5-4.5 3.5zM8.5 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm6.5 10.5c-1.93 0-3.5-1.12-3.5-2.5s1.57-2.5 3.5-2.5 3.5 1.12 3.5 2.5-1.57 2.5-3.5 2.5zM15 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
-              </svg>
-            </button>
-
-            {/* Google 登录 */}
-            <button
-              type="button"
-              onClick={() => handleSocialLogin('google')}
-              disabled
-              className="w-12 h-12 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:scale-110 hover:bg-white/10 hover:border-[var(--primary-start)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-              title="Google 登录"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-6 h-6"
-              >
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-              </svg>
+              <Github className="w-6 h-6 text-[var(--text-secondary)]" />
             </button>
           </div>
 
           {/* 底部登录链接 */}
-          <div className="mt-8 pt-6 border-t border-white/5 text-center">
+          <div className="mt-5 pt-4 border-t border-white/5 text-center">
             <p className="text-sm text-[var(--text-secondary)]">
               已有账号？{' '}
               <a

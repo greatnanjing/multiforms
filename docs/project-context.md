@@ -1,10 +1,10 @@
 ---
 project_name: 'multiforms'
 user_name: 'Jack'
-date: '2026-02-09'
+date: '2026-02-10'
 sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns', 'feature_patterns']
 status: 'complete'
-rule_count: 95
+rule_count: 98
 optimized_for_llm: true
 ---
 
@@ -334,6 +334,14 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Logout behavior**: When unchecked, clear form fields after logout
 - **Default state**: Unchecked (don't remember by default)
 
+### GitHub OAuth Login
+- **Provider**: GitHub OAuth via Supabase Auth
+- **Flow**: Authorization Code Flow with PKCE
+- **Callback**: `/auth/callback` route handler
+- **Token handling**: GitHub Access Token stays on Supabase backend; frontend only receives Supabase Session JWT
+- **Security**: Client Secret only used in server-to-server communication (Supabase ↔ GitHub)
+- **See also**: [docs/github-oauth-flow.md](github-oauth-flow.md) for detailed flow diagram
+
 ---
 
 ## Usage Guidelines
@@ -352,4 +360,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-**Last Updated**: 2026-02-09
+**Last Updated**: 2026-02-10

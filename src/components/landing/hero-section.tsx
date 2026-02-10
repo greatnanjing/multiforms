@@ -83,7 +83,7 @@ export function HeroSection() {
   return (
     <section
       className="relative overflow-hidden flex items-center justify-center"
-      style={{ height: '100vh', paddingTop: 'max(24px, 6vh)' }}
+      style={{ height: '100vh', paddingTop: 'max(80px, 12vh)' }}
     >
       {/* 动态背景 */}
       <div className="absolute inset-0 -z-10 overflow-hidden">

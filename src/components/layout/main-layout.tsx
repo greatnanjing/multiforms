@@ -48,17 +48,20 @@ export function MainLayout({
     return 'public'
   }
 
+  // 判断是否是登录/注册页面
+  const isAuthPage = pathname === '/login' || pathname === '/register'
+
   return (
-    <div className={cn('min-h-screen flex flex-col', className)}>
+    <div className={cn(isAuthPage ? 'h-screen overflow-hidden' : 'min-h-screen', 'flex flex-col', className)}>
       {/* Navbar */}
       {!hideNavbar && <Navbar variant={getNavbarVariant()} currentPath={pathname} />}
 
       {/* Main Content */}
       <main
         className={cn(
-          'flex-1',
-          // Navbar 占用的高度
-          !hideNavbar && 'pt-16',
+          isAuthPage ? 'flex-1 overflow-hidden' : 'flex-1',
+          // Navbar 占用的高度（auth 页面不需要，因为内容会填满整个 main 区域）
+          !hideNavbar && !isAuthPage && 'pt-16',
           // 底部留出 TabBar 空间（移动端）
           'lg:pb-0',
           contentClassName
@@ -68,10 +71,10 @@ export function MainLayout({
       </main>
 
       {/* Mobile TabBar Spacer */}
-      <TabBarSpacer />
+      {!isAuthPage && <TabBarSpacer />}
 
       {/* Footer (可选) */}
-      {!hideNavbar && isPublicPage && (
+      {!hideNavbar && isPublicPage && !isAuthPage && (
         <footer className="border-t border-white/5 py-8 mt-auto">
           <div className="max-w-[1280px] mx-auto px-6 text-center text-sm text-[var(--text-muted)]">
             <p>&copy; {new Date().getFullYear()} 表单随心填. All rights reserved.</p>

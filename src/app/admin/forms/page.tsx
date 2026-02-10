@@ -33,7 +33,9 @@ import {
   ClipboardList,
   Star,
   MessageSquare,
-  FileEdit
+  FileEdit,
+  CheckSquare,
+  Square,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -74,13 +76,19 @@ function FormCard({
   onView,
   onStats,
   onDelete,
-  onCycleStatus
+  onCycleStatus,
+  selectionMode = false,
+  selected = false,
+  onSelect,
 }: {
   form: Form
   onView: (id: string) => void
   onStats: (id: string) => void
   onDelete: (id: string) => void
   onCycleStatus: (id: string) => void
+  selectionMode?: boolean
+  selected?: boolean
+  onSelect?: () => void
 }) {
   const statusColors: Record<string, string> = {
     draft: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
@@ -105,10 +113,44 @@ function FormCard({
 
   const TypeIcon = typeIcons[form.type] || typeIcons.default
 
+  const handleCardClick = () => {
+    if (selectionMode) {
+      onSelect?.()
+    }
+  }
+
   return (
-    <div className="p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all hover:scale-[1.01]">
+    <div
+      className={cn(
+        'p-5 rounded-2xl bg-white/5 border transition-all hover:scale-[1.01] cursor-pointer',
+        selectionMode
+          ? 'border-white/10 hover:border-purple-500/30'
+          : 'border-white/10 hover:bg-white/10',
+        selected && 'border-purple-500/50 bg-purple-500/5'
+      )}
+      onClick={handleCardClick}
+    >
+      {/* 选择框（选择模式） */}
+      {selectionMode && (
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelect?.()
+            }}
+            className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-white/10 group"
+          >
+            {selected ? (
+              <CheckSquare className="w-5 h-5 text-purple-400" />
+            ) : (
+              <Square className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-white transition-colors" />
+            )}
+          </button>
+        </div>
+      )}
+
       {/* 头部 */}
-      <div className="flex items-start justify-between mb-4">
+      <div className={cn('flex items-start justify-between', selectionMode && 'mb-4', !selectionMode && 'mb-4')}>
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
             <TypeIcon className="w-6 h-6 text-purple-400" />
@@ -152,36 +194,38 @@ function FormCard({
       </div>
 
       {/* 操作按钮 */}
-      <div className="flex items-center gap-2 pt-4 border-t border-white/5">
-        <button
-          onClick={() => onView(form.id)}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors"
-        >
-          <Eye className="w-4 h-4" />
-          查看
-        </button>
-        <button
-          onClick={() => onStats(form.id)}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors"
-        >
-          <BarChart3 className="w-4 h-4" />
-          数据
-        </button>
-        <button
-          onClick={() => onCycleStatus(form.id)}
-          className="p-2 rounded-lg hover:bg-amber-500/10 text-[var(--text-secondary)] hover:text-amber-400 transition-colors"
-          title="切换状态"
-        >
-          <Archive className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => onDelete(form.id)}
-          className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors"
-          title="删除表单"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
+      {!selectionMode && (
+        <div className="flex items-center gap-2 pt-4 border-t border-white/5">
+          <button
+            onClick={() => onView(form.id)}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors"
+          >
+            <Eye className="w-4 h-4" />
+            查看
+          </button>
+          <button
+            onClick={() => onStats(form.id)}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors"
+          >
+            <BarChart3 className="w-4 h-4" />
+            数据
+          </button>
+          <button
+            onClick={() => onCycleStatus(form.id)}
+            className="p-2 rounded-lg hover:bg-amber-500/10 text-[var(--text-secondary)] hover:text-amber-400 transition-colors"
+            title="切换状态"
+          >
+            <Archive className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onDelete(form.id)}
+            className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors"
+            title="删除表单"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -201,6 +245,10 @@ export default function AdminFormsPage() {
     status: 'all',
     type: 'all'
   })
+
+  // 批量选择状态
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchForms()
@@ -298,15 +346,120 @@ export default function AdminFormsPage() {
     }
   }
 
+  // 批量选择相关
+  const toggleSelectForm = (formId: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(formId)) {
+        newSet.delete(formId)
+      } else {
+        newSet.add(formId)
+      }
+      return newSet
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredForms.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filteredForms.map(f => f.id)))
+    }
+  }
+
+  const isAllSelected = filteredForms.length > 0 && selectedIds.size === filteredForms.length
+  const isSomeSelected = selectedIds.size > 0 && !isAllSelected
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) return
+
+    if (!confirm(`确定要删除选中的 ${selectedIds.size} 个表单吗？此操作不可恢复。`)) return
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('forms')
+        .delete()
+        .in('id', Array.from(selectedIds))
+
+      if (error) throw error
+
+      // 更新本地状态
+      setForms(forms.filter(f => !selectedIds.has(f.id)))
+      setSelectedIds(new Set())
+      setSelectionMode(false)
+    } catch (error) {
+      console.error('Failed to batch delete forms:', error)
+      alert('批量删除失败，请稍后重试')
+    }
+  }
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false)
+    setSelectedIds(new Set())
+  }
+
   return (
     <div className="space-y-6">
-      {/* 页面描述 */}
+      {/* 页面描述和批量操作 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <p className="text-[var(--text-secondary)]">
             管理和审核平台上的所有表单
           </p>
         </div>
+
+        {/* 批量操作按钮 */}
+        {filteredForms.length > 0 && !selectionMode && (
+          <button
+            onClick={() => setSelectionMode(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20 transition-colors"
+          >
+            <CheckSquare className="w-5 h-5" />
+            批量管理
+          </button>
+        )}
+
+        {/* 选择模式操作栏 */}
+        {selectionMode && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[var(--text-secondary)] hover:text-white hover:border-white/20 transition-colors"
+            >
+              {isAllSelected ? (
+                <CheckSquare className="w-5 h-5 text-purple-400" />
+              ) : isSomeSelected ? (
+                <div className="w-5 h-5 relative">
+                  <Square className="w-5 h-5 absolute" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 bg-purple-400 rounded-sm" />
+                  </div>
+                </div>
+              ) : (
+                <Square className="w-5 h-5" />
+              )}
+              <span>
+                {selectedIds.size > 0 ? `已选 ${selectedIds.size}` : '全选'}
+              </span>
+            </button>
+            {selectedIds.size > 0 && (
+              <button
+                onClick={handleBatchDelete}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-colors"
+              >
+                <Trash2 className="w-5 h-5" />
+                删除 {selectedIds.size} 项
+              </button>
+            )}
+            <button
+              onClick={exitSelectionMode}
+              className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white transition-colors"
+            >
+              取消
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 搜索和筛选 */}
@@ -394,6 +547,9 @@ export default function AdminFormsPage() {
               onStats={(id) => router.push(`/admin/forms/${id}/stats`)}
               onDelete={handleDelete}
               onCycleStatus={handleCycleStatus}
+              selectionMode={selectionMode}
+              selected={selectedIds.has(form.id)}
+              onSelect={() => toggleSelectForm(form.id)}
             />
           ))}
         </div>

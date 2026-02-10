@@ -555,6 +555,15 @@ export async function duplicateQuestions(
 function getDefaultOptions(questionType: QuestionType): QuestionOptions {
   switch (questionType) {
     case 'single_choice':
+      return {
+        choices: [
+          { id: '1', label: '选项 1', value: 'option-1' },
+          { id: '2', label: '选项 2', value: 'option-2' },
+        ],
+        allow_other: false,
+        other_label: '其他',
+      }
+
     case 'multiple_choice':
       return {
         choices: [
@@ -563,6 +572,7 @@ function getDefaultOptions(questionType: QuestionType): QuestionOptions {
         ],
         allow_other: false,
         other_label: '其他',
+        max_selections: 2, // 默认最多选 2 项
       }
     
     case 'dropdown':

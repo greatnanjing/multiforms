@@ -26,6 +26,12 @@ interface MultipleChoiceProps extends ChoiceQuestionProps {
 }
 
 // ============================================
+// Constants
+// ============================================
+
+const QUESTION_TYPE_LABEL = '多选题'
+
+// ============================================
 // Helpers
 // ============================================
 
@@ -338,17 +344,20 @@ export function MultipleChoice({
     <div className={cn('question-wrapper', className)}>
       {/* 题目标题 - 仅在非 preview 模式且非空时显示 */}
       {mode !== 'preview' && questionText && (
-        <div className="mb-4">
+        <div className="mb-4 flex items-baseline gap-2 flex-wrap">
           <span className="text-base font-medium text-[var(--text-primary)]">
             {questionText}
           </span>
-          {required && (
-            <span className="ml-1 text-red-400">*</span>
-          )}
+          <span className="text-xs font-medium text-[var(--text-muted)] bg-white/5 px-2 py-0.5 rounded-md">
+            {QUESTION_TYPE_LABEL}
+          </span>
           {maxSelections && mode !== 'edit' && (
-            <span className="ml-2 text-sm text-[var(--text-muted)]">
-              (最多选 {maxSelections} 项)
+            <span className="text-xs font-medium text-indigo-400/80 bg-indigo-500/10 px-2 py-0.5 rounded-md">
+              最多选 {maxSelections} 项
             </span>
+          )}
+          {required && (
+            <span className="text-red-400">*</span>
           )}
         </div>
       )}

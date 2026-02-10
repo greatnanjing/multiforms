@@ -18,7 +18,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Menu, X, Sun, Moon, User, LogOut, Settings, LayoutDashboard } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -55,10 +55,42 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeId>('nebula')
   const [mode, setMode] = useState<ThemeMode>('dark')
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [userMenuHover, setUserMenuHover] = useState(false)
+  const userMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // 从 authStore 获取用户认证状态
-  const isAuthenticated = useAuthStore((state) => state.isInitialized && !!state.user)
+  // 延迟关闭用户菜单，防止鼠标意外移出
+  const handleUserMouseLeave = useCallback(() => {
+    if (userMenuTimeoutRef.current) {
+      clearTimeout(userMenuTimeoutRef.current)
+    }
+    userMenuTimeoutRef.current = setTimeout(() => {
+      setUserMenuHover(false)
+    }, 150)
+  }, [])
+
+  const handleUserMouseEnter = useCallback(() => {
+    if (userMenuTimeoutRef.current) {
+      clearTimeout(userMenuTimeoutRef.current)
+    }
+    setUserMenuHover(true)
+  }, [])
+
+  // 从 authStore 获取用户认证状态和用户信息
+  const authUser = useAuthStore((state) => state.user)
+  const authProfile = useAuthStore((state) => state.profile)
+
+  // 使用 prop 传入的 user，如果没有则使用 authStore 中的 user
+  const currentUser = user || authUser
+
+  // 组合完整的用户对象（用于显示）- nickname 和 role 来自 profile
+  const displayUser = currentUser ? {
+    ...currentUser,
+    nickname: authProfile?.nickname || null,
+    role: authProfile?.role || null
+  } : null
+
+  // 直接检查用户是否存在（不依赖 isInitialized）
+  const isAuthenticated = !!currentUser
 
   // 应用主题
   const applyTheme = (newTheme: ThemeId, newMode: ThemeMode) => {
@@ -134,9 +166,9 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
 
   // 获取用户显示名称
   const getUserDisplay = () => {
-    if (user?.nickname) return user.nickname
-    if (user?.email) {
-      const email = user.email
+    if (displayUser?.nickname) return displayUser.nickname
+    if (displayUser?.email) {
+      const email = displayUser.email
       return email.split('@')[0]
     }
     return '用户'
@@ -224,12 +256,13 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
               </div>
 
               {/* Auth Buttons / User Menu */}
-              {user ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
-                  >
+              {displayUser ? (
+                <div
+                  className="relative py-2 -my-2"
+                  onMouseEnter={handleUserMouseEnter}
+                  onMouseLeave={handleUserMouseLeave}
+                >
+                  <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)] flex items-center justify-center text-white text-sm font-medium">
                       {getUserDisplay().charAt(0).toUpperCase()}
                     </div>
@@ -239,55 +272,46 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
                   </button>
 
                   {/* User Dropdown */}
-                  {userMenuOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setUserMenuOpen(false)}
-                      />
-                      <div className="absolute right-0 top-full mt-2 w-48 bg-[rgba(26,26,46,0.95)] backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-20">
-                        <div className="px-4 py-3 border-b border-white/5">
-                          <p className="text-sm font-medium text-white">{getUserDisplay()}</p>
-                          <p className="text-xs text-[var(--text-muted)]">{user.email}</p>
-                        </div>
-                        <div className="py-1">
-                          <Link
-                            href="/profile"
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
-                            onClick={() => setUserMenuOpen(false)}
-                          >
-                            <User className="w-4 h-4" />
-                            个人资料
-                          </Link>
-                          <Link
-                            href="/settings"
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
-                            onClick={() => setUserMenuOpen(false)}
-                          >
-                            <Settings className="w-4 h-4" />
-                            设置
-                          </Link>
-                          {user.role === 'admin' && variant !== 'admin' && (
-                            <Link
-                              href="/admin"
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
-                              onClick={() => setUserMenuOpen(false)}
-                            >
-                              <LayoutDashboard className="w-4 h-4" />
-                              管理后台
-                            </Link>
-                          )}
-                          <hr className="border-white/5 my-1" />
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
-                          >
-                            <LogOut className="w-4 h-4" />
-                            退出登录
-                          </button>
-                        </div>
+                  {userMenuHover && (
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-[rgba(26,26,46,0.95)] backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-20 shadow-xl">
+                      <div className="px-4 py-3 border-b border-white/5">
+                        <p className="text-sm font-medium text-white">{getUserDisplay()}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{displayUser.email}</p>
                       </div>
-                    </>
+                      <div className="py-1">
+                        <Link
+                          href="/profile"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                          个人资料
+                        </Link>
+                        <Link
+                          href="/settings"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
+                        >
+                          <Settings className="w-4 h-4" />
+                          设置
+                        </Link>
+                        {displayUser.role === 'admin' && variant !== 'admin' && (
+                          <Link
+                            href="/admin"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
+                          >
+                            <LayoutDashboard className="w-4 h-4" />
+                            管理后台
+                          </Link>
+                        )}
+                        <hr className="border-white/5 my-1" />
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          退出登录
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               ) : (

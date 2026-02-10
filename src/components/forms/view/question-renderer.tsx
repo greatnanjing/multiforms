@@ -84,12 +84,32 @@ export const QuestionRenderer = forwardRef<HTMLDivElement, QuestionRendererProps
     const required = validation?.required ?? false
     const Component = getQuestionComponent(question_type)
 
+    // 题型标签映射
+    const questionTypeLabels: Record<string, string> = {
+      single_choice: '单选题',
+      multiple_choice: '多选题',
+      dropdown: '下拉题',
+      rating: '评分题',
+      text: '文本题',
+      textarea: '多行文本',
+      number: '数字题',
+      date: '日期题',
+      email: '邮箱题',
+      phone: '电话题',
+      file_upload: '上传题',
+      matrix: '矩阵题',
+      sorting: '排序题',
+    }
+
+    const questionTypeLabel = questionTypeLabels[question_type] || '未知'
+
     // Map FormQuestion options to component props
     const componentProps: Record<string, any> = {
       mode: 'fill',
       questionId: question.id,
-      questionText: question_text,
-      required,
+      // 当有题号时，不显示题目组件自带的标题，避免重复
+      questionText: questionNumber ? '' : question_text,
+      required: questionNumber ? false : required, // 题号模式下的标题行包含必填标记
       value,
       onChange,
       error,
@@ -182,16 +202,43 @@ export const QuestionRenderer = forwardRef<HTMLDivElement, QuestionRendererProps
           className
         )}
       >
-        {/* Question Number */}
+        {/* 题目标题行：题号 + 题目文字 + 题型标签 + 必填标记 */}
         {questionNumber !== undefined && (
-          <div
-            className={cn(
-              'inline-flex items-center justify-center',
-              'w-7 h-7 rounded-lg text-xs font-semibold mb-3',
-              'bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)] text-white'
+          <div className="mb-4 flex items-baseline gap-2 flex-wrap">
+            {/* 题号 */}
+            <span className="text-sm font-semibold text-[var(--primary-glow)]">
+              {questionNumber}.
+            </span>
+            {/* 题目文字 */}
+            <span className="text-base font-medium text-[var(--text-primary)]">
+              {question_text || '未命名题目'}
+            </span>
+            {/* 题型标签 - 单选题用蓝色，多选题用紫罗兰色，其他用灰色 */}
+            {question_type === 'single_choice' && (
+              <span className="text-xs font-medium text-blue-400/80 bg-blue-500/10 px-2 py-0.5 rounded-md">
+                {questionTypeLabel}
+              </span>
             )}
-          >
-            {questionNumber}
+            {question_type === 'multiple_choice' && (
+              <span className="text-xs font-medium text-violet-400/80 bg-violet-500/10 px-2 py-0.5 rounded-md">
+                {questionTypeLabel}
+              </span>
+            )}
+            {question_type !== 'single_choice' && question_type !== 'multiple_choice' && (
+              <span className="text-xs font-medium text-[var(--text-muted)] bg-white/5 px-2 py-0.5 rounded-md">
+                {questionTypeLabel}
+              </span>
+            )}
+            {/* 多选题最多选数量 */}
+            {question_type === 'multiple_choice' && options?.max_selections && (
+              <span className="text-xs font-medium text-violet-400/80 bg-violet-500/10 px-2 py-0.5 rounded-md">
+                最多选 {options.max_selections} 项
+              </span>
+            )}
+            {/* 必填标记 */}
+            {required && (
+              <span className="text-red-400">*</span>
+            )}
           </div>
         )}
 

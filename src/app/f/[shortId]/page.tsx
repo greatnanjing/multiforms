@@ -13,7 +13,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getFormByShortId, incrementFormViewCount } from '@/lib/api/forms'
@@ -50,7 +50,11 @@ interface FormQuestionWithId {
 export default function FormViewPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const shortId = params.shortId as string
+
+  // 检查是否为预览模式（管理员查看）
+  const isPreviewMode = searchParams.get('preview') === 'readonly'
 
   // Form state
   const [form, setForm] = useState<Form | null>(null)
@@ -86,16 +90,16 @@ export default function FormViewPage() {
         // 检查请求是否已取消
         if (abortController.signal.aborted) return
 
-        // Check if form is published
-        if (formData.status !== 'published') {
+        // Check if form is published (skip check for admin preview mode)
+        if (formData.status !== 'published' && !isPreviewMode) {
           setError('表单尚未发布，无法访问')
           return
         }
 
         setForm(formData)
 
-        // Check password protection
-        if (formData.access_type === 'password') {
+        // Check password protection (skip for admin preview mode)
+        if (!isPreviewMode && formData.access_type === 'password') {
           // 检查是否在浏览器环境中
           if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
             const isVerified = sessionStorage.getItem(`form_${shortId}_verified`)
@@ -107,8 +111,10 @@ export default function FormViewPage() {
           }
         }
 
-        // Increment view count
-        await incrementFormViewCount(formData.id)
+        // Increment view count (skip for admin preview mode)
+        if (!isPreviewMode) {
+          await incrementFormViewCount(formData.id)
+        }
 
         // 检查请求是否已取消
         if (abortController.signal.aborted) return
@@ -284,22 +290,32 @@ export default function FormViewPage() {
         <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] rounded-full bg-[radial-gradient(circle_at_70%_80%,rgba(139,92,246,0.06)_0%,transparent_50%)]" />
       </div>
 
+      {/* 预览模式提示 */}
+      {isPreviewMode && (
+        <div className="sticky top-0 z-50 px-4 py-2 bg-amber-500/10 border-b border-amber-500/30">
+          <div className="max-w-2xl mx-auto flex items-center justify-center gap-2 text-sm text-amber-300">
+            <AlertCircle className="w-4 h-4" />
+            <span>管理员预览模式 - 不允许提交数据</span>
+          </div>
+        </div>
+      )}
+
       {/* Form Container */}
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 sm:py-8">
         {/* Form Header */}
         <FormHeader form={form} />
 
         {/* Questions */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+        <form onSubmit={(e) => { e.preventDefault(); if (!isPreviewMode) handleSubmit(); }}>
           <div className="space-y-4">
             {questions.map((question, index) => (
               <div key={question.id} data-question-id={question.id}>
                 <QuestionRenderer
                   question={question as any}
                   value={answers[question.id]}
-                  onChange={(value) => handleAnswerChange(question.id, value)}
+                  onChange={(value) => !isPreviewMode && handleAnswerChange(question.id, value)}
                   error={errors[question.id]}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isPreviewMode}
                   questionNumber={index + 1}
                 />
               </div>
@@ -322,8 +338,8 @@ export default function FormViewPage() {
         </div>
       </div>
 
-      {/* Progress Bar / Submit Button */}
-      {questions.length > 0 && (
+      {/* Progress Bar / Submit Button - 隐藏预览模式 */}
+      {questions.length > 0 && !isPreviewMode && (
         <FormProgress
           answeredCount={answeredCount}
           requiredCount={requiredCount}

@@ -402,13 +402,6 @@ export default function FormBuilderPage() {
               required: updates.required,
             }
           }
-          console.log(`[handleUpdateQuestion] Updated ${questionId}:`, {
-            updates,
-            oldRequired: q.required,
-            newRequired: updated.required,
-            oldValidation: q.validation,
-            newValidation: updated.validation,
-          })
           return updated
         }
         return q
@@ -417,7 +410,7 @@ export default function FormBuilderPage() {
   }, [])
 
   // Form handlers
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (force: boolean = false) => {
     // Prevent multiple simultaneous saves
     if (isSavingRef.current) {
       console.log('[handleSave] Skipped - already saving')
@@ -430,7 +423,7 @@ export default function FormBuilderPage() {
     const currentQuestions = questionsRef.current
     const currentPrivacySettings = privacySettingsRef.current
 
-    // Check if anything actually changed
+    // Check if anything actually changed (unless force is true)
     const currentStateHash = JSON.stringify({
       title: currentTitle,
       description: currentDescription,
@@ -443,14 +436,19 @@ export default function FormBuilderPage() {
       current: currentStateHash.substring(0, 50),
       hasLastSaved: !!lastSavedStateRef.current,
       areEqual: lastSavedStateRef.current === currentStateHash,
+      force,
     })
 
-    if (lastSavedStateRef.current === currentStateHash) {
+    if (!force && lastSavedStateRef.current === currentStateHash) {
       // No changes, skip save and reset hasUnsavedChanges
       console.log('[handleSave] No changes detected, skipping save')
       setHasUnsavedChanges(false)
       return
     }
+
+    console.log('[handleSave]', force ? 'Force save triggered' : 'Changes detected, starting save...')
+    isSavingRef.current = true
+    setSaving(true)
 
     console.log('[handleSave] Changes detected, starting save...')
     isSavingRef.current = true
@@ -518,11 +516,23 @@ export default function FormBuilderPage() {
       currentQuestions.forEach((q, index) => {
         const existingQ = existingQuestionsMap.get(q.id)
 
+        // For multiple_choice questions, ensure max_selections is set
+        let optionsToSave = q.options || {}
+        if (q.type === 'multiple_choice') {
+          const choicesCount = optionsToSave.choices?.length || 0
+          if (!optionsToSave.max_selections && choicesCount > 0) {
+            optionsToSave = {
+              ...optionsToSave,
+              max_selections: choicesCount,
+            }
+          }
+        }
+
         const questionData = {
           id: q.id,
           question_text: q.question_text,
           question_type: q.type,
-          options: q.options || {},
+          options: optionsToSave,
           validation: {
             ...q.validation,
             required: q.required,
@@ -540,7 +550,9 @@ export default function FormBuilderPage() {
             JSON.stringify(existingQ.options) !== JSON.stringify(q.options) ||
             existingQ.validation?.required !== q.required
 
-          if (hasChanged) {
+          // When force is true, update all questions regardless of changes
+          // Otherwise, only update changed questions
+          if (force || hasChanged) {
             questionsToUpdate.push(questionData)
           }
         } else {
@@ -659,8 +671,8 @@ export default function FormBuilderPage() {
 
   const handlePublishToggle = useCallback(async (publish: boolean): Promise<string | undefined> => {
     try {
-      // Save any pending changes first
-      await handleSave()
+      // Save any pending changes first (force save to ensure all data is synced)
+      await handleSave(true)
 
       const supabase = createClient()
 
@@ -881,7 +893,11 @@ export default function FormBuilderPage() {
 
             <div className="flex items-center gap-2">
               {/* Auto-save indicator */}
-              {hasUnsavedChanges ? (
+              {saving ? (
+                <div className="hidden sm:flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 text-xs">
+                  <span>保存中...</span>
+                </div>
+              ) : hasUnsavedChanges ? (
                 <div className="hidden sm:flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-amber-500/10 text-amber-400 text-xs">
                   <span>未保存</span>
                 </div>
@@ -892,7 +908,7 @@ export default function FormBuilderPage() {
               ) : null}
 
               <button
-                onClick={handleSave}
+                onClick={() => handleSave(true)}
                 disabled={saving}
                 className={cn(
                   'hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',

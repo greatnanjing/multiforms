@@ -9,7 +9,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, LogOut, LayoutDashboard, ListTodo, LayoutGrid } from 'lucide-react'
@@ -25,16 +25,34 @@ const navLinks = [
 export function LandingNavbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [userMenuHover, setUserMenuHover] = useState(false)
+  const userMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const pathname = usePathname()
 
   // 获取用户状态
   const { user, profile, isAuthenticated, signOut } = useAuth()
 
+  // 延迟关闭用户菜单，防止鼠标意外移出
+  const handleUserMouseLeave = useCallback(() => {
+    if (userMenuTimeoutRef.current) {
+      clearTimeout(userMenuTimeoutRef.current)
+    }
+    userMenuTimeoutRef.current = setTimeout(() => {
+      setUserMenuHover(false)
+    }, 150)
+  }, [])
+
+  const handleUserMouseEnter = useCallback(() => {
+    if (userMenuTimeoutRef.current) {
+      clearTimeout(userMenuTimeoutRef.current)
+    }
+    setUserMenuHover(true)
+  }, [])
+
   // 退出登录
   const handleLogout = async () => {
     await signOut()
-    setUserMenuOpen(false)
+    setUserMenuHover(false)
     window.location.href = '/'
   }
 
@@ -91,11 +109,12 @@ export function LandingNavbar() {
           <div className="hidden md:flex items-center gap-3">
             {/* Auth Buttons / User Menu */}
             {isAuthenticated && user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
-                >
+              <div
+                className="relative py-2 -my-2"
+                onMouseEnter={handleUserMouseEnter}
+                onMouseLeave={handleUserMouseLeave}
+              >
+                <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary-start)] to-[var(--primary-end)] flex items-center justify-center text-white text-sm font-medium">
                     {getUserDisplay().charAt(0).toUpperCase()}
                   </div>
@@ -105,37 +124,30 @@ export function LandingNavbar() {
                 </button>
 
                 {/* User Dropdown */}
-                {userMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setUserMenuOpen(false)}
-                    />
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-[rgba(26,26,46,0.95)] backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-20">
-                      <div className="px-4 py-3 border-b border-white/5">
-                        <p className="text-sm font-medium text-white">{getUserDisplay()}</p>
-                        <p className="text-xs text-[var(--text-muted)]">{user.email}</p>
-                      </div>
-                      <div className="py-1">
-                        <Link
-                          href="/dashboard"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          <LayoutDashboard className="w-4 h-4" />
-                          控制台
-                        </Link>
-                        <hr className="border-white/5 my-1" />
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          退出登录
-                        </button>
-                      </div>
+                {userMenuHover && (
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-[rgba(26,26,46,0.95)] backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-20 shadow-xl">
+                    <div className="px-4 py-3 border-b border-white/5">
+                      <p className="text-sm font-medium text-white">{getUserDisplay()}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{user.email}</p>
                     </div>
-                  </>
+                    <div className="py-1">
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-colors"
+                      >
+                        <LayoutDashboard className="w-4 h-4" />
+                        控制台
+                      </Link>
+                      <hr className="border-white/5 my-1" />
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        退出登录
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (

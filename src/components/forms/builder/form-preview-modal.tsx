@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { BuilderQuestion } from './question-card'
 import type { QuestionType } from '@/types'
-import * as QuestionComponents from '@/components/forms/questions'
+import { QuestionRenderer } from '@/components/forms/view/question-renderer'
 
 // ============================================
 // Types
@@ -89,117 +89,20 @@ export function FormPreviewModal({
   const requiredQuestions = questions.filter((q) => q.required)
   const answeredRequired = requiredQuestions.filter((q) => answers[q.id]).length
 
-  // 题目类型组件映射
-  // 注意：Email、Phone、Textarea 使用 Text 组件
-  const QuestionComponentMap: Record<QuestionType, React.ComponentType<any>> = {
-    single_choice: QuestionComponents.SingleChoice,
-    multiple_choice: QuestionComponents.MultipleChoice,
-    dropdown: QuestionComponents.Dropdown,
-    rating: QuestionComponents.Rating,
-    text: QuestionComponents.Text,
-    textarea: QuestionComponents.Text,
-    number: QuestionComponents.Number,
-    date: QuestionComponents.Date,
-    email: QuestionComponents.Text,
-    phone: QuestionComponents.Text,
-    file_upload: QuestionComponents.FileUpload,
-    matrix: QuestionComponents.Matrix,
-    sorting: QuestionComponents.Sorting,
-  }
-
   // 预览题目渲染
   const renderQuestion = (question: BuilderQuestion, index: number) => {
-    const Component = QuestionComponentMap[question.type]
-    if (!Component) return null
-
     const questionData = convertBuilderToPreview(question)
     const value = answers[question.id]
 
-    // 根据题目类型设置默认属性
-    const commonProps = {
-      mode: 'fill' as const,
-      questionId: question.id,
-      questionText: question.question_text,
-      required: question.required,
-      value,
-      onChange: (val: any) => handleAnswerChange(question.id, val),
-      disabled: false,
-    }
-
-    // 题目类型特定属性
-    const typeSpecificProps: Partial<Record<QuestionType, any>> = {
-      single_choice: {
-        options: question.options?.choices || [
-          { id: '1', label: '选项 1', value: '1' },
-          { id: '2', label: '选项 2', value: '2' },
-        ],
-        optionStyle: 'text',
-      },
-      multiple_choice: {
-        options: question.options?.choices || [
-          { id: '1', label: '选项 1', value: '1' },
-          { id: '2', label: '选项 2', value: '2' },
-        ],
-        maxSelections: question.options?.max_selections && question.options.max_selections > 0 ? question.options.max_selections : undefined,
-      },
-      dropdown: {
-        options: question.options?.choices || [
-          { id: '1', label: '选项 1', value: '1' },
-          { id: '2', label: '选项 2', value: '2' },
-        ],
-      },
-      rating: {
-        ratingType: question.options?.rating_type || 'star',
-        maxRating: question.options?.rating_max || 5,
-      },
-      text: {
-        inputType: 'text',
-        placeholder: question.options?.placeholder || '请输入文本',
-      },
-      textarea: {
-        inputType: 'textarea',
-        placeholder: question.options?.placeholder || '请输入详细内容',
-      },
-      number: {
-        placeholder: question.options?.placeholder || '请输入数字',
-      },
-      date: {
-        format: question.options?.date_format || 'YYYY-MM-DD',
-      },
-      email: {
-        inputType: 'email',
-        placeholder: question.options?.placeholder || 'example@email.com',
-      },
-      phone: {
-        inputType: 'phone',
-        placeholder: question.options?.placeholder || '请输入手机号码',
-      },
-      file_upload: {
-        maxFileSize: question.options?.max_file_size || 10 * 1024 * 1024,
-        maxFiles: question.options?.max_file_count || 1,
-      },
-      matrix: {
-        rows: question.options?.matrix_rows || ['项目 1', '项目 2'],
-        columns: question.options?.matrix_columns || ['选项 1', '选项 2', '选项 3'],
-      },
-      sorting: {
-        items: question.options?.sortable_items || [
-          { id: '1', label: '选项 1', order: 0 },
-          { id: '2', label: '选项 2', order: 1 },
-        ],
-      },
-    }
-
     return (
-      <div
+      <QuestionRenderer
         key={question.id}
-        className={cn(
-          'p-5 rounded-2xl border transition-all duration-200',
-          'glass-card border-white/[0.08]'
-        )}
-      >
-        <Component {...commonProps} {...typeSpecificProps[question.type]} />
-      </div>
+        question={questionData as any}
+        questionNumber={index + 1}
+        value={value}
+        onChange={(val: any) => handleAnswerChange(question.id, val)}
+        disabled={true}  // 预览模式下禁用所有题目
+      />
     )
   }
 
@@ -263,7 +166,7 @@ export function FormPreviewModal({
             {/* Preview Notice */}
             <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
               <p className="text-sm text-amber-300">
-                预览模式：此为表单预览，您可以测试填写效果。您的输入不会被保存。
+                预览模式：预览时不允许填选操作。
               </p>
             </div>
           </div>

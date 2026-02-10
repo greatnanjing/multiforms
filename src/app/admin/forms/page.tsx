@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   Search,
   Eye,
@@ -36,6 +37,8 @@ import {
   FileEdit,
   CheckSquare,
   Square,
+  AlertTriangle,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -53,6 +56,7 @@ interface Form {
   user_id: string
   view_count: number
   response_count: number
+  question_count: number
   created_at: string
   published_at: string | null
   profiles?: {
@@ -187,6 +191,10 @@ function FormCard({
           <TrendingUp className="w-4 h-4" />
           <span>{form.response_count || 0} 提交</span>
         </div>
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+          <FileEdit className="w-4 h-4" />
+          <span>{form.question_count || 0} 题</span>
+        </div>
         <div className="flex items-center gap-2 text-[var(--text-muted)] text-xs">
           <Calendar className="w-3 h-3" />
           <span>{new Date(form.created_at).toLocaleDateString('zh-CN')}</span>
@@ -231,6 +239,87 @@ function FormCard({
 }
 
 // ============================================
+// Delete Confirmation Modal
+// ============================================
+
+interface DeleteModalProps {
+  isOpen: boolean
+  formTitle: string
+  onClose: () => void
+  onConfirm: () => void
+}
+
+function DeleteModal({ isOpen, formTitle, onClose, onConfirm }: DeleteModalProps) {
+  if (!isOpen) return null
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="relative w-full max-w-md bg-[var(--bg-secondary)] rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">确认删除</h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="px-6 py-5">
+            <p className="text-[var(--text-secondary)] mb-2">
+              您确定要删除这个表单吗？
+            </p>
+            <p className="text-white font-medium truncate">
+              "{formTitle}"
+            </p>
+            <p className="text-sm text-[var(--text-muted)] mt-3">
+              此操作不可恢复，表单及其所有提交数据将被永久删除。
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 px-6 py-4 bg-white/5 border-t border-white/10">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-white transition-colors"
+            >
+              取消
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors"
+            >
+              确认删除
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
+// ============================================
 // Forms Page Component
 // ============================================
 
@@ -250,6 +339,13 @@ export default function AdminFormsPage() {
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
+  // 删除确认状态
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; formId: string; formTitle: string }>({
+    isOpen: false,
+    formId: '',
+    formTitle: ''
+  })
+
   useEffect(() => {
     fetchForms()
   }, [])
@@ -263,12 +359,18 @@ export default function AdminFormsPage() {
         .from('forms')
         .select(`
           *,
-          profiles (email, nickname)
+          profiles (email, nickname),
+          form_questions (id)
         `)
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setForms(data || [])
+      // 添加题目数量
+      const formsWithCount = (data || []).map(form => ({
+        ...form,
+        question_count: form.form_questions?.length || 0
+      }))
+      setForms(formsWithCount)
     } catch (error) {
       console.error('Failed to fetch forms:', error)
     } finally {
@@ -289,9 +391,19 @@ export default function AdminFormsPage() {
     return matchSearch && matchStatus && matchType
   })
 
-  // 删除表单
-  const handleDelete = async (formId: string) => {
-    if (!confirm('确定要删除这个表单吗？此操作不可恢复。')) return
+  // 打开删除确认弹窗
+  const openDeleteModal = (formId: string, formTitle: string) => {
+    setDeleteModal({ isOpen: true, formId, formTitle })
+  }
+
+  // 关闭删除确认弹窗
+  const closeDeleteModal = () => {
+    setDeleteModal({ isOpen: false, formId: '', formTitle: '' })
+  }
+
+  // 确认删除表单
+  const confirmDelete = async () => {
+    const { formId } = deleteModal
 
     try {
       const supabase = createClient()
@@ -304,9 +416,30 @@ export default function AdminFormsPage() {
 
       // 更新本地状态
       setForms(forms.filter(f => f.id !== formId))
+      setDeleteModal({ isOpen: false, formId: '', formTitle: '' })
     } catch (error) {
       console.error('Failed to delete form:', error)
       alert('删除失败，请稍后重试')
+    }
+  }
+
+  // 确认删除弹窗
+  const confirmDeleteModal = async () => {
+    const { formId } = deleteModal
+
+    // 如果是批量删除（formId包含逗号）
+    if (formId.includes(',')) {
+      await confirmBatchDelete()
+    } else {
+      await confirmDelete()
+    }
+  }
+
+  // 删除表单（旧函数，保留用于批量删除）
+  const handleDelete = async (formId: string) => {
+    const form = forms.find(f => f.id === formId)
+    if (form) {
+      openDeleteModal(formId, form.title)
     }
   }
 
@@ -373,8 +506,18 @@ export default function AdminFormsPage() {
   const handleBatchDelete = async () => {
     if (selectedIds.size === 0) return
 
-    if (!confirm(`确定要删除选中的 ${selectedIds.size} 个表单吗？此操作不可恢复。`)) return
+    // 使用第一个表单的标题作为提示
+    const firstForm = forms.find(f => selectedIds.has(f.id))
+    openDeleteModal(
+      Array.from(selectedIds).join(','),
+      selectedIds.size === 1
+        ? firstForm?.title || ''
+        : `选中的 ${selectedIds.size} 个表单`
+    )
+  }
 
+  // 批量删除确认（实际执行）
+  const confirmBatchDelete = async () => {
     try {
       const supabase = createClient()
       const { error } = await supabase
@@ -388,6 +531,7 @@ export default function AdminFormsPage() {
       setForms(forms.filter(f => !selectedIds.has(f.id)))
       setSelectedIds(new Set())
       setSelectionMode(false)
+      setDeleteModal({ isOpen: false, formId: '', formTitle: '' })
     } catch (error) {
       console.error('Failed to batch delete forms:', error)
       alert('批量删除失败，请稍后重试')
@@ -543,7 +687,7 @@ export default function AdminFormsPage() {
             <FormCard
               key={form.id}
               form={form}
-              onView={(id) => router.push(`/f/${form.short_id}`)}
+              onView={(id) => router.push(`/f/${form.short_id}?preview=readonly`)}
               onStats={(id) => router.push(`/admin/forms/${id}/stats`)}
               onDelete={handleDelete}
               onCycleStatus={handleCycleStatus}
@@ -554,6 +698,14 @@ export default function AdminFormsPage() {
           ))}
         </div>
       )}
+
+      {/* 删除确认弹窗 */}
+      <DeleteModal
+        isOpen={deleteModal.isOpen}
+        formTitle={deleteModal.formTitle}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDeleteModal}
+      />
     </div>
   )
 }

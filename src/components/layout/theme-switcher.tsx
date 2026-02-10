@@ -124,16 +124,16 @@ export function ThemeSwitcher({
         onClick={() => handleSelectTheme(theme.id)}
         onMouseEnter={() => handleThemeHover(theme.id)}
         className={cn(
-          'w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200',
-          'hover:bg-white/5 hover:scale-[1.02]',
+          'w-full flex items-center gap-3 px-3 py-1 rounded-lg transition-all duration-200',
+          'hover:bg-white/5',
           isCurrent && !isHovering && 'bg-white/5',
-          isHovering && 'bg-white/10 scale-[1.02]'
+          isHovering && 'bg-white/10'
         )}
       >
         {/* 颜色预览圆点 */}
         <div
           className={cn(
-            'w-6 h-6 rounded-full border-2 flex-shrink-0 transition-transform duration-200',
+            'w-5 h-5 rounded-full border-2 flex-shrink-0 transition-transform duration-200',
             (isHovering || isCurrent) ? 'border-white scale-110' : 'border-white/20'
           )}
           style={{
@@ -143,27 +143,17 @@ export function ThemeSwitcher({
 
         {/* 主题信息 */}
         <div className="flex-1 text-left">
-          <div className="flex items-center gap-2">
-            <span className={cn(
-              'text-sm font-medium transition-colors',
-              (isHovering || isCurrent) ? 'text-white' : 'text-[var(--text-secondary)]'
-            )}>
-              {theme.name}
-            </span>
-            {isCurrent && !isHovering && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--primary-glow)]/20 text-[var(--primary-glow)]">
-                当前
-              </span>
-            )}
-          </div>
-          <span className="text-xs text-[var(--text-muted)]">
-            {theme.nameEn} · {theme.description}
+          <span className={cn(
+            'text-xs font-medium transition-colors',
+            (isHovering || isCurrent) ? 'text-white' : 'text-[var(--text-secondary)]'
+          )}>
+            {theme.name}
           </span>
         </div>
 
         {/* 选中指示器 */}
         {isCurrent && (
-          <div className="w-2 h-2 rounded-full bg-[var(--primary-glow)]" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--primary-glow)]" />
         )}
       </button>
     )
@@ -198,9 +188,9 @@ export function ThemeSwitcher({
           <div
             onMouseEnter={handleContainerEnter}
             onMouseLeave={handleContainerLeave}
-            className="absolute top-full right-0 mt-2 w-64 p-2 rounded-2xl bg-[var(--bg-secondary)] border border-white/[0.08] shadow-xl z-50"
+            className="absolute top-full right-0 mt-2 w-36 p-1.5 rounded-xl bg-[var(--bg-secondary)] border border-white/[0.08] shadow-xl z-50"
           >
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0.5">
               {themes.map(theme => (
                 <ThemeRow key={theme.id} theme={theme} />
               ))}
@@ -241,9 +231,9 @@ export function ThemeSwitcher({
           <div
             onMouseEnter={handleContainerEnter}
             onMouseLeave={handleContainerLeave}
-            className="absolute top-full right-0 mt-2 w-64 p-2 rounded-2xl bg-[var(--bg-secondary)] border border-white/[0.08] shadow-xl z-50"
+            className="absolute top-full right-0 mt-2 w-36 p-1.5 rounded-xl bg-[var(--bg-secondary)] border border-white/[0.08] shadow-xl z-50"
           >
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0.5">
               {themes.map(theme => (
                 <ThemeRow key={theme.id} theme={theme} />
               ))}
@@ -284,9 +274,9 @@ export function ThemeSwitcher({
           <div
             onMouseEnter={handleContainerEnter}
             onMouseLeave={handleContainerLeave}
-            className="absolute top-full right-0 mt-2 w-72 p-2 rounded-2xl bg-[var(--bg-secondary)] border border-white/[0.08] shadow-xl z-50"
+            className="absolute top-full right-0 mt-2 w-36 p-1.5 rounded-xl bg-[var(--bg-secondary)] border border-white/[0.08] shadow-xl z-50"
           >
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0.5">
               {themes.map(theme => (
                 <ThemeRow key={theme.id} theme={theme} />
               ))}

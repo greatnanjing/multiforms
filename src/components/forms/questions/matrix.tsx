@@ -23,6 +23,12 @@ interface MatrixProps extends MatrixQuestionProps {
 }
 
 // ============================================
+// Constants
+// ============================================
+
+const QUESTION_TYPE_LABEL = '矩阵题'
+
+// ============================================
 // Helpers
 // ============================================
 
@@ -287,15 +293,18 @@ export function Matrix({
     <div className={cn('question-wrapper', className)}>
       {/* 题目标题 - 仅在非 preview 模式且非空时显示 */}
       {mode !== 'preview' && questionText && (
-        <div className="mb-4">
+        <div className="mb-4 flex items-baseline gap-2 flex-wrap">
           <span className="text-base font-medium text-[var(--text-primary)]">
             {questionText}
           </span>
+          <span className="text-xs font-medium text-[var(--text-muted)] bg-white/5 px-2 py-0.5 rounded-md">
+            {QUESTION_TYPE_LABEL}
+          </span>
           {required && (
-            <span className="ml-1 text-red-400">*</span>
+            <span className="text-red-400">*</span>
           )}
           {!required && (
-            <span className="ml-2 text-xs text-[var(--text-muted)]">
+            <span className="text-xs text-[var(--text-muted)]">
               (可选)
             </span>
           )}

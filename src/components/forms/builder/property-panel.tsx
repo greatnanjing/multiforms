@@ -50,6 +50,7 @@ function QuestionProperties({ question, onUpdate }: QuestionPropertiesProps) {
   // Track previous values to detect changes
   const prevQuestionIdRef = useRef(question.id)
   const prevRequiredRef = useRef(question.required)
+  const prevOptionsRef = useRef(question.options)
   const isInternalUpdateRef = useRef(false)
 
   // DnD sensors for option reordering
@@ -60,6 +61,22 @@ function QuestionProperties({ question, onUpdate }: QuestionPropertiesProps) {
       },
     })
   )
+
+  // Ensure multiple_choice questions always have max_selections set
+  useEffect(() => {
+    if (question.type === 'multiple_choice' && !question.options?.max_selections) {
+      const choices = question.options?.choices || []
+      if (choices.length > 0) {
+        // Initialize max_selections to the number of choices
+        onUpdate({
+          options: {
+            ...question.options,
+            max_selections: choices.length,
+          },
+        })
+      }
+    }
+  }, [question.id, question.type, question.options?.max_selections])
 
   // Sync local state when question changes or required updates from outside
   // Note: question_text is NOT in dependencies to prevent re-render on every keystroke

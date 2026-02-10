@@ -13,7 +13,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, ListTodo, SlidersHorizontal, Filter, X } from 'lucide-react'
+import { Plus, Search, ListTodo, SlidersHorizontal, Filter, X, Trash2, CheckSquare, Square } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { getForms } from '@/lib/api/forms'
 import { FormCard, FormCardSkeleton } from '@/components/forms/form-card'
@@ -86,6 +86,10 @@ export default function MyFormsPage() {
   const [showSortMenu, setShowSortMenu] = useState(false)
   const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
+
+  // 批量选择状态
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   // 获取表单数据
   const fetchForms = useCallback(async () => {
@@ -205,6 +209,61 @@ export default function MyFormsPage() {
     }
   }
 
+  // 批量选择相关
+  const toggleSelectForm = (formId: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(formId)) {
+        newSet.delete(formId)
+      } else {
+        newSet.add(formId)
+      }
+      return newSet
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredForms.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filteredForms.map(f => f.id)))
+    }
+  }
+
+  const isAllSelected = filteredForms.length > 0 && selectedIds.size === filteredForms.length
+  const isSomeSelected = selectedIds.size > 0 && !isAllSelected
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) return
+
+    const confirmed = await confirm({
+      title: `确认删除 ${selectedIds.size} 个表单`,
+      message: `确定要删除选中的 ${selectedIds.size} 个表单吗？此操作不可撤销。`,
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'danger',
+    })
+
+    if (!confirmed) return
+
+    try {
+      const { deleteForm } = await import('@/lib/api/forms')
+      await Promise.all(Array.from(selectedIds).map(id => deleteForm(id)))
+      toast.success(`已删除 ${selectedIds.size} 个表单`)
+      setSelectedIds(new Set())
+      setSelectionMode(false)
+      await fetchForms()
+    } catch (error) {
+      console.error('Failed to batch delete forms:', error)
+      toast.error('批量删除失败')
+    }
+  }
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false)
+    setSelectedIds(new Set())
+  }
+
   // 循环切换表单状态：draft → published → archived → draft
   const handleCycleStatus = async (formId: string) => {
     const form = forms.find(f => f.id === formId)
@@ -265,84 +324,143 @@ export default function MyFormsPage() {
     <div className="space-y-6">
       {/* 顶部操作栏 */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        {/* 搜索框 */}
-        <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
-          <input
-            type="text"
-            placeholder="搜索表单..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-indigo-500/50 transition-colors"
-          />
-        </div>
+        {/* 左侧：搜索框 或 选择模式提示 */}
+        {selectionMode ? (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[var(--text-secondary)] hover:text-white hover:border-white/20 transition-colors"
+            >
+              {isAllSelected ? (
+                <CheckSquare className="w-5 h-5 text-[var(--primary-glow)]" />
+              ) : isSomeSelected ? (
+                <div className="w-5 h-5 relative">
+                  <Square className="w-5 h-5 absolute" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 bg-[var(--primary-glow)] rounded-sm" />
+                  </div>
+                </div>
+              ) : (
+                <Square className="w-5 h-5" />
+              )}
+              <span className="hidden sm:inline">
+                {selectedIds.size > 0 ? `已选 ${selectedIds.size}` : '全选'}
+              </span>
+            </button>
+            <button
+              onClick={exitSelectionMode}
+              className="px-4 py-3 text-sm text-[var(--text-secondary)] hover:text-white transition-colors"
+            >
+              取消
+            </button>
+          </div>
+        ) : (
+          <div className="flex-1 min-w-[200px] relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              placeholder="搜索表单..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-indigo-500/50 transition-colors"
+            />
+          </div>
+        )}
 
-        {/* 筛选按钮 */}
-        <button
-          onClick={() => setShowFilterPanel(!showFilterPanel)}
-          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition-colors relative ${
-            hasActiveFilters
-              ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300'
-              : 'bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20'
-          }`}
-        >
-          <Filter className="w-5 h-5" />
-          <span className="hidden sm:inline">筛选</span>
-          {hasActiveFilters && (
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-500 rounded-full" />
-          )}
-        </button>
+        {/* 右侧操作按钮 */}
+        {selectionMode ? (
+          <div className="flex items-center gap-3">
+            {selectedIds.size > 0 && (
+              <button
+                onClick={handleBatchDelete}
+                className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-colors"
+              >
+                <Trash2 className="w-5 h-5" />
+                <span className="hidden sm:inline">删除 {selectedIds.size} 项</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* 批量选择按钮 */}
+            {filteredForms.length > 0 && (
+              <button
+                onClick={() => setSelectionMode(true)}
+                className="flex items-center gap-2 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[var(--text-secondary)] hover:text-white hover:border-white/20 transition-colors"
+              >
+                <CheckSquare className="w-5 h-5" />
+                <span className="hidden sm:inline">批量管理</span>
+              </button>
+            )}
 
-        {/* 排序按钮 */}
-        <div className="relative">
-          <button
-            onClick={() => setShowSortMenu(!showSortMenu)}
-            className="flex items-center gap-2 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[var(--text-secondary)] hover:text-white hover:border-white/20 transition-colors"
-          >
-            <SlidersHorizontal className="w-5 h-5" />
-            <span className="hidden sm:inline">
-              {sortOptions.find(o => o.value === sortBy)?.label}
-            </span>
-          </button>
+            {/* 筛选按钮 */}
+            <button
+              onClick={() => setShowFilterPanel(!showFilterPanel)}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl transition-colors relative ${
+                hasActiveFilters
+                  ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300'
+                  : 'bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20'
+              }`}
+            >
+              <Filter className="w-5 h-5" />
+              <span className="hidden sm:inline">筛选</span>
+              {hasActiveFilters && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-500 rounded-full" />
+              )}
+            </button>
 
-          {showSortMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowSortMenu(false)}
-              />
-              <div className="absolute right-0 top-full mt-2 w-48 glass-card rounded-xl overflow-hidden z-20">
-                {sortOptions.map(option => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      setSortBy(option.value)
-                      setShowSortMenu(false)
-                    }}
-                    className={`
-                      w-full px-4 py-3 text-left text-sm transition-colors
-                      ${sortBy === option.value
-                        ? 'text-white bg-white/10'
-                        : 'text-[var(--text-secondary)] hover:text-white hover:bg-white/5'
-                      }
-                    `}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+            {/* 排序按钮 */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSortMenu(!showSortMenu)}
+                className="flex items-center gap-2 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[var(--text-secondary)] hover:text-white hover:border-white/20 transition-colors"
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+                <span className="hidden sm:inline">
+                  {sortOptions.find(o => o.value === sortBy)?.label}
+                </span>
+              </button>
 
-        {/* 创建按钮 */}
-        <button
-          onClick={handleCreateForm}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white font-medium shadow-lg shadow-indigo-500/25 transition-all duration-250 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-indigo-500/30]"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="hidden sm:inline">创建表单</span>
-        </button>
+              {showSortMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowSortMenu(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-48 glass-card rounded-xl overflow-hidden z-20">
+                    {sortOptions.map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSortBy(option.value)
+                          setShowSortMenu(false)
+                        }}
+                        className={`
+                          w-full px-4 py-3 text-left text-sm transition-colors
+                          ${sortBy === option.value
+                            ? 'text-white bg-white/10'
+                            : 'text-[var(--text-secondary)] hover:text-white hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* 创建按钮 */}
+            <button
+              onClick={handleCreateForm}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--primary-start)] to-[var(--primary-end)] text-white font-medium shadow-lg shadow-indigo-500/25 transition-all duration-250 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-indigo-500/30]"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="hidden sm:inline">创建表单</span>
+            </button>
+          </>
+        )}
       </div>
 
       {/* 筛选面板 */}
@@ -529,6 +647,9 @@ export default function MyFormsPage() {
                 e.stopPropagation()
                 handleDeleteForm(form.id)
               }}
+              selectionMode={selectionMode}
+              selected={selectedIds.has(form.id)}
+              onSelect={() => toggleSelectForm(form.id)}
             />
           ))}
         </div>

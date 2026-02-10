@@ -32,6 +32,8 @@ import {
   Trash2,
   MoreVertical,
   Archive,
+  CheckSquare,
+  Square,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Form, FormType } from '@/types'
@@ -61,6 +63,12 @@ interface FormCardProps {
   showDelete?: boolean
   /** 额外的类名 */
   className?: string
+  /** 选择模式 */
+  selectionMode?: boolean
+  /** 是否已选中 */
+  selected?: boolean
+  /** 选择回调 */
+  onSelect?: () => void
 }
 
 // ============================================
@@ -217,6 +225,9 @@ export function FormCard({
   onCycleStatus,
   showDelete = true,
   className,
+  selectionMode = false,
+  selected = false,
+  onSelect,
 }: FormCardProps) {
   const handleAction = (e: React.MouseEvent, handler?: (e: React.MouseEvent) => void) => {
     e.preventDefault()
@@ -231,20 +242,47 @@ export function FormCard({
 
   const responseText = form.type === 'vote' ? '投票' : '回复'
 
+  // 选择模式下点击卡片触发选择
+  const handleCardClick = () => {
+    if (selectionMode) {
+      onSelect?.()
+    } else {
+      onClick?.()
+    }
+  }
+
   return (
     <div
       className={cn(
         'glass-card',
         'flex items-center gap-5',
         'transition-all duration-300',
-        'hover:border-indigo-500/30',
-        !compact && 'hover:translate-x-1',
+        selectionMode ? 'hover:border-indigo-500/50' : 'hover:border-indigo-500/30',
+        !compact && !selectionMode && 'hover:translate-x-1',
         'cursor-pointer',
         compact ? 'p-4' : 'p-5 sm:p-6',
+        selected && 'border-indigo-500/50 bg-indigo-500/5',
         className
       )}
-      onClick={onClick}
+      onClick={handleCardClick}
     >
+      {/* 选择框（选择模式） */}
+      {selectionMode && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onSelect?.()
+          }}
+          className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-white/10 group flex-shrink-0"
+        >
+          {selected ? (
+            <CheckSquare className="w-5 h-5 text-[var(--primary-glow)]" />
+          ) : (
+            <Square className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-white transition-colors" />
+          )}
+        </button>
+      )}
+
       {/* 表单图标 */}
       <div
         className={cn(
@@ -293,47 +331,49 @@ export function FormCard({
       </div>
 
       {/* 操作按钮 */}
-      <div className="flex items-center gap-2">
-        {onCycleStatus && (
+      {!selectionMode && (
+        <div className="flex items-center gap-2">
+          {onCycleStatus && (
+            <button
+              onClick={(e) => handleAction(e, onCycleStatus)}
+              className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-amber-500/10 hover:border-amber-500/50 group"
+              title="切换状态"
+            >
+              <Archive className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-amber-400 transition-colors" />
+            </button>
+          )}
           <button
-            onClick={(e) => handleAction(e, onCycleStatus)}
-            className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-amber-500/10 hover:border-amber-500/50 group"
-            title="切换状态"
+            onClick={(e) => handleAction(e, onEdit)}
+            className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-white/10 hover:border-indigo-500/50 group"
+            title="编辑"
           >
-            <Archive className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-amber-400 transition-colors" />
+            <Edit className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-indigo-400 transition-colors" />
           </button>
-        )}
-        <button
-          onClick={(e) => handleAction(e, onEdit)}
-          className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-white/10 hover:border-indigo-500/50 group"
-          title="编辑"
-        >
-          <Edit className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-indigo-400 transition-colors" />
-        </button>
-        <button
-          onClick={(e) => handleAction(e, onShare)}
-          className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-white/10 hover:border-indigo-500/50 group"
-          title="分享"
-        >
-          <Share2 className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-indigo-400 transition-colors" />
-        </button>
-        <button
-          onClick={(e) => handleAction(e, onAnalyze)}
-          className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-white/10 hover:border-indigo-500/50 group"
-          title="分析"
-        >
-          <BarChart3 className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-indigo-400 transition-colors" />
-        </button>
-        {showDelete && (
           <button
-            onClick={(e) => handleAction(e, onDelete)}
-            className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-red-500/10 hover:border-red-500/50 group"
-            title="删除"
+            onClick={(e) => handleAction(e, onShare)}
+            className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-white/10 hover:border-indigo-500/50 group"
+            title="分享"
           >
-            <Trash2 className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-red-400 transition-colors" />
+            <Share2 className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-indigo-400 transition-colors" />
           </button>
-        )}
-      </div>
+          <button
+            onClick={(e) => handleAction(e, onAnalyze)}
+            className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-white/10 hover:border-indigo-500/50 group"
+            title="分析"
+          >
+            <BarChart3 className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-indigo-400 transition-colors" />
+          </button>
+          {showDelete && (
+            <button
+              onClick={(e) => handleAction(e, onDelete)}
+              className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-red-500/10 hover:border-red-500/50 group"
+              title="删除"
+            >
+              <Trash2 className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-red-400 transition-colors" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

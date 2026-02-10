@@ -129,10 +129,10 @@ export function DashboardLayout({
 
       {/* Main Content Area */}
       <div className="lg:ml-56 flex flex-col h-screen overflow-hidden">
-        {/* Fixed Header - Combined Welcome and Page Title */}
+        {/* Fixed Header - Top Bar Only */}
         <header className="flex-shrink-0 bg-[var(--bg-primary)]/95 backdrop-blur-xl border-b border-white/5">
           {/* Top Bar - Welcome, Theme Switcher, User Menu */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-2 border-b border-white/5">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-2">
             <div className="flex items-center gap-3">
               {/* Return Home Button */}
               <Link
@@ -189,11 +189,6 @@ export function DashboardLayout({
               </div>
             </div>
           </div>
-
-          {/* Page Title */}
-          <div className="px-6 py-3 lg:py-4">
-            <h1 className="text-lg font-semibold text-white">{getPageTitle(pathname)}</h1>
-          </div>
         </header>
 
         {/* Scrollable Page Content */}
@@ -215,28 +210,4 @@ export function DashboardLayout({
   )
 }
 
-// 根据路径获取页面标题
-function getPageTitle(pathname: string): string {
-  const titleMap: Record<string, string> = {
-    '/dashboard': '仪表盘',
-    '/forms': '我的表单',
-    '/templates': '模板库',
-    '/analytics': '数据分析',
-    '/settings': '设置',
-    '/profile': '个人资料',
-  }
-
-  // 精确匹配
-  if (titleMap[pathname]) {
-    return titleMap[pathname]
-  }
-
-  // 前缀匹配
-  for (const [path, title] of Object.entries(titleMap)) {
-    if (pathname.startsWith(path + '/')) {
-      return title
-    }
-  }
-
-  return '仪表盘'
-}
+// 页面标题功能已移除 - 主内容区域现在直接在欢迎栏下方显示

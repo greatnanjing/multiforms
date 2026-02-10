@@ -230,7 +230,7 @@ export function FormPreviewModal({
             <div>
               <h2 className="text-lg font-semibold text-white">表单预览</h2>
               <p className="text-xs text-[var(--text-muted)]">
-                {questions.length} 道题目 • {requiredQuestions.length} 道必填
+                {questions.length} 道题目 • {requiredQuestions.length} 道必选
               </p>
             </div>
           </div>
@@ -277,7 +277,7 @@ export function FormPreviewModal({
                   <span className="text-sm text-[var(--text-secondary)]">
                     {answeredRequired >= requiredQuestions.length
                       ? '已完成所有必填题'
-                      : `已完成 ${answeredRequired}/${requiredQuestions.length} 道必填题`}
+                      : `已完成 ${answeredRequired}/${requiredQuestions.length} 道必选题`}
                   </span>
                   <span className="text-sm font-medium text-[var(--text-primary)]">
                     {requiredQuestions.length > 0

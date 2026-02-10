@@ -336,20 +336,22 @@ export function MultipleChoice({
 
   return (
     <div className={cn('question-wrapper', className)}>
-      {/* 题目标题 */}
-      <div className="mb-4">
-        <span className="text-base font-medium text-[var(--text-primary)]">
-          {questionText || '未命名题目'}
-        </span>
-        {required && (
-          <span className="ml-1 text-red-400">*</span>
-        )}
-        {maxSelections && mode !== 'edit' && (
-          <span className="ml-2 text-sm text-[var(--text-muted)]">
-            (最多选 {maxSelections} 项)
+      {/* 题目标题 - 仅在非 preview 模式且非空时显示 */}
+      {mode !== 'preview' && questionText && (
+        <div className="mb-4">
+          <span className="text-base font-medium text-[var(--text-primary)]">
+            {questionText}
           </span>
-        )}
-      </div>
+          {required && (
+            <span className="ml-1 text-red-400">*</span>
+          )}
+          {maxSelections && mode !== 'edit' && (
+            <span className="ml-2 text-sm text-[var(--text-muted)]">
+              (最多选 {maxSelections} 项)
+            </span>
+          )}
+        </div>
+      )}
 
       {/* 错误提示 */}
       {error && (

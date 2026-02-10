@@ -239,6 +239,9 @@ export interface QuestionOptions {
   number_max?: number
   number_step?: number
 
+  // 多选题最多可选数量
+  max_selections?: number
+
   // 其他配置
   placeholder?: string
   default_value?: string | number | boolean | string[] | null

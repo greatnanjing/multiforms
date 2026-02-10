@@ -87,7 +87,6 @@ export function Navbar({ variant = 'public', currentPath = '/', user = null }: N
     : variant === 'dashboard'
     ? [
         { label: '仪表盘', href: '/dashboard', active: currentPath === '/dashboard' },
-        { label: '我的表单', href: '/forms', active: currentPath.startsWith('/forms') && !currentPath.includes('/analytics') },
         { label: '模板库', href: '/templates', active: currentPath.startsWith('/templates') },
       ]
     : variant === 'minimal'

@@ -105,6 +105,9 @@ export const QuestionRenderer = forwardRef<HTMLDivElement, QuestionRendererProps
         componentProps.allowOther = options?.allow_other
         componentProps.otherLabel = options?.other_label
         componentProps.optionStyle = 'text'
+        if (question_type === 'multiple_choice') {
+          componentProps.maxSelections = options?.max_selections
+        }
         break
 
       case 'rating':
@@ -154,12 +157,18 @@ export const QuestionRenderer = forwardRef<HTMLDivElement, QuestionRendererProps
         break
 
       case 'sorting':
-        componentProps.items = options?.sortable_items?.map((item, index) => ({
-          id: `${index}`,
-          label: item,
-          value: item,
-          order: index,
-        })) || []
+        // sortable_items can be string[] or {id, label, order}[]
+        componentProps.items = options?.sortable_items?.map((item: any, index: number) => {
+          if (typeof item === 'string') {
+            return {
+              id: `sort-${index}`,
+              label: item,
+              value: item,
+              order: index,
+            }
+          }
+          return item
+        }) || []
         break
     }
 

@@ -68,6 +68,8 @@ export interface ChoiceQuestionProps extends BaseQuestionProps {
   onRemoveOption?: (optionId: string) => void
   /** 选项样式 */
   optionStyle?: 'text' | 'card' | 'image'
+  /** 多选题最多可选数量 */
+  maxSelections?: number
 }
 
 // ============================================

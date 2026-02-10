@@ -296,21 +296,21 @@ export function FormCard({
       {/* 表单信息 */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-xs font-medium text-[var(--text-muted)] px-2 py-0.5 rounded-full bg-white/5">
+          <span className="text-xs font-medium text-[var(--text-muted)] px-3 py-1.5 rounded-full bg-white/5">
             {formTypeNames[form.type]}
           </span>
           {form.status === 'published' && (
-            <span className="text-xs font-medium text-green-400 px-2 py-0.5 rounded-full bg-green-500/10">
+            <span className="text-xs font-medium text-green-400 px-3 py-1.5 rounded-full bg-green-500/10">
               已发布
             </span>
           )}
           {form.status === 'archived' && (
-            <span className="text-xs font-medium text-yellow-400 px-2 py-0.5 rounded-full bg-yellow-500/10">
+            <span className="text-xs font-medium text-yellow-400 px-3 py-1.5 rounded-full bg-yellow-500/10">
               已归档
             </span>
           )}
           {form.status === 'draft' && (
-            <span className="text-xs font-medium text-[var(--text-muted)] px-2 py-0.5 rounded-full bg-white/5">
+            <span className="text-xs font-medium text-[var(--text-muted)] px-3 py-1.5 rounded-full bg-white/5">
               草稿
             </span>
           )}

@@ -190,14 +190,16 @@ export function FileUpload({
   if (mode === 'edit') {
     return (
       <div className={cn('question-wrapper', className)}>
-        <div className="mb-4">
-          <span className="text-base font-medium text-[var(--text-primary)]">
-            {questionText || '未命名题目'}
-          </span>
-          {required && (
-            <span className="ml-1 text-red-400">*</span>
-          )}
-        </div>
+        {questionText && (
+          <div className="mb-4">
+            <span className="text-base font-medium text-[var(--text-primary)]">
+              {questionText}
+            </span>
+            {required && (
+              <span className="ml-1 text-red-400">*</span>
+            )}
+          </div>
+        )}
 
         <div className="space-y-4">
           {/* 文件类型限制 */}
@@ -249,15 +251,17 @@ export function FileUpload({
 
   return (
     <div className={cn('question-wrapper', className)}>
-      {/* 题目标题 */}
-      <div className="mb-4">
-        <span className="text-base font-medium text-[var(--text-primary)]">
-          {questionText || '未命名题目'}
-        </span>
-        {required && (
-          <span className="ml-1 text-red-400">*</span>
-        )}
-      </div>
+      {/* 题目标题 - 仅在非 preview 模式且非空时显示 */}
+      {mode !== 'preview' && questionText && (
+        <div className="mb-4">
+          <span className="text-base font-medium text-[var(--text-primary)]">
+            {questionText}
+          </span>
+          {required && (
+            <span className="ml-1 text-red-400">*</span>
+          )}
+        </div>
+      )}
 
       {/* 错误提示 */}
       {error && (

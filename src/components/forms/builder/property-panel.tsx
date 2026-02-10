@@ -12,6 +12,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Settings2, Plus, GripVertical, Trash2, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DndContext, DragEndEvent, closestCenter, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { QuestionType } from '@/types'
 import type { BuilderQuestion } from './question-card'
 import type { ChoiceOption } from '@/types'
@@ -27,6 +30,8 @@ interface PropertyPanelProps {
   onUpdateQuestion?: (questionId: string, updates: Partial<BuilderQuestion>) => void
   /** 是否显示 */
   isOpen?: boolean
+  /** 题目编号 */
+  questionNumber?: number
 }
 
 // ============================================
@@ -42,17 +47,38 @@ function QuestionProperties({ question, onUpdate }: QuestionPropertiesProps) {
   const [questionText, setQuestionText] = useState(question.question_text)
   const [required, setRequired] = useState(question.required)
 
-  // Track previous question ID to detect when switching questions
+  // Track previous values to detect changes
   const prevQuestionIdRef = useRef(question.id)
+  const prevRequiredRef = useRef(question.required)
+  const isInternalUpdateRef = useRef(false)
 
-  // Sync local state only when switching to a different question
+  // DnD sensors for option reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  )
+
+  // Sync local state when question changes or required updates from outside
+  // Note: question_text is NOT in dependencies to prevent re-render on every keystroke
+  // Text changes are handled directly by handleTextChange without syncing back
   useEffect(() => {
     if (question.id !== prevQuestionIdRef.current) {
+      // Switching to a different question - sync all state
       setQuestionText(question.question_text)
       setRequired(question.required)
       prevQuestionIdRef.current = question.id
+      prevRequiredRef.current = question.required
+    } else if (!isInternalUpdateRef.current && question.required !== prevRequiredRef.current) {
+      // Sync required state when toggled from question card (not from this panel)
+      setRequired(question.required)
+      prevRequiredRef.current = question.required
     }
-  }, [question.id, question.question_text, question.required])
+    // Reset internal update flag after sync
+    isInternalUpdateRef.current = false
+  }, [question.id, question.required])
 
   // Get current options, provide defaults for choice-based questions if empty
   const getDefaultChoices = () => {
@@ -77,12 +103,7 @@ function QuestionProperties({ question, onUpdate }: QuestionPropertiesProps) {
   }
 
   const handleRequiredChange = (value: boolean) => {
-    console.log('[PropertyPanel] handleRequiredChange:', {
-      questionId: question.id,
-      oldValue: required,
-      newValue: value,
-      questionValidation: question.validation,
-    })
+    isInternalUpdateRef.current = true
     setRequired(value)
     onUpdate({ required: value })
   }
@@ -94,10 +115,12 @@ function QuestionProperties({ question, onUpdate }: QuestionPropertiesProps) {
       label: `选项 ${currentOptions.length + 1}`,
       value: `option-${currentOptions.length + 1}`,
     }
+    const newChoices = [...(question.options?.choices || []), newOption]
     onUpdate({
       options: {
         ...question.options,
-        choices: [...(question.options?.choices || []), newOption],
+        choices: newChoices,
+        max_selections: newChoices.length,
       },
     })
   }
@@ -123,16 +146,42 @@ function QuestionProperties({ question, onUpdate }: QuestionPropertiesProps) {
       options: {
         ...question.options,
         choices: updatedChoices,
+        max_selections: updatedChoices.length,
       },
     })
+  }
+
+  const handleOptionReorder = (oldIndex: number, newIndex: number) => {
+    const updatedChoices = [...currentOptions]
+    const [removed] = updatedChoices.splice(oldIndex, 1)
+    updatedChoices.splice(newIndex, 0, removed)
+    onUpdate({
+      options: {
+        ...question.options,
+        choices: updatedChoices,
+      },
+    })
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over) return
+
+    if (active.id !== over.id) {
+      const oldIndex = currentOptions.findIndex((opt) => opt.id === active.id)
+      const newIndex = currentOptions.findIndex((opt) => opt.id === over.id)
+      handleOptionReorder(oldIndex, newIndex)
+    }
   }
 
   const hasChoices = question.type === 'single_choice' ||
                      question.type === 'multiple_choice' ||
                      question.type === 'dropdown'
 
+  const isMultipleChoice = question.type === 'multiple_choice'
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       {/* Question Text */}
       <div>
         <label htmlFor="question-text" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
@@ -143,7 +192,7 @@ function QuestionProperties({ question, onUpdate }: QuestionPropertiesProps) {
           value={questionText}
           onChange={(e) => handleTextChange(e.target.value)}
           placeholder="请输入题目内容"
-          rows={3}
+          rows={2}
           className={cn(
             'w-full px-3 py-2.5 rounded-xl',
             'bg-white/5 border border-white/10',
@@ -154,44 +203,72 @@ function QuestionProperties({ question, onUpdate }: QuestionPropertiesProps) {
         />
       </div>
 
-      {/* Required Toggle */}
-      <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-        <div>
-          <div className="text-sm font-medium text-[var(--text-primary)]">
-            必填项
+      {/* Question Settings: Required + Type + Max Selections */}
+      <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+        <div className="flex items-center gap-6">
+          {/* Required Toggle */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-[var(--text-primary)]">必选</span>
+            <button
+              onClick={() => handleRequiredChange(!required)}
+              role="switch"
+              aria-checked={required}
+              aria-label="切换必选状态"
+              type="button"
+              className={cn(
+                'relative w-8 h-4 rounded-full transition-colors duration-200',
+                required ? 'bg-[var(--primary-start)]' : 'bg-white/10'
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all duration-200',
+                  required ? 'right-0.5' : 'left-0.5'
+                )}
+              />
+            </button>
           </div>
-          <div className="text-xs text-[var(--text-muted)]">
-            用户必须回答此题目才能提交
-          </div>
-        </div>
-        <button
-          onClick={() => handleRequiredChange(!required)}
-          role="switch"
-          aria-checked={required}
-          aria-label="切换必填状态"
-          type="button"
-          className={cn(
-            'relative w-12 h-6 rounded-full transition-colors duration-200',
-            required ? 'bg-[var(--primary-start)]' : 'bg-white/10'
-          )}
-        >
-          <span
-            className={cn(
-              'absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-              required ? 'left-7' : 'left-1'
-            )}
-          />
-        </button>
-      </div>
 
-      {/* Question Type Info */}
-      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-        <div className="flex items-center gap-2 mb-1">
-          <Settings2 className="w-4 h-4 text-[var(--text-muted)]" />
-          <span className="text-xs text-[var(--text-muted)]">题型类型</span>
-        </div>
-        <div className="text-sm text-[var(--text-primary)]">
-          {getQuestionTypeName(question.type)}
+          {/* Type */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[var(--text-muted)]">题型</span>
+            <span className="text-xs text-[var(--text-primary)]">
+              {getQuestionTypeShortName(question.type)}
+            </span>
+          </div>
+
+          {/* Max Selections for multiple choice */}
+          {isMultipleChoice && (
+            <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+              <span className="text-xs text-[var(--text-muted)]">最多选项数</span>
+              <input
+                type="number"
+                min={1}
+                max={currentOptions.length}
+                value={question.options?.max_selections ?? currentOptions.length}
+                onChange={(e) => {
+                  const value = e.target.value
+                  const num = parseInt(value, 10)
+                  if (!isNaN(num) && num >= 1 && num <= currentOptions.length) {
+                    onUpdate({
+                      options: {
+                        ...question.options,
+                        max_selections: num,
+                      },
+                    })
+                  }
+                }}
+                className={cn(
+                  'w-12 px-1.5 py-0.5 rounded',
+                  'bg-white/5 border border-white/10',
+                  'text-xs text-[var(--text-primary)]',
+                  'text-center',
+                  'focus:outline-none focus:ring-1 focus:ring-[var(--primary-start)]/20 focus:border-[var(--primary-start)]/30',
+                  'transition-colors'
+                )}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -219,83 +296,55 @@ function QuestionProperties({ question, onUpdate }: QuestionPropertiesProps) {
             </button>
           </div>
 
-          <div className="space-y-2">
-            {currentOptions.map((option: ChoiceOption, index: number) => (
-              <div
-                key={option.id}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={currentOptions.map(opt => opt.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {currentOptions.map((option: ChoiceOption, index: number) => (
+                  <SortableOptionItem
+                    key={option.id}
+                    option={option}
+                    index={index}
+                    onUpdate={handleUpdateOption}
+                    onDelete={handleDeleteOption}
+                    totalCount={currentOptions.length}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+
+          {currentOptions.length === 0 && (
+            <div className="p-4 rounded-lg border border-dashed border-white/20 text-center">
+              <p className="text-sm text-[var(--text-muted)] mb-2">
+                暂无选项
+              </p>
+              <button
+                onClick={handleAddOption}
+                aria-label="添加第一个选项"
+                type="button"
                 className={cn(
-                  'flex items-center gap-2 p-2.5 rounded-lg',
-                  'bg-white/5 border border-white/10',
-                  'group hover:border-white/20',
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg',
+                  'text-sm font-medium',
+                  'bg-indigo-500/10 text-indigo-400',
+                  'hover:bg-indigo-500/20',
                   'transition-colors'
                 )}
               >
-                {/* Drag Handle */}
-                <div className="cursor-grab active:cursor-grabbing text-[var(--text-muted)]">
-                  <GripVertical className="w-4 h-4" />
-                </div>
-
-                {/* Option Label */}
-                <input
-                  id={`option-${option.id}`}
-                  type="text"
-                  value={option.label}
-                  onChange={(e) => handleUpdateOption(option.id, e.target.value)}
-                  placeholder={`选项 ${index + 1}`}
-                  className={cn(
-                    'flex-1 px-2 py-1.5 rounded-md',
-                    'bg-white/5 border border-white/5',
-                    'text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
-                    'focus:outline-none focus:ring-1 focus:ring-[var(--primary-start)]/20 focus:border-[var(--primary-start)]/30',
-                    'transition-colors'
-                  )}
-                />
-
-                {/* Delete Button */}
-                <button
-                  onClick={() => handleDeleteOption(option.id)}
-                  disabled={currentOptions.length <= 1}
-                  aria-label={`删除选项 ${option.label}`}
-                  type="button"
-                  className={cn(
-                    'w-8 h-8 rounded-lg flex items-center justify-center',
-                    'text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10',
-                    'disabled:opacity-30 disabled:cursor-not-allowed',
-                    'transition-colors'
-                  )}
-                  title={currentOptions.length <= 1 ? '至少保留一个选项' : '删除选项'}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-
-            {currentOptions.length === 0 && (
-              <div className="p-4 rounded-lg border border-dashed border-white/20 text-center">
-                <p className="text-sm text-[var(--text-muted)] mb-2">
-                  暂无选项
-                </p>
-                <button
-                  onClick={handleAddOption}
-                  aria-label="添加第一个选项"
-                  type="button"
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg',
-                    'text-sm font-medium',
-                    'bg-indigo-500/10 text-indigo-400',
-                    'hover:bg-indigo-500/20',
-                    'transition-colors'
-                  )}
-                >
-                  <Plus className="w-4 h-4" />
-                  添加第一个选项
-                </button>
-              </div>
-            )}
-          </div>
+                <Plus className="w-4 h-4" />
+                添加第一个选项
+              </button>
+            </div>
+          )}
 
           <p className="text-xs text-[var(--text-muted)] px-1">
-            提示：点击输入框编辑选项内容
+            提示：拖拽手柄可调整选项顺序
           </p>
         </div>
       )}
@@ -335,6 +384,111 @@ function getQuestionTypeName(type: QuestionType): string {
   return names[type] || type
 }
 
+function getQuestionTypeShortName(type: QuestionType): string {
+  const names: Record<QuestionType, string> = {
+    single_choice: '单选',
+    multiple_choice: '多选',
+    dropdown: '下拉',
+    rating: '评分',
+    text: '文本',
+    textarea: '多行',
+    number: '数字',
+    date: '日期',
+    email: '邮箱',
+    phone: '电话',
+    file_upload: '上传',
+    matrix: '矩阵',
+    sorting: '排序',
+  }
+  return names[type] || type
+}
+
+// ============================================
+// Sortable Option Item Component
+// ============================================
+
+interface SortableOptionItemProps {
+  option: ChoiceOption
+  index: number
+  onUpdate: (optionId: string, label: string) => void
+  onDelete: (optionId: string) => void
+  totalCount: number
+}
+
+function SortableOptionItem({ option, index, onUpdate, onDelete, totalCount }: SortableOptionItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: option.id,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'flex items-center gap-2 p-2.5 rounded-lg',
+        'bg-white/5 border border-white/10',
+        'group hover:border-white/20',
+        'transition-colors'
+      )}
+    >
+      {/* Drag Handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
+
+      {/* Option Label */}
+      <input
+        id={`option-${option.id}`}
+        type="text"
+        value={option.label}
+        onChange={(e) => onUpdate(option.id, e.target.value)}
+        placeholder={`选项 ${index + 1}`}
+        className={cn(
+          'flex-1 px-2 py-1.5 rounded-md',
+          'bg-white/5 border border-white/5',
+          'text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
+          'focus:outline-none focus:ring-1 focus:ring-[var(--primary-start)]/20 focus:border-[var(--primary-start)]/30',
+          'transition-colors'
+        )}
+      />
+
+      {/* Delete Button */}
+      <button
+        onClick={() => onDelete(option.id)}
+        disabled={totalCount <= 1}
+        aria-label={`删除选项 ${option.label}`}
+        type="button"
+        className={cn(
+          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 -mr-2',
+          'text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10',
+          'disabled:opacity-30 disabled:cursor-not-allowed',
+          'transition-colors'
+        )}
+        title={totalCount <= 1 ? '至少保留一个选项' : '删除选项'}
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  )
+}
+
 // ============================================
 // Main Component
 // ============================================
@@ -343,6 +497,7 @@ export function PropertyPanel({
   selectedQuestion,
   onUpdateQuestion,
   isOpen = true,
+  questionNumber,
 }: PropertyPanelProps) {
   const handleUpdate = (updates: Partial<BuilderQuestion>) => {
     if (selectedQuestion) {
@@ -355,13 +510,18 @@ export function PropertyPanel({
   return (
     <div
       className={cn(
-        'w-72 border-l border-white/5 bg-[var(--bg-secondary)]',
+        'w-80 border-l border-white/5 bg-[var(--bg-secondary)]',
         'flex flex-col h-full',
         'transition-all duration-300'
       )}
     >
       {/* Header */}
       <div className="flex items-center px-5 py-4 border-b border-white/5">
+        {questionNumber !== undefined && (
+          <span className="text-3xl font-bold text-indigo-400 mr-3">
+            {questionNumber}
+          </span>
+        )}
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">
           题目属性
         </h2>
@@ -407,6 +567,7 @@ interface CollapsiblePropertyPanelProps {
   isOpen?: boolean
   isCollapsed?: boolean
   onToggleCollapse?: () => void
+  questionNumber?: number
 }
 
 export function CollapsiblePropertyPanel({
@@ -415,6 +576,7 @@ export function CollapsiblePropertyPanel({
   isOpen = true,
   isCollapsed = false,
   onToggleCollapse,
+  questionNumber,
 }: CollapsiblePropertyPanelProps) {
   if (!isOpen) return null
 
@@ -422,7 +584,7 @@ export function CollapsiblePropertyPanel({
     <div
       className={cn(
         'border-l border-white/5 bg-[var(--bg-secondary)] transition-all duration-300',
-        isCollapsed ? 'w-12' : 'w-72'
+        isCollapsed ? 'w-12' : 'w-80'
       )}
     >
       {/* Collapse Toggle */}
@@ -446,6 +608,7 @@ export function CollapsiblePropertyPanel({
           selectedQuestion={selectedQuestion}
           onUpdateQuestion={onUpdateQuestion}
           isOpen={isOpen}
+          questionNumber={questionNumber}
         />
       )}
     </div>

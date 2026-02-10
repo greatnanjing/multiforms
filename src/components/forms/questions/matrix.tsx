@@ -196,14 +196,16 @@ export function Matrix({
   if (mode === 'edit') {
     return (
       <div className={cn('question-wrapper', className)}>
-        <div className="mb-4">
-          <span className="text-base font-medium text-[var(--text-primary)]">
-            {questionText || '未命名题目'}
-          </span>
-          {required && (
-            <span className="ml-1 text-red-400">*</span>
-          )}
-        </div>
+        {questionText && (
+          <div className="mb-4">
+            <span className="text-base font-medium text-[var(--text-primary)]">
+              {questionText}
+            </span>
+            {required && (
+              <span className="ml-1 text-red-400">*</span>
+            )}
+          </div>
+        )}
 
         <div className="space-y-4">
           {/* 行设置 */}
@@ -283,20 +285,22 @@ export function Matrix({
 
   return (
     <div className={cn('question-wrapper', className)}>
-      {/* 题目标题 */}
-      <div className="mb-4">
-        <span className="text-base font-medium text-[var(--text-primary)]">
-          {questionText || '未命名题目'}
-        </span>
-        {required && (
-          <span className="ml-1 text-red-400">*</span>
-        )}
-        {!required && (
-          <span className="ml-2 text-xs text-[var(--text-muted)]">
-            (可选)
+      {/* 题目标题 - 仅在非 preview 模式且非空时显示 */}
+      {mode !== 'preview' && questionText && (
+        <div className="mb-4">
+          <span className="text-base font-medium text-[var(--text-primary)]">
+            {questionText}
           </span>
-        )}
-      </div>
+          {required && (
+            <span className="ml-1 text-red-400">*</span>
+          )}
+          {!required && (
+            <span className="ml-2 text-xs text-[var(--text-muted)]">
+              (可选)
+            </span>
+          )}
+        </div>
+      )}
 
       {/* 错误提示 */}
       {error && (

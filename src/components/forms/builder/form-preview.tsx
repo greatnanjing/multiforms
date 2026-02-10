@@ -9,7 +9,7 @@
 
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Lock, Eye, Clock, Shield, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDroppable } from '@dnd-kit/core'
@@ -39,6 +39,8 @@ interface FormPreviewProps {
   questions: BuilderQuestion[]
   /** 是否正在拖拽 */
   isDragging?: boolean
+  /** 选中的题目ID */
+  selectedQuestionId?: string | null
   /** 更新标题 */
   onTitleChange?: (title: string) => void
   /** 更新描述 */
@@ -51,7 +53,7 @@ interface FormPreviewProps {
   onCopyQuestion?: (questionId: string) => void
   /** 删除题目 */
   onDeleteQuestion?: (questionId: string) => void
-  /** 切换必填 */
+  /** 切换必选 */
   onToggleRequired?: (questionId: string) => void
   /** 重新排序 */
   onReorder?: (questions: BuilderQuestion[]) => void
@@ -78,18 +80,36 @@ function FormHeader({ title, description, onTitleChange, onDescriptionChange }: 
   const [editTitle, setEditTitle] = useState(title)
   const [editDesc, setEditDesc] = useState(description)
 
-  // Sync local state when props change
+  // Track if user is currently editing to avoid overwriting their input
+  const isEditingTitleRef = useRef(false)
+  const isEditingDescRef = useRef(false)
+
+  // Sync local state when props change (only if not editing)
   useEffect(() => {
-    setEditTitle(title)
-    setEditDesc(description)
+    if (!isEditingTitleRef.current) {
+      setEditTitle(title)
+    }
+    if (!isEditingDescRef.current) {
+      setEditDesc(description)
+    }
   }, [title, description])
 
   const handleTitleBlur = () => {
+    isEditingTitleRef.current = false
     onTitleChange?.(editTitle)
   }
 
   const handleDescBlur = () => {
+    isEditingDescRef.current = false
     onDescriptionChange?.(editDesc)
+  }
+
+  const handleTitleFocus = () => {
+    isEditingTitleRef.current = true
+  }
+
+  const handleDescFocus = () => {
+    isEditingDescRef.current = true
   }
 
   const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -104,6 +124,7 @@ function FormHeader({ title, description, onTitleChange, onDescriptionChange }: 
         type="text"
         value={editTitle}
         onChange={(e) => setEditTitle(e.target.value)}
+        onFocus={handleTitleFocus}
         onBlur={handleTitleBlur}
         onKeyDown={handleTitleKeyDown}
         placeholder="未命名表单"
@@ -116,6 +137,7 @@ function FormHeader({ title, description, onTitleChange, onDescriptionChange }: 
       <textarea
         value={editDesc}
         onChange={(e) => setEditDesc(e.target.value)}
+        onFocus={handleDescFocus}
         onBlur={handleDescBlur}
         placeholder="表单描述（可选）"
         rows={2}
@@ -227,10 +249,17 @@ function PrivacySettings({
         {requirePassword && (
           <div className="pl-4">
             <input
-              type="text"
+              type="password"
               value={password || ''}
-              onChange={(e) => onSettingsChange({ ...settings, password: e.target.value })}
-              placeholder="设置访问密码"
+              onChange={(e) => {
+                const value = e.target.value
+                // Minimum password length validation
+                if (value.length <= 32) {
+                  onSettingsChange({ ...settings, password: value })
+                }
+              }}
+              placeholder="设置访问密码（至少4位）"
+              minLength={4}
               aria-label="访问密码"
               className={cn(
                 'w-full px-4 py-2.5 rounded-lg',
@@ -389,6 +418,7 @@ export function FormPreview({
   description,
   questions,
   isDragging = false,
+  selectedQuestionId,
   onTitleChange,
   onDescriptionChange,
   onAddQuestion,
@@ -401,8 +431,6 @@ export function FormPreview({
   privacySettings,
   onPrivacySettingsChange,
 }: FormPreviewProps) {
-  const [activeId, setActiveId] = useState<string | null>(null)
-
   // Drop zone for reordering (entire form preview)
   const { setNodeRef: setFormRef } = useDroppable({
     id: 'form-preview',
@@ -419,7 +447,14 @@ export function FormPreview({
 
   return (
     <div ref={setFormRef} className={cn('flex-1 overflow-y-auto custom-scrollbar', className)}>
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
+      {/* Skip link for keyboard navigation */}
+      <a
+        href="#form-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--primary-start)] focus:text-white focus:rounded-lg focus:shadow-lg"
+      >
+        跳转到表单内容
+      </a>
+      <div id="form-content" className="max-w-2xl mx-auto px-4 py-6 pb-32">
         {/* Form Header */}
         <div
           className={cn(
@@ -448,6 +483,7 @@ export function FormPreview({
                   key={question.id}
                   question={question}
                   index={index}
+                  isSelected={question.id === selectedQuestionId}
                   onEdit={onEditQuestion}
                   onCopy={onCopyQuestion}
                   onDelete={onDeleteQuestion}

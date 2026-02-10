@@ -956,6 +956,7 @@ export default function FormBuilderPage() {
             description={description}
             questions={questions}
             isDragging={activeId !== null}
+            selectedQuestionId={selectedQuestionId}
             onTitleChange={setTitle}
             onDescriptionChange={setDescription}
             onAddQuestion={handleAddQuestion}
@@ -975,6 +976,7 @@ export default function FormBuilderPage() {
           onUpdateQuestion={handleUpdateQuestion}
           isCollapsed={isPropertyPanelCollapsed}
           onToggleCollapse={() => setIsPropertyPanelCollapsed((prev) => !prev)}
+          questionNumber={selectedQuestion ? questions.findIndex(q => q.id === selectedQuestion.id) + 1 : undefined}
         />
       </div>
 

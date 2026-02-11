@@ -219,6 +219,12 @@ function QuestionPreview({ type, questionText, required, options, showQuestionNu
         )}>
           {questionTypeLabel}
         </span>
+        {/* 多选题最多选数量 */}
+        {type === 'multiple_choice' && options?.max_selections && (
+          <span className="px-2 py-0.5 rounded text-xs font-medium text-violet-400/80 bg-violet-500/10 flex-shrink-0">
+            最多选 {options.max_selections} 项
+          </span>
+        )}
       </div>
       {/* 题目组件预览 */}
       <Component {...commonProps} {...typeDefaults[type]} />

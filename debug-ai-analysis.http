@@ -1,0 +1,26 @@
+### AI Analysis Debug Script
+### Run these in VS Code with REST Client extension, or use curl
+
+### 1. Check if form_submissions table has ai_analysis column
+GET https://tyhmopsotdtoiorgjvoy.supabase.co/rest/v1/form_submissions?select=ai_analysis,ai_analysis_status&limit=1
+apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5aG1vcHNvdWR0b2lvcmdqdm95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2Nzk2NjUsImV4cCI6MjA4NTI1NTY2NX0.0c8Z3TI4pzu_lx6UXBZld2dzBf2JIwAvTjvv6sonrkI
+
+### 2. Test submit-form Edge Function (this should work)
+POST https://tyhmopsotdtoiorgjvoy.supabase.co/functions/v1/submit-form
+Content-Type: application/json
+
+{
+  "formId": "test-form-id",
+  "answers": {"q1": "test answer"}
+}
+
+### 3. Test analyze-submission Edge Function directly
+POST https://tyhmopsotdtoiorgjvoy.supabase.co/functions/v1/analyze-submission
+Content-Type: application/json
+
+{
+  "submissionId": "test-submission-id",
+  "formTitle": "Test Form",
+  "questions": [{"id": "q1", "question_text": "What do you think?"}],
+  "answers": {"q1": "It's great!"}
+}

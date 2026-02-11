@@ -188,9 +188,9 @@ export function HeroSection() {
               </div>
 
               {/* 提交按钮 */}
-              <div className="mt-auto">
+              <div className="mt-auto flex justify-center">
                 <button
-                  className={`w-full px-8 py-3 rounded-xl bg-gradient-to-r ${currentForm.color} text-white font-medium shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5`}
+                  className={`px-12 py-3 rounded-xl bg-gradient-to-r ${currentForm.color} text-white font-medium shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5`}
                 >
                   提交
                 </button>

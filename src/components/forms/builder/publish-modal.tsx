@@ -285,17 +285,24 @@ export function PublishModal({ form, isOpen, onClose, onPublishToggle }: Publish
                       表单链接
                     </label>
                     <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={formUrl}
-                        readOnly
+                      <a
+                        href={formUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className={cn(
-                          'flex-1 px-4 py-2.5 rounded-lg',
+                          'flex-1 px-4 py-2.5 rounded-lg flex items-center gap-2',
                           'bg-white/5 border border-white/10',
-                          'text-sm text-[var(--text-primary)]',
-                          'focus:outline-none'
+                          'text-sm text-indigo-400 hover:text-indigo-300',
+                          'hover:border-indigo-500/30 hover:bg-indigo-500/5',
+                          'transition-all',
+                          'cursor-pointer'
                         )}
-                      />
+                      >
+                        <span className="truncate flex-1">{formUrl}</span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 flex-shrink-0">
+                          访问
+                        </span>
+                      </a>
                       <button
                         onClick={handleCopyLink}
                         type="button"

@@ -16,9 +16,14 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import type { Database } from '@/lib/database.types'
+// import type { Database } from '@/lib/database.types'
 
-type Profile = Database['public']['Tables']['profiles']['Row']
+type Profile = {
+  id: string
+  email: string
+  role: string | null
+  status: string | null
+}
 
 export async function proxy(req: NextRequest) {
   const { pathname } = new URL(req.url)

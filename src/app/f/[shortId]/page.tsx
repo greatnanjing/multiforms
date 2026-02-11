@@ -18,7 +18,7 @@ import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getFormByShortId, incrementFormViewCount } from '@/lib/api/forms'
 import { getPublicQuestions } from '@/lib/api/questions'
-import { submitFormAnswer } from '@/lib/api/submissions'
+import { submitFormAnswer, waitForAnalysis } from '@/lib/api/submissions'
 import type { Form, AnswerValue, SubmissionAnswers } from '@/types'
 import {
   FormHeader,
@@ -69,9 +69,21 @@ export default function FormViewPage() {
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  // undefined = analysis not supported/initialized, null = loading, string = completed, empty string = failed
+  const [aiAnalysis, setAiAnalysis] = useState<string | null | undefined>(undefined)
 
   // Start time for duration tracking
   const startTimeRef = useRef<number>(Date.now())
+
+  // Track polling promise for cleanup
+  const analysisPromiseRef = useRef<Promise<string | null> | null>(null)
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      analysisPromiseRef.current = null
+    }
+  }, [])
 
   // ============================================
   // Data Loading
@@ -190,20 +202,43 @@ export default function FormViewPage() {
 
     // Submit
     setIsSubmitting(true)
+    setAiAnalysis(null) // Reset to loading state
 
     try {
       // Calculate duration
       const durationSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000)
 
       // Submit to API
-      await submitFormAnswer({
+      const result = await submitFormAnswer({
         formId: form!.id,
         answers,
         durationSeconds,
       })
 
-      // Show success modal
+      // Show success modal immediately
       setShowSuccess(true)
+
+      // Poll for AI analysis in background
+      if (result.submissionId) {
+        const promise = waitForAnalysis(result.submissionId, { maxWaitTime: 15000 })
+          .then(analysis => {
+            // Only update if component is still mounted
+            if (analysisPromiseRef.current === promise) {
+              setAiAnalysis(analysis ?? '') // analysis or empty string if failed/timed out
+            }
+            return null
+          })
+          .catch(err => {
+            console.warn('Failed to get AI analysis:', err)
+            // Set to empty string on error to show "not available" message
+            if (analysisPromiseRef.current === promise) {
+              setAiAnalysis('')
+            }
+            return null
+          })
+
+        analysisPromiseRef.current = promise
+      }
     } catch (err) {
       console.error('Failed to submit form:', err)
       setError('提交失败，请稍后重试')
@@ -220,7 +255,12 @@ export default function FormViewPage() {
   // 只统计已填写的必答题数量
   const answeredCount = questions.filter(q => {
     const isRequired = q.validation?.required ?? false
-    return isRequired && answers[q.id]  // 必填且已回答
+    const answer = answers[q.id]
+    // 对于数组类型（多选题），空数组视为未回答
+    const hasValidAnswer = answer && (
+      !Array.isArray(answer) || answer.length > 0
+    )
+    return isRequired && hasValidAnswer
   }).length
 
   // 总必填题数量
@@ -354,6 +394,7 @@ export default function FormViewPage() {
         isOpen={showSuccess}
         shortId={shortId}
         showResults={form.show_results}
+        aiAnalysis={aiAnalysis}
         onClose={() => {
           setShowSuccess(false)
           // Optionally redirect or reset

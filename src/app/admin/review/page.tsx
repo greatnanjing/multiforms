@@ -28,13 +28,26 @@ import {
   Eye
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Database } from '@/lib/database.types'
+// import type { Database } from '@/lib/database.types'
 
 // ============================================
 // Types
 // ============================================
 
-type ContentReview = Database['public']['Tables']['content_reviews']['Row']
+type ContentReview = {
+  id: string
+  resource_type: string
+  resource_id: string
+  report_type: string
+  reporter_id: string | null
+  report_reason: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  reviewer_id: string | null
+  review_notes: string | null
+  reviewed_at: string | null
+  resource_banned: boolean
+  created_at: string
+}
 
 // ============================================
 // Components

@@ -495,6 +495,8 @@ export async function exportSubmissions(options: GetSubmissionsOptions & {
   options.questions.forEach(q => {
     headers.push(q.question_text)
   })
+  // 添加 AI 分析列
+  headers.push('AI 分析')
 
   const rows = data.map(submission => {
     const row = [
@@ -511,6 +513,8 @@ export async function exportSubmissions(options: GetSubmissionsOptions & {
         row.push(value?.toString() || '')
       }
     })
+    // 添加 AI 分析
+    row.push(submission.ai_analysis || '')
     return row
   })
 

@@ -10,6 +10,17 @@ import { createBrowserClient } from '@supabase/ssr'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+// 诊断日志：验证环境变量是否正确加载
+if (typeof window !== 'undefined') {
+  console.log('[Supabase Client] Environment check:', {
+    urlSet: !!supabaseUrl,
+    keySet: !!supabaseAnonKey,
+    url: supabaseUrl,
+    // 只打印 key 的前几个字符用于验证
+    keyPrefix: supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'not set'
+  })
+}
+
 // 使用全局变量，热重载时不会丢失
 const getGlobal = () => {
   if (typeof window === 'undefined') return null

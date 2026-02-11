@@ -327,6 +327,10 @@ export interface FormSubmission {
 
   status: SubmissionStatus
 
+  // AI 分析
+  ai_analysis: string | null
+  ai_analysis_status: 'pending' | 'processing' | 'completed' | 'failed'
+
   created_at: string
   updated_at: string
 }

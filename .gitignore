@@ -119,3 +119,5 @@ _bmad-output/
 Thumbs.db
 Desktop.ini
 nul
+
+.env*.local

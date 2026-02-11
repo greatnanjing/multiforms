@@ -18,7 +18,10 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { generateId } from '@/lib/utils'
-import type { SubmissionAnswers } from '@/types'
+import type { SubmissionAnswers, FormSubmission } from '@/types'
+
+// Re-export FormSubmission for convenience
+export type { FormSubmission }
 
 // ============================================
 // Types
@@ -34,28 +37,6 @@ export interface SubmitFormOptions {
   durationSeconds?: number
   /** 会话 ID（用于追踪匿名用户） */
   sessionId?: string
-}
-
-/** 表单提交记录 */
-export interface FormSubmission {
-  id: string
-  form_id: string
-  user_id: string | null
-  session_id: string | null
-  submitter_ip: string | null
-  submitter_user_agent: string | null
-  submitter_location: {
-    country?: string
-    city?: string
-    ip?: string
-    latitude?: number
-    longitude?: number
-  } | null
-  answers: SubmissionAnswers
-  duration_seconds: number | null
-  status: 'draft' | 'completed'
-  created_at: string
-  updated_at: string
 }
 
 /** 获取提交列表选项 */
@@ -107,7 +88,7 @@ function getUserAgent(): string | null {
 /**
  * 提交表单答案（通过 Edge Function，无需登录）
  */
-export async function submitFormAnswer(options: SubmitFormOptions): Promise<FormSubmission> {
+export async function submitFormAnswer(options: SubmitFormOptions): Promise<FormSubmission & { submissionId: string }> {
   const { formId, answers, durationSeconds, sessionId } = options
 
   // 获取 Supabase URL 和 anon key
@@ -153,7 +134,128 @@ export async function submitFormAnswer(options: SubmitFormOptions): Promise<Form
     throw new Error(result.error || '提交失败，请稍后重试')
   }
 
-  return result.data as FormSubmission
+  return {
+    ...(result.data as FormSubmission),
+    submissionId: result.data.id,
+  }
+}
+
+/** AI 分析状态 */
+export type AIAnalysisStatus = 'pending' | 'processing' | 'completed' | 'failed'
+
+/** AI 分析结果 */
+export interface AIAnalysisResult {
+  ai_analysis: string | null
+  ai_analysis_status: AIAnalysisStatus
+}
+
+/**
+ * 获取提交的 AI 分析结果（用于公开表单页面）
+ * @param submissionId - 提交记录 ID
+ * @returns 包含 AI 分析内容和状态的 Promise
+ * @throws {Error} 当 Supabase 配置未找到或请求失败时抛出错误
+ */
+export async function getSubmissionAnalysis(submissionId: string): Promise<AIAnalysisResult> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase 配置未找到')
+  }
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/form_submissions?id=eq.${submissionId}&select=ai_analysis,ai_analysis_status`, {
+    headers: {
+      'apikey': supabaseAnonKey,
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('获取分析结果失败')
+  }
+
+  const data = await response.json()
+  return data[0] || { ai_analysis: null, ai_analysis_status: 'pending' }
+}
+
+/** 轮询等待 AI 分析选项 */
+export interface WaitForAnalysisOptions {
+  /** 最长等待时间（毫秒），默认 10000 */
+  maxWaitTime?: number
+  /** 初始轮询间隔（毫秒），默认 500 */
+  initialInterval?: number
+  /** 最大轮询间隔（毫秒），默认 2000 */
+  maxInterval?: number
+  /** 退避倍数，默认 1.5 */
+  backoffMultiplier?: number
+}
+
+/**
+ * 轮询等待 AI 分析完成（使用指数退避优化）
+ * @param submissionId - 提交记录 ID
+ * @param options - 轮询选项
+ * @returns AI 分析内容，超时或失败时返回 null
+ *
+ * @example
+ * ```ts
+ * const analysis = await waitForAnalysis(submissionId, {
+ *   maxWaitTime: 15000,
+ *   initialInterval: 500,
+ *   maxInterval: 2000
+ * })
+ * ```
+ */
+export async function waitForAnalysis(
+  submissionId: string,
+  options: WaitForAnalysisOptions = {}
+): Promise<string | null> {
+  const {
+    maxWaitTime = 10000,
+    initialInterval = 500,
+    maxInterval = 2000,
+    backoffMultiplier = 1.5
+  } = options
+
+  const startTime = Date.now()
+  let currentInterval = initialInterval
+
+  while (Date.now() - startTime < maxWaitTime) {
+    const result = await getSubmissionAnalysis(submissionId)
+
+    // 已完成且有分析结果
+    if (result.ai_analysis_status === 'completed' && result.ai_analysis) {
+      return result.ai_analysis
+    }
+
+    // 已完成但无分析结果（可能是分析生成失败）
+    if (result.ai_analysis_status === 'completed' && !result.ai_analysis) {
+      return null
+    }
+
+    // 失败状态
+    if (result.ai_analysis_status === 'failed') {
+      return null
+    }
+
+    // 仍在处理中（pending 或 processing），继续等待
+    if (result.ai_analysis_status === 'pending' || result.ai_analysis_status === 'processing') {
+      // 添加随机抖动以避免 Thundering Herd 问题
+      const jitter = Math.random() * 0.3 * currentInterval
+      await new Promise(resolve => setTimeout(resolve, currentInterval + jitter))
+
+      // 指数退避，但不超过最大间隔
+      currentInterval = Math.min(currentInterval * backoffMultiplier, maxInterval)
+      continue
+    }
+
+    // 未知状态，继续等待
+    const jitter = Math.random() * 0.3 * currentInterval
+    await new Promise(resolve => setTimeout(resolve, currentInterval + jitter))
+    currentInterval = Math.min(currentInterval * backoffMultiplier, maxInterval)
+  }
+
+  // 超时返回 null
+  return null
 }
 
 /**

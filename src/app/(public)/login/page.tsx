@@ -84,13 +84,39 @@ export default function LoginPage() {
     setFieldErrors({})
     setIsLoading(true)
 
+    // 诊断：测试网络连接
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    console.log('[Login] Supabase URL from env:', supabaseUrl)
+
+    // 测试基本的 fetch 连通性
+    try {
+      const testUrl = `${supabaseUrl}/auth/v1/user`
+      console.log('[Login] Testing connectivity to:', testUrl)
+      const testResponse = await fetch(testUrl, {
+        method: 'GET',
+        headers: {
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        },
+      })
+      console.log('[Login] Network test response status:', testResponse.status)
+    } catch (networkError) {
+      console.error('[Login] Network test failed:', networkError)
+      setAuthError(`网络连接测试失败: ${networkError instanceof Error ? networkError.message : '未知错误'}`)
+      setIsLoading(false)
+      return
+    }
+
     try {
       const supabase = createClient()
+
+      console.log('[Login] Attempting sign in with:', { email, supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL })
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
+
+      console.log('[Login] Sign in result:', { error, data: data ? 'session received' : 'no data' })
 
       if (error) {
         handleAuthError(error)

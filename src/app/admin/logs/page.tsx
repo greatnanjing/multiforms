@@ -26,13 +26,23 @@ import {
   MapPin
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Database } from '@/lib/database.types'
+// import type { Database } from '@/lib/database.types'
 
 // ============================================
 // Types
 // ============================================
 
-type AdminLog = Database['public']['Tables']['admin_logs']['Row']
+type AdminLog = {
+  id: string
+  admin_id: string | null
+  action: string
+  resource_type: string | null
+  resource_id: string | null
+  details: Record<string, any>
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
+}
 
 const actionLabels: Record<string, string> = {
   login: '登录',

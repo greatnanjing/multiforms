@@ -366,7 +366,7 @@ export default function AdminFormsPage() {
 
       if (error) throw error
       // 添加题目数量
-      const formsWithCount = (data || []).map(form => ({
+      const formsWithCount = (data || []).map((form: any) => ({
         ...form,
         question_count: form.form_questions?.length || 0
       }))

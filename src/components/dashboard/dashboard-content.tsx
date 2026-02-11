@@ -206,6 +206,18 @@ export default function DashboardContent() {
     }
   }
 
+  const handleDuplicateForm = async (formId: string) => {
+    try {
+      const { duplicateForm } = await import('@/lib/api/forms')
+      const newForm = await duplicateForm(formId)
+      toast.success('表单已复制')
+      await fetchForms()
+    } catch (error) {
+      console.error('Failed to duplicate form:', error)
+      toast.error('复制失败，请稍后重试')
+    }
+  }
+
   // 循环切换表单状态：draft → published → archived → draft
   const handleCycleStatus = async (formId: string) => {
     const form = forms.find(f => f.id === formId)
@@ -364,6 +376,10 @@ export default function DashboardContent() {
                 onAnalyze={(e) => {
                   e.stopPropagation()
                   handleAnalyzeForm(form.id)
+                }}
+                onDuplicate={(e) => {
+                  e.stopPropagation()
+                  handleDuplicateForm(form.id)
                 }}
                 onDelete={(e) => {
                   e.stopPropagation()

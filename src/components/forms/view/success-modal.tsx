@@ -14,6 +14,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, Eye, X, Sparkles, Loader2, Copy, Check } from 'lucide-react'
+import { domToPng } from 'modern-screenshot'
 
 // ============================================
 // Types
@@ -79,187 +80,30 @@ export function SuccessModal({
     setIsCopying(true)
 
     try {
-      // Get computed styles for the modal
-      const rect = modal.getBoundingClientRect()
-      const scaleX = 2 // Retina/High-DPI scaling
-      const scaleY = 2
+      // 使用 modern-screenshot 库，它对现代 CSS（如 oklab）有更好的支持
+      // 从 CSS 变量获取背景色以支持主题
+      const backgroundColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--bg-secondary')?.trim() || '#1A1A2E'
 
-      // Create canvas with scaling
-      const canvas = document.createElement('canvas')
-      canvas.width = rect.width * scaleX
-      canvas.height = rect.height * scaleY
-      const ctx = canvas.getContext('2d')
+      const dataUrl = await domToPng(modal, {
+        scale: 2,
+        backgroundColor,
+      })
 
-      if (!ctx) {
-        throw new Error('Could not get canvas context')
-      }
+      // 将 dataUrl 转换为 blob
+      const response = await fetch(dataUrl)
+      const blob = await response.blob()
 
-      // Scale context for high DPI
-      ctx.scale(scaleX, scaleY)
-
-      // Get CSS variable values
-      const computedStyle = getComputedStyle(document.body)
-      const bgSecondary = computedStyle.getPropertyValue('--bg-secondary').trim() || '#1A1A2E'
-      const textPrimary = computedStyle.getPropertyValue('--text-primary').trim() || '#F8FAFC'
-      const textSecondary = computedStyle.getPropertyValue('--text-secondary').trim() || '#94A3B8'
-      const textMuted = computedStyle.getPropertyValue('--text-muted').trim() || '#64748B'
-      const primaryGlow = computedStyle.getPropertyValue('--primary-glow').trim() || '#A78BFA'
-
-      // Draw background
-      ctx.fillStyle = bgSecondary
-      ctx.roundRect(0, 0, rect.width, rect.height, 16)
-      ctx.fill()
-
-      // Draw green success icon circles
-      const iconX = rect.width / 2
-      const iconY = 80
-
-      // Outer circle
-      ctx.fillStyle = 'rgba(34, 197, 94, 0.2)'
-      ctx.beginPath()
-      ctx.arc(iconX, iconY, 40, 0, Math.PI * 2)
-      ctx.fill()
-
-      // Inner circle
-      const gradient = ctx.createLinearGradient(iconX - 28, iconY - 28, iconX + 28, iconY + 28)
-      gradient.addColorStop(0, '#22C55E')
-      gradient.addColorStop(1, '#10B981')
-      ctx.fillStyle = gradient
-      ctx.beginPath()
-      ctx.arc(iconX, iconY, 28, 0, Math.PI * 2)
-      ctx.fill()
-
-      // Draw checkmark
-      ctx.strokeStyle = '#FFFFFF'
-      ctx.lineWidth = 3
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
-      ctx.beginPath()
-      ctx.moveTo(iconX - 8, iconY)
-      ctx.lineTo(iconX - 2, iconY + 6)
-      ctx.lineTo(iconX + 8, iconY - 6)
-      ctx.stroke()
-
-      // Draw title
-      ctx.fillStyle = textPrimary
-      ctx.font = '600 24px "Space Grotesk", sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText(message, rect.width / 2, 160)
-
-      // Draw subtitle
-      ctx.fillStyle = textSecondary
-      ctx.font = '400 14px "DM Sans", sans-serif'
-      ctx.fillText('感谢您的参与，您的回答已成功提交。', rect.width / 2, 185)
-
-      let currentY = 210
-
-      // Draw AI analysis if present
-      if (aiAnalysis && aiAnalysis !== undefined && aiAnalysis !== null) {
-        // AI section background
-        ctx.fillStyle = 'rgba(99, 102, 241, 0.1)'
-        ctx.roundRect(24, currentY, rect.width - 48, 0, 12)
-        const aiBoxHeight = Math.max(80, aiAnalysis.length * 3.5 + 50)
-        ctx.roundRect(24, currentY, rect.width - 48, aiBoxHeight, 12)
-        ctx.fill()
-
-        // AI header with icon
-        ctx.fillStyle = '#818CF8'
-        ctx.font = '500 14px "DM Sans", sans-serif'
-        ctx.textAlign = 'left'
-        ctx.fillText('✨ AI 分析', 44, currentY + 30)
-
-        // AI analysis text (word wrap)
-        ctx.fillStyle = textPrimary
-        ctx.font = '400 14px "DM Sans", sans-serif'
-        const maxWidth = rect.width - 96
-        const words = aiAnalysis.split('')
-        let line = ''
-        let textY = currentY + 55
-
-        for (let i = 0; i < words.length; i++) {
-          const testLine = line + words[i]
-          const metrics = ctx.measureText(testLine)
-          if (metrics.width > maxWidth && i > 0) {
-            ctx.fillText(line, 44, textY)
-            line = words[i]
-            textY += 22
-          } else {
-            line = testLine
-          }
-        }
-        ctx.fillText(line, 44, textY)
-
-        currentY += aiBoxHeight + 20
-      }
-
-      // Draw buttons
-      const buttonY = currentY + 10
-      const buttonWidth = rect.width / 2 - 24
-
-      // Close button
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'
-      ctx.roundRect(24, buttonY, buttonWidth, 48, 12)
-      ctx.fill()
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
-      ctx.lineWidth = 1
-      ctx.stroke()
-      ctx.fillStyle = textSecondary
-      ctx.font = '500 14px "DM Sans", sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('关闭', 24 + buttonWidth / 2, buttonY + 29)
-
-      // View Results button (if shown)
-      if (showResults) {
-        const buttonGradient = ctx.createLinearGradient(rect.width / 2 + 36, buttonY, rect.width - 24 + 36, buttonY)
-        buttonGradient.addColorStop(0, '#6366F1')
-        buttonGradient.addColorStop(1, '#8B5CF6')
-        ctx.fillStyle = buttonGradient
-        ctx.roundRect(rect.width / 2 + 12, buttonY, buttonWidth, 48, 12)
-        ctx.fill()
-        ctx.fillStyle = '#FFFFFF'
-        ctx.fillText('👁 查看结果', rect.width / 2 + 12 + buttonWidth / 2, buttonY + 29)
-      }
-
-      // Draw footer
-      const footerY = buttonY + 80
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
-      ctx.beginPath()
-      ctx.moveTo(24, footerY)
-      ctx.lineTo(rect.width - 24, footerY)
-      ctx.stroke()
-
-      ctx.fillStyle = textMuted
-      ctx.font = '400 12px "DM Sans", sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText(`由 ${primaryGlow === '#A78BFA' ? '' : ''}MultiForms 提供支持`, rect.width / 2, footerY + 24)
-
-      // Convert to blob and copy
-      canvas.toBlob(async (blob: Blob | null) => {
-        if (!blob) {
-          setIsCopying(false)
-          return
-        }
-
-        try {
-          await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-          ])
-          setCopied(true)
-          setTimeout(() => setCopied(false), 2000)
-        } catch (err) {
-          console.error('Clipboard write failed:', err)
-          // Download as fallback
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `multiforms-${Date.now()}.png`
-          a.click()
-          URL.revokeObjectURL(url)
-        }
-        setIsCopying(false)
-      }, 'image/png')
-    } catch (error) {
-      console.error('Screenshot capture failed:', error)
+      // 复制到剪贴板
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ])
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Screenshot failed:', err)
+    } finally {
+      // 无论成功或失败，都要重置 isCopying 状态
       setIsCopying(false)
     }
   }
@@ -268,17 +112,17 @@ export function SuccessModal({
 
   return (
     <>
-      {/* Background overlay - clicks here close the modal */}
+      {/* Background overlay - 只显示遮罩，不允许点击关闭 */}
       <div
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300 opacity-100"
-        onClick={handleClose}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300 opacity-100 pointer-events-none"
       />
 
-      {/* Modal content container - no onClick to prevent interference */}
+      {/* Modal content container - 只能通过 X 按钮或关闭按钮关闭 */}
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
         <div
           ref={modalRef}
-          className="relative w-full max-w-md bg-[var(--bg-secondary)] rounded-2xl border border-white/0.08] p-8 text-center transition-all duration-300 transform pointer-events-auto"
+          data-screenshot="true"
+          className="relative w-full max-w-md bg-[var(--bg-secondary)] rounded-2xl border border-white/0.08 p-8 text-center transition-all duration-300 transform pointer-events-auto"
         >
           {/* Header Actions */}
           <div className="absolute top-4 right-4 flex items-center gap-2">

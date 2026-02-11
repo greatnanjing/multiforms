@@ -34,6 +34,7 @@ import {
   Archive,
   CheckSquare,
   Square,
+  Copy,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Form, FormType } from '@/types'
@@ -59,6 +60,8 @@ interface FormCardProps {
   onDelete?: (e: React.MouseEvent) => void
   /** 状态切换回调 */
   onCycleStatus?: (e: React.MouseEvent) => void
+  /** 复制回调 */
+  onDuplicate?: (e: React.MouseEvent) => void
   /** 是否显示删除按钮 */
   showDelete?: boolean
   /** 额外的类名 */
@@ -223,6 +226,7 @@ export function FormCard({
   onAnalyze,
   onDelete,
   onCycleStatus,
+  onDuplicate,
   showDelete = true,
   className,
   selectionMode = false,
@@ -363,6 +367,15 @@ export function FormCard({
           >
             <BarChart3 className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-indigo-400 transition-colors" />
           </button>
+          {onDuplicate && (
+            <button
+              onClick={(e) => handleAction(e, onDuplicate)}
+              className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center transition-all duration-200 hover:bg-emerald-500/10 hover:border-emerald-500/50 group"
+              title="复制"
+            >
+              <Copy className="w-4.5 h-4.5 text-[var(--text-secondary)] group-hover:text-emerald-400 transition-colors" />
+            </button>
+          )}
           {showDelete && (
             <button
               onClick={(e) => handleAction(e, onDelete)}
